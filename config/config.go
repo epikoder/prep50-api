@@ -17,6 +17,8 @@ type (
 		Throttle throttle
 		Aes      aes
 		Cors     cors
+		Jwt      jwt
+		Mail     mail
 	}
 )
 
@@ -55,6 +57,19 @@ type (
 	aes struct {
 		Key string
 		Iv  string
+	}
+
+	jwt struct {
+		Access  int
+		Refresh int
+	}
+
+	mail struct {
+		UserName string `yaml:"username"`
+		From     string
+		SmtpHost string `yaml:"smtpHost"`
+		SmtpPort int    `yaml:"smtpPort"`
+		Password string
 	}
 )
 
