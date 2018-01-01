@@ -28,6 +28,8 @@ var (
 	bcEncoding = base64.NewEncoding(alphabet)
 )
 
+func init() { randMath.Seed(time.Now().Unix()) }
+
 func KeyGen(generatePemfile bool) (k *ecdsa.PrivateKey, err error) {
 	if k, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader); !logger.HandleError(err) {
 		return nil, err
@@ -110,6 +112,28 @@ func Base64(n int) string {
 	dst := make([]byte, base64.URLEncoding.EncodedLen(len(src)))
 	bcEncoding.Encode(dst, src)
 	return string(dst[len(dst)-n:])
+}
+
+func Random(n int) (s string) {
+	for _, r := range Base64(n * 2) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			s += string(r)
+		}
+	}
+	return s[len(s)-n:]
+}
+
+func RandomString(n int) (s string) {
+	for _, r := range Base64(n * 2) {
+		if unicode.IsLetter(r) {
+			s += string(r)
+		}
+	}
+	return s[len(s)-n:]
+}
+
+func RandomNumber(min, max int) int {
+	return randMath.Intn(max-min) + min
 }
 
 func Ase256Encode(plaintext string) (string, error) {

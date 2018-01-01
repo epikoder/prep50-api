@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
@@ -9,12 +11,17 @@ import (
 
 type (
 	User struct {
-		Id        uuid.UUID  `sql:"primary_key;index;type:uuid;default:uuid_generate_v4()" json:"-"`
-		UserName  string     `gorm:"type:varchar(50);column:username" json:"username"`
-		Email     string     `gorm:"type:varchar(50);column:email;unique;index;" json:"email"`
-		Phone     string     `gorm:"type:varchar(50);column:phone;unique;index;" json:"phone"`
-		Password  string     `gorm:"type:varchar(50);column:password" json:"password"`
-		Providers []Provider `gorm:"many2many:user_providers;"`
+		Id         uuid.UUID      `sql:"primary_key;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
+		UserName   string         `gorm:"type:varchar(50);column:username;notnull" json:"username"`
+		Email      string         `gorm:"type:varchar(255);column:email;unique;index;notnull;" json:"email"`
+		Phone      string         `gorm:"type:varchar(20);column:phone;unique;index;notnull" json:"phone"`
+		Photo      string         `gorm:"type:varchar(255);column:photo" json:"photo"`
+		Password   string         `gorm:"type:varchar(64);column:password" json:"-"`
+		IsProvider bool           `gorm:"type:tinyint(1);" json:"-"`
+		Providers  []Provider     `gorm:"many2many:user_providers;" json:"-"`
+		CreatedAt  time.Time      `json:"-"`
+		UpdatedAt  time.Time      `json:"-"`
+		DeletedAt  gorm.DeletedAt `json:"-"`
 	}
 
 	UserProvider struct {
@@ -22,17 +29,25 @@ type (
 	}
 
 	UserRegisterFormStruct struct {
-		UserName string `validate:"required,string"`
+		UserName string `validate:"required,alphanum"`
 		Email    string `validate:"required,email"`
 		Phone    string `validate:"required,numeric,min=8"`
-		Password string `validate:"required,string"`
+		Password string `validate:"required,alphanum,min=6"`
 	}
 
 	UserLoginFormStruct struct {
-		UName    string
-		Password string
+		UserName string `validate:"required,alphanum"`
+		Password string `validate:"required,alphanum"`
 	}
 )
+
+func (u *User) ID() uuid.UUID {
+	return u.Id
+}
+
+func (u *User) Tag() string {
+	return "users"
+}
 
 func (u *User) Database() *gorm.DB {
 	return database.UseDB("app")
