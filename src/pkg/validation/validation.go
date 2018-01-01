@@ -18,16 +18,27 @@ func Errors(err error) interface{} {
 	m["message"] = "validation failed"
 	m["error"] = make(map[string]string)
 	for _, err := range validationErrors {
-		m["error"].(map[string]string)[strings.ToLower(err.Field())] = getErrorMessage(err.Tag())
+		m["error"].(map[string]string)[strings.ToLower(err.Field())] = getErrorMessage(err)
 	}
 	return m
 }
 
-func getErrorMessage(tag string) string {
-	switch tag {
+func getErrorMessage(err validator.FieldError) string {
+	switch err.Tag() {
 	case "email":
 		return "email is invalid"
+	case "required":
+		return "field is required"
+	case "min":
+		switch err.Field() {
+		case "Phone":
+			return "minimium lenght is 8"
+		case "Password":
+			return "minimium lenght is 6"
+		default:
+			return "lenght is too short"
+		}
 	default:
-		return fmt.Sprintf("validation failed for %s", tag)
+		return fmt.Sprintf("validation failed for %s", err.Tag())
 	}
 }

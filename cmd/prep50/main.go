@@ -6,23 +6,24 @@ import (
 
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/routes"
-	"github.com/Prep50mobileApp/prep50-api/src/services/database"
+	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
-	"gorm.io/gorm"
 )
 
 type Prep50 struct {
 	App *iris.Application
-	DB  *gorm.DB
 }
 
 func main() {
-	prep50 := &Prep50{iris.New(), database.DBConnection}
+	prep50 := &Prep50{iris.New()}
 	prep50.registerAppRoutes()
 	prep50.registerMiddlewares()
 	prep50.RegisterStructValidation()
+	prep50.AuthConfig()
+	go queue.Run()
 	prep50.StartServer()
 }
 
@@ -59,4 +60,13 @@ func (prep50 *Prep50) registerMiddlewares() {
 
 func (prep50 *Prep50) registerAppRoutes() {
 	routes.RegisterApiRoutes(prep50.App)
+}
+
+func (prep50 *Prep50) AuthConfig() {
+	if d := config.Conf.Jwt.Access; d != 0 {
+		ijwt.SetAccessLife(d)
+	}
+	if d := config.Conf.Jwt.Refresh; d != 0 {
+		ijwt.SetRefreshLife(d)
+	}
 }

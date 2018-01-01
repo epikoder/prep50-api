@@ -14,7 +14,15 @@ type (
 	}
 )
 
-func (u *Provider) Database() *gorm.DB {
+func (p *Provider) ID() uuid.UUID {
+	return p.Id
+}
+
+func (u *Provider) Tag() string {
+	return "providers"
+}
+
+func (p *Provider) Database() *gorm.DB {
 	return database.UseDB("app")
 }
 
