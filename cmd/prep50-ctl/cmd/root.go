@@ -34,5 +34,6 @@ func init() {
 	}
 	migrateCmd.Flags().BoolP("rollback", "r", false, "Rollback migrations")
 	migrateCmd.Flags().BoolP("reset", "f", false, "Reset migrations")
+	migrateCmd.Flags().StringP("table", "t", "", "Run migration on a specific table")
 	rootCmd.AddCommand(migrateCmd)
 }
