@@ -1,0 +1,20 @@
+app:
+  name: Prep50
+  host: prep50.com
+  port: 8081
+  key:
+  version: "1"
+  defaultApiVersion: 1.0.0
+database:
+  url:
+  tables:
+    users: users
+throttle:
+  limit: 20
+  burst: 5
+cors:
+  origins:
+    - prep50.com
+    - prep50.com:8081
+  headers: "Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization"
+  allowCredentials: "true"
