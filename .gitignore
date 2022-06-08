@@ -15,3 +15,6 @@
 # vendor/
 config.local.yml.bak
 config.local.yml
+.vscode
+logs
+.env
