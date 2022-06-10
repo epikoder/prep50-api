@@ -2,31 +2,44 @@ Name: Prep50Api
 Repo: github.com/Prep50mobileApp/prep50-api
 Version: main
 Dest: ./
-Module: "prep50-api"
+Module: prep50-api
 DisableInlineCommands: false
 DisableNpmInstall: false
 NpmBuildScriptName: build
 Watcher:
-  Disable: false
-  Backend:
-    - .go
-    - .mod
-    - .yml
-    - .toml
-    - .tml
-    - .ini
-  Frontend:
-  IgnoreDirs:
-    - .github
-    - .github/*
-    - uploads
-    - uploads/*
-    - bin
+    Disable: false
+    Backend:
+        - .go
+        - .mod
+        - .yml
+        - .toml
+        - .tml
+        - .ini
+    Frontend:
+        - .html
+        - .htm
+        - .svelte
+        - .md
+        - .js
+        - .ts
+        - .jsx
+        - .tsx
+        - .css
+        - .scss
+        - .less
+        - .json
+        - .proto
+    IgnoreDirs:
+        - .github
+        - .github/*
+        - uploads
+        - uploads/*
+        - bin
 LiveReload:
-  Disable: false
-  Port: 35729
+    Disable: false
+    Port: 35729
 Files:
-  - ./
+    - ./
 BuildFiles: []
 MD5PackageJSON: []
 Running: true
