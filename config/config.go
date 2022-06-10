@@ -36,16 +36,22 @@ type (
 		AllowCredentials string `yaml:"allowCredentials"`
 	}
 	database struct {
-		Url         string
-		Collections collections
+		Core dbConnection
+		App  dbConnection
+	}
+	dbConnection struct {
+		Url      string
+		Host     string
+		Port     string
+		User     string
+		Password string
+		Name     string
 	}
 	throttle struct {
 		Limit int
 		Burst int
 	}
-	collections struct {
-		Users string
-	}
+
 	aes struct {
 		Key string
 		Iv  string
@@ -53,9 +59,16 @@ type (
 )
 
 var (
-	__DIR__, path string
-	Conf          *conf
+	path string
+	Conf *conf
 )
+
+func (db database) UseDB(s string) dbConnection {
+	if s == "core" {
+		return db.Core
+	}
+	return db.App
+}
 
 func init() {
 	godotenv.Load()
