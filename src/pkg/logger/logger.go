@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"runtime"
@@ -13,10 +12,10 @@ import (
 func HandleError(err error) (ok bool) {
 	if os.Getenv("APP_ENV") == "local" || os.Getenv("LOG_STACK") == "file" {
 		__DIR__, _ := os.Getwd()
-		if err := os.Mkdir(__DIR__+"/logs", fs.ModeDir); !strings.Contains(err.Error(), "file exists") {
+		if err := os.Mkdir(__DIR__+"/logs", 0744); err != nil && !strings.Contains(err.Error(), "file exists") {
 			panic(err)
 		}
-		f, err := os.OpenFile(__DIR__+"/logs/log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		f, err := os.OpenFile(__DIR__+"/logs/log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
