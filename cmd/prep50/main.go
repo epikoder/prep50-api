@@ -32,24 +32,25 @@ func (prep50 *Prep50) RegisterStructValidation() {
 }
 
 func (prep50 *Prep50) StartServer() {
+	serverConfigPath := "server.yml"
 	{
-		if os.Getenv("APP_ENV") != "local" {
-			prep50.App.Run(iris.TLS(fmt.Sprintf("%s:443",
-				config.Conf.App.Host),
-				"server.crt",
-				"server.key"),
-				iris.WithConfiguration(iris.YAML("server.yml")))
+		if os.Getenv("APP_ENV") == "local" {
+			addr := func() string {
+				if h := config.Conf.App.Host; h != "" {
+					return fmt.Sprintf("%s:%d", h, config.Conf.App.Port)
+				}
+				return fmt.Sprintf(":%d", config.Conf.App.Port)
+			}
+			prep50.App.Run(iris.Addr(addr()), iris.WithConfiguration(iris.YAML(serverConfigPath)))
 			return
 		}
 	}
 
-	addr := func() string {
-		if h := config.Conf.App.Host; h != "" {
-			return fmt.Sprintf("%s:%d", h, config.Conf.App.Port)
-		}
-		return fmt.Sprintf(":%d", config.Conf.App.Port)
-	}
-	prep50.App.Run(iris.Addr(addr()), iris.WithConfiguration(iris.YAML("server.yml")))
+	prep50.App.Run(iris.TLS(fmt.Sprintf("%s:443",
+		config.Conf.App.Host),
+		"server.crt",
+		"server.key"),
+		iris.WithConfiguration(iris.YAML(serverConfigPath)))
 }
 
 func (prep50 *Prep50) registerMiddlewares() {
