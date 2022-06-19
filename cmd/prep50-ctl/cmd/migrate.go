@@ -14,12 +14,16 @@ var mT migrationTable = []dbmodel.DBModel{
 	&models.User{},
 	&models.Provider{},
 	&models.PasswordReset{},
+	&models.Exam{},
 }
 
 func migrate(cmd *cobra.Command, args []string) {
 	rollback := cmd.Flag("rollback").Value.String() == "true"
 	reset := cmd.Flag("reset").Value.String() == "true"
-	tables := strings.Split(cmd.Flag("table").Value.String(), ",")
+	tables := make([]string, 0)
+	if cmd.Flag("table").Value.String() != "" {
+		tables = strings.Split(cmd.Flag("table").Value.String(), ",")
+	}
 
 	for i := 0; i < len(mT); i++ {
 		if len(tables) > 0 {
