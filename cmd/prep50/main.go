@@ -36,7 +36,7 @@ func (prep50 *Prep50) RegisterStructValidation() {
 func (prep50 *Prep50) StartServer() {
 	serverConfigPath := "server.yml"
 	{
-		if os.Getenv("APP_ENV") == "local" {
+		if env := os.Getenv("APP_ENV"); env == "local" || env == "devel" {
 			port, err := strconv.Atoi(os.Getenv("PORT"))
 			fmt.Println(err != nil, config.Conf.App.Port != 0)
 			if err != nil && config.Conf.App.Port != 0 {
