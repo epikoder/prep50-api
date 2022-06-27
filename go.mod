@@ -1,6 +1,6 @@
 module github.com/Prep50mobileApp/prep50-api
 
-// +heroku goVersion go1.16
+// +heroku goVersion go1.18
 go 1.18
 
 require (
