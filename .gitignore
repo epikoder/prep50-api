@@ -13,8 +13,9 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-config.local.yml.bak
-config.local.yml
+config.local.*
+config.test.*
+config.devel.*
 .vscode
 logs
 .env
@@ -22,3 +23,4 @@ logs
 jwt.key
 server.crt
 server.key
+bin
