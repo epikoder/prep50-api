@@ -93,9 +93,10 @@ func init() {
 	}
 
 	path = "config.yml"
-	if os.Getenv("APP_ENV") == "local" {
-		path = "config.local.yml"
+	if env := os.Getenv("APP_ENV"); env != "production" {
+		path = "config." + env + ".yml"
 	}
+
 	var file *os.File
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
