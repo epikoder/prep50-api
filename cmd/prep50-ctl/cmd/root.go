@@ -35,5 +35,15 @@ func init() {
 	migrateCmd.Flags().BoolP("rollback", "r", false, "Rollback migrations")
 	migrateCmd.Flags().BoolP("reset", "f", false, "Reset migrations")
 	migrateCmd.Flags().StringP("table", "t", "", "Run migration on a specific table")
+
+	initializeCmd := &cobra.Command{
+		Use: "init",
+		Run: func(cmd *cobra.Command, args []string) {
+			initialize(cmd, args)
+		},
+		Short: "Initialize the application on first Run",
+	}
+
 	rootCmd.AddCommand(migrateCmd)
+	rootCmd.AddCommand(initializeCmd)
 }

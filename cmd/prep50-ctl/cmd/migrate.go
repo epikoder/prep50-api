@@ -8,13 +8,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type migrationTable []dbmodel.DBModel
+type migrationModel []dbmodel.DBModel
 
-var mT migrationTable = []dbmodel.DBModel{
+var mT migrationModel = []dbmodel.DBModel{
 	&models.User{},
 	&models.Provider{},
 	&models.PasswordReset{},
 	&models.Exam{},
+	&models.Device{},
 }
 
 func migrate(cmd *cobra.Command, args []string) {
