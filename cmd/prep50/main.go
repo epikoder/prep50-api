@@ -42,8 +42,7 @@ func (prep50 *Prep50) StartServer() {
 				port = config.Conf.App.Port
 			}
 			addr := func() string {
-				if h := config.Conf.App.Host; h != "" {
-
+				if h := config.Conf.App.Host; h != "" && env != "devel" {
 					return fmt.Sprintf("%s:%d", h, port)
 				}
 				return fmt.Sprintf(":%d", port)
@@ -53,8 +52,7 @@ func (prep50 *Prep50) StartServer() {
 		}
 	}
 
-	prep50.App.Run(iris.TLS(fmt.Sprintf("%s:443",
-		config.Conf.App.Host),
+	prep50.App.Run(iris.TLS(":443",
 		"server.crt",
 		"server.key"),
 		iris.WithConfiguration(iris.YAML(serverConfigPath)))
