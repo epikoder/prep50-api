@@ -40,6 +40,9 @@ func connectDB(db string) (g *gorm.DB, err error) {
 		DSN:               dns,
 		DefaultStringSize: 256,
 	}))
+	if err != nil {
+		return nil, err
+	}
 	g.Set("gorm:table_options", "ENGINE=InnoDB")
 	return
 }
