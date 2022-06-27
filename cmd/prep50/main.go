@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
@@ -36,11 +37,17 @@ func (prep50 *Prep50) StartServer() {
 	serverConfigPath := "server.yml"
 	{
 		if os.Getenv("APP_ENV") == "local" {
+			port, err := strconv.Atoi(os.Getenv("PORT"))
+			fmt.Println(err != nil, config.Conf.App.Port != 0)
+			if err != nil && config.Conf.App.Port != 0 {
+				port = config.Conf.App.Port
+			}
 			addr := func() string {
 				if h := config.Conf.App.Host; h != "" {
-					return fmt.Sprintf("%s:%d", h, config.Conf.App.Port)
+
+					return fmt.Sprintf("%s:%d", h, port)
 				}
-				return fmt.Sprintf(":%d", config.Conf.App.Port)
+				return fmt.Sprintf(":%d", port)
 			}
 			prep50.App.Run(iris.Addr(addr()), iris.WithConfiguration(iris.YAML(serverConfigPath)))
 			return
