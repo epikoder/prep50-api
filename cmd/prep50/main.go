@@ -38,7 +38,6 @@ func (prep50 *Prep50) StartServer() {
 	{
 		if env := os.Getenv("APP_ENV"); env == "local" || env == "devel" {
 			port, err := strconv.Atoi(os.Getenv("PORT"))
-			fmt.Println(err != nil, config.Conf.App.Port != 0)
 			if err != nil && config.Conf.App.Port != 0 {
 				port = config.Conf.App.Port
 			}
