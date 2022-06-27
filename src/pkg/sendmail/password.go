@@ -7,17 +7,13 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/eknkc/amber"
 	"github.com/google/uuid"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
-var (
-	templateDir = "./src/templates"
-)
-
-func NewSmtpClient() (*mail.SMTPClient, error) {
+func newSmtpClient() (*mail.SMTPClient, error) {
 	server := mail.NewSMTPClient()
 	server.Host = config.Conf.Mail.SmtpHost
 	server.Port = config.Conf.Mail.SmtpPort
@@ -28,23 +24,16 @@ func NewSmtpClient() (*mail.SMTPClient, error) {
 }
 
 func SendPasswordResetMail(user *models.User) (err error) {
-	temp, err := amber.CompileFile(templateDir+"/password_reset.amber", amber.Options{
-		PrettyPrint: true,
-	})
-	if err != nil {
-		return
-	}
-
 	var buf bytes.Buffer
 	code := crypto.RandomNumber(1000, 9999)
-	if err = temp.Execute(&buf, map[string]interface{}{
+	if err = page.Compile(&buf, "password_reset", map[string]interface{}{
 		"user": user,
 		"code": code,
 	}); err != nil {
 		return
 	}
 
-	smtpClient, err := NewSmtpClient()
+	smtpClient, err := newSmtpClient()
 	if err != nil {
 		return err
 	}

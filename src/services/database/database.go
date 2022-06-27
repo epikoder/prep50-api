@@ -10,16 +10,16 @@ import (
 )
 
 var (
-	DBConnection     *gorm.DB
-	DBConnectionCore *gorm.DB
+	dbConnection     *gorm.DB
+	dbConnectionCore *gorm.DB
 )
 
 func init() {
 	var err error
-	if DBConnection, err = connectDB("app"); !logger.HandleError(err) {
+	if dbConnection, err = connectDB("app"); !logger.HandleError(err) {
 		panic(err)
 	}
-	if DBConnectionCore, err = connectDB("core"); !logger.HandleError(err) {
+	if dbConnectionCore, err = connectDB("core"); !logger.HandleError(err) {
 		panic(err)
 	}
 }
@@ -46,7 +46,7 @@ func connectDB(db string) (g *gorm.DB, err error) {
 
 func UseDB(db string) *gorm.DB {
 	if db == "app" {
-		return DBConnection
+		return dbConnection
 	}
-	return DBConnectionCore
+	return dbConnectionCore
 }

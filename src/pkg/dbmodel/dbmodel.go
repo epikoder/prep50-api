@@ -28,6 +28,12 @@ type (
 		Database() *gorm.DB
 		Migrate() Migration
 	}
+
+	ModelExt interface {
+		Relations() []interface {
+			Join() string
+		}
+	}
 )
 
 func NewMigration(model DBModel) (m Migration) {
@@ -41,6 +47,14 @@ func (migration Migration) Up() (err error) {
 		return
 	}
 	fmt.Printf("%sCreating table:: %s ...%s\n", color.Yellow, name, color.Reset)
+	if i, ok := migration.model.(ModelExt); ok {
+		for _, v := range i.Relations() {
+			if err := migration.model.Database().SetupJoinTable(migration.model, v.Join(), v); err != nil {
+				fmt.Println(err)
+				return err
+			}
+		}
+	}
 	if err = migration.model.Database().Migrator().AutoMigrate(migration.model); err != nil {
 		fmt.Printf("%sError creating table:: %s \n%s", color.Red, name, color.Reset)
 		return err
@@ -51,6 +65,16 @@ func (migration Migration) Up() (err error) {
 
 func (migration Migration) Down() (err error) {
 	name := strings.Split(reflect.TypeOf(migration.model).String(), ".")[1]
+	if i, ok := migration.model.(ModelExt); ok {
+		fmt.Printf("%sDropping relational table for: %s %s\n", color.Yellow, name, color.Reset)
+		for _, v := range i.Relations() {
+			if err := migration.model.Database().Migrator().DropTable(v); err != nil {
+				return err
+			}
+		}
+		fmt.Printf("%sDropped relational table for: %s Successful ... %s\n", color.Blue, name, color.Reset)
+	}
+
 	if !migration.model.Database().Migrator().HasTable(migration.model) {
 		return
 	}

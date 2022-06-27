@@ -11,21 +11,26 @@ import (
 
 type (
 	User struct {
-		Id         uuid.UUID      `sql:"primary_key;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
+		Id         uuid.UUID      `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		UserName   string         `gorm:"type:varchar(50);column:username;notnull" json:"username"`
 		Email      string         `gorm:"type:varchar(255);column:email;unique;index;notnull;" json:"email"`
 		Phone      string         `gorm:"type:varchar(20);column:phone;unique;index;notnull" json:"phone"`
 		Photo      string         `gorm:"type:varchar(255);column:photo" json:"photo"`
 		Password   string         `gorm:"type:varchar(64);column:password" json:"-"`
 		IsProvider bool           `gorm:"type:tinyint(1);" json:"-"`
+		Locked     bool           `gorm:"type:tinyint(1);" json:"-"`
 		Providers  []Provider     `gorm:"many2many:user_providers;" json:"-"`
+		Exams      []Exam         `gorm:"many2many:user_exams;" json:"exams"`
+		Device     Device         `json:"-"`
 		CreatedAt  time.Time      `json:"-"`
 		UpdatedAt  time.Time      `json:"-"`
 		DeletedAt  gorm.DeletedAt `json:"-"`
 	}
 
 	UserProvider struct {
-		Token string
+		UserId     uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
+		ProviderId uuid.UUID `sql:"type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
+		Token      string
 	}
 
 	UserRegisterFormStruct struct {
@@ -55,4 +60,14 @@ func (u *User) Database() *gorm.DB {
 
 func (u *User) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(u)
+}
+
+func (u *User) Relations() []interface{ Join() string } {
+	return []interface{ Join() string }{
+		UserProvider{},
+	}
+}
+
+func (u UserProvider) Join() string {
+	return "Providers"
 }

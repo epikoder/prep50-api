@@ -1,17 +1,24 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
 	"github.com/kataras/iris/v12"
+)
+
+var (
+	internalServerError = apiResponse{
+		"status":  "failed",
+		"message": "error occcured",
+	}
 )
 
 func PasswordReset(ctx iris.Context) {
@@ -26,7 +33,7 @@ func PasswordReset(ctx iris.Context) {
 	}
 	user := &models.User{}
 	{
-		if ok := repository.NewRepository(user).FindByField("email = ?", prs.Email); !ok {
+		if ok := repository.NewRepository(user).FindOne("email = ?", prs.Email); !ok {
 			ctx.StatusCode(http.StatusUnauthorized)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -49,8 +56,6 @@ func PasswordReset(ctx iris.Context) {
 		Type: queue.SendMail,
 		Func: func() error {
 			return sendmail.SendPasswordResetMail(user)
-			// fmt.Println(5)
-			// return nil
 		},
 		Schedule: time.Now().Add(time.Second * 5),
 		Retries:  3,
@@ -78,19 +83,19 @@ func CompletePasswordReset(ctx iris.Context) {
 
 	{
 		pr := &models.PasswordReset{}
-		if ok := repository.NewRepository(pr).FindByField("code = ? AND email = ?", cprs.Code, cprs.Email); !ok || time.Since(pr.CreatedAt).Minutes() > 30 {
+		if ok := repository.NewRepository(pr).FindOne("code = ? AND email = ?", cprs.Code, cprs.Email); !ok || time.Since(pr.CreatedAt).Minutes() > 30 {
 			ctx.StatusCode(http.StatusBadRequest)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"message": "expired or invalid code",
 			})
 		}
-		fmt.Println(*pr)
+		return
 	}
 
 	user := &models.User{}
 	{
-		if ok := repository.NewRepository(user).FindByField("email = ?", cprs.Email); !ok {
+		if ok := repository.NewRepository(user).FindOne("email = ?", cprs.Email); !ok {
 			ctx.StatusCode(http.StatusUnauthorized)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -127,7 +132,7 @@ func CompletePasswordReset(ctx iris.Context) {
 	}
 
 	user.Password = p
-	if err := repository.NewRepository(user).Save(); err != nil {
+	if err := repository.NewRepository(user).Save(); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(apiResponse{
 			"status":  "failed",

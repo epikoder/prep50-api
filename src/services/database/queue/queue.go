@@ -3,6 +3,8 @@ package queue
 import (
 	"fmt"
 	"time"
+
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 )
 
 type (
@@ -39,7 +41,9 @@ func Run() {
 				}
 				runFunc := func() {
 					j.hasRun = true
-					if err := j.Func(); err != nil {
+					err := j.Func()
+					fmt.Println(err)
+					if !logger.HandleError(err) {
 						fmt.Println(err)
 						if j.Retries == 1 {
 							fmt.Println("retries exceeded save to db")
@@ -50,6 +54,7 @@ func Run() {
 						j.Schedule = time.Now().Add(time.Second * 5)
 						Dispatch(j)
 					}
+					fmt.Println("success")
 				}
 				fmt.Println("start")
 				if time.Since(j.Schedule).Milliseconds() < 0 {
@@ -63,6 +68,8 @@ func Run() {
 				fmt.Println("is not scheduled")
 				runFunc()
 			}
+		default:
+			time.Sleep(time.Millisecond * 500)
 		}
 	}
 

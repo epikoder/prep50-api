@@ -4,24 +4,45 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
+	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 )
 
 type (
-	apiResponse map[string]interface{}
+	apiResponse    map[string]interface{}
+	UserDeviceForm struct {
+		DeviceId   string `json:"device_id"`
+		DeviceName string `json:"device_name"`
+	}
 )
 
 const googleOAuthUrl = "https://www.googleapis.com/userinfo/v2/me"
 
 func QueryUsernameV1(ctx iris.Context) {
-
+	type QueryUsername struct {
+		UserName string `validate:"required,alphanum"`
+	}
+	data := QueryUsername{}
+	if err := ctx.ReadJSON(&data); err != nil {
+		ctx.Write([]byte("0"))
+		return
+	}
+	if ok := repository.NewRepository(&models.User{}).FindOne("username = ?", data.UserName); !ok {
+		ctx.Write([]byte("0"))
+		return
+	}
+	ctx.Write([]byte("1"))
 }
 
 func RegisterV1(ctx iris.Context) {
@@ -33,18 +54,15 @@ func RegisterV1(ctx iris.Context) {
 	}
 
 	p, err := hash.MakeHash(data.Password)
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
-		ctx.JSON(apiResponse{
-			"status":  "failed",
-			"message": "error occcured",
-		})
+		ctx.JSON(internalServerError)
 		return
 	}
 
 	var user *models.User = &models.User{}
 	{
-		if ok := repository.NewRepository(user).FindByField("username = ?", data.UserName); ok {
+		if ok := repository.NewRepository(user).FindOne("username = ?", data.UserName); ok {
 			ctx.StatusCode(http.StatusBadRequest)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -55,7 +73,7 @@ func RegisterV1(ctx iris.Context) {
 			})
 			return
 		}
-		if ok := repository.NewRepository(user).FindByField("email = ?", data.Email); ok {
+		if ok := repository.NewRepository(user).FindOne("email = ?", data.Email); ok {
 			ctx.StatusCode(http.StatusBadRequest)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -66,7 +84,7 @@ func RegisterV1(ctx iris.Context) {
 			})
 			return
 		}
-		if ok := repository.NewRepository(user).FindByField("phone = ?", data.Phone); ok {
+		if ok := repository.NewRepository(user).FindOne("phone = ?", data.Phone); ok {
 			ctx.StatusCode(http.StatusBadRequest)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -85,12 +103,9 @@ func RegisterV1(ctx iris.Context) {
 		Phone:    data.Phone,
 		Password: p,
 	}
-	if err := repository.NewRepository(user).Create(); err != nil {
+	if err := repository.NewRepository(user).Create(); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
-		ctx.JSON(apiResponse{
-			"status":  "failed",
-			"message": "error occcured",
-		})
+		ctx.JSON(internalServerError)
 		return
 	}
 	ctx.JSON(apiResponse{
@@ -103,16 +118,31 @@ func RegisterV1(ctx iris.Context) {
 }
 
 func LoginV1(ctx iris.Context) {
-	data := models.UserLoginFormStruct{}
+	type UserDeviceLoginForm struct {
+		models.UserLoginFormStruct
+		UserDeviceForm
+	}
+	data := UserDeviceLoginForm{}
 	if err := ctx.ReadJSON(&data); err != nil {
 		ctx.StatusCode(http.StatusBadRequest)
 		ctx.JSON(validation.Errors(err))
 		return
 	}
 
+	if data.DeviceId == "" || data.DeviceName == "" {
+		ctx.StatusCode(http.StatusForbidden)
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"code":    400,
+			"message": "missing/invalid device info",
+		})
+		return
+	}
 	user := &models.User{}
 	{
-		if ok := repository.NewRepository(user).FindByField("username = ?", data.UserName); !ok {
+		if ok := repository.NewRepository(user).
+			Preload("Device", "Exam").
+			FindOne("username = ?", data.UserName); !ok {
 			ctx.StatusCode(http.StatusUnauthorized)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -123,6 +153,7 @@ func LoginV1(ctx iris.Context) {
 
 		if user.IsProvider {
 			ctx.StatusCode(http.StatusNotAcceptable)
+			// TODO: Return provider
 			// ctx.JSON(apiResponse{
 			// 	"status":  "failed",
 			// 	"message": "",
@@ -139,15 +170,65 @@ func LoginV1(ctx iris.Context) {
 			return
 		}
 	}
+
 	token, err := ijwt.GenerateToken(user)
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
-		ctx.JSON(apiResponse{
-			"status":  "failed",
-			"message": "error occcured",
-		})
+		ctx.JSON(internalServerError)
 		return
 	}
+
+	{
+		if user.Device.Id == uuid.Nil {
+			device := &models.Device{}
+			if ok := repository.NewRepository(device).FindOne("identifier = ?", data.DeviceId); ok && device.UserID != user.Id {
+				ctx.StatusCode(http.StatusForbidden)
+				ctx.JSON(apiResponse{
+					"status":  "failed",
+					"code":    401,
+					"message": "this device is currently registered to another user",
+				})
+				return
+			}
+			user.Device = models.Device{
+				Id:         uuid.New(),
+				UserID:     user.Id,
+				Identifier: data.DeviceId,
+				Token:      token.Refresh,
+				Name:       data.DeviceName,
+			}
+
+			if err := repository.NewRepository(&user.Device).Save(); !logger.HandleError(err) {
+				ctx.StatusCode(http.StatusInternalServerError)
+				ctx.JSON(internalServerError)
+				return
+			}
+		} else if user.Device.Identifier == data.DeviceId &&
+			strings.TrimSpace(strings.ToLower(user.Device.Name)) == strings.TrimSpace(strings.ToLower(data.DeviceName)) {
+			user.Device.UpdatedAt = time.Now()
+			user.Device.Token = token.Refresh
+			if err := repository.NewRepository(&user.Device).Save(); !logger.HandleError(err) {
+				ctx.StatusCode(http.StatusInternalServerError)
+				ctx.JSON(internalServerError)
+				return
+			}
+		} else {
+			queue.Dispatch(queue.Job{
+				Type: queue.SendMail,
+				Func: func() error {
+					return sendmail.SendNewDeviceMail(user)
+				},
+			})
+			ctx.StatusCode(http.StatusForbidden)
+			ctx.JSON(apiResponse{
+				"status":  "failed",
+				"code":    402,
+				"message": "new device detected",
+			})
+			return
+		}
+	}
+
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "logged in successfully",
@@ -164,6 +245,7 @@ func SocialV1(ctx iris.Context) {
 	case "google":
 		type GoogleAuth struct {
 			Code string `validate:"required"`
+			UserDeviceForm
 		}
 		gA := GoogleAuth{}
 		if err := ctx.ReadJSON(&gA); err != nil {
@@ -207,6 +289,11 @@ func SocialV1(ctx iris.Context) {
 		}
 		defer res.Body.Close()
 		b, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			ctx.StatusCode(http.StatusInternalServerError)
+			ctx.JSON(internalServerError)
+			return
+		}
 		fmt.Println(string(b))
 	}
 }

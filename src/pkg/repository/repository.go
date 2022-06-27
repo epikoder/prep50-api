@@ -29,10 +29,15 @@ func (r *repository) Get(i interface{}, condition ...string) (err error) {
 	return
 }
 
-func (r *repository) FindByField(i ...interface{}) (ok bool) {
+func (r *repository) FindOne(i ...interface{}) (ok bool) {
 	r.DB.First(r.Model, i...)
 	return r.Model.ID() != uuid.Nil
 }
+
+func (r *repository) FindMany(i ...interface{}) error {
+	return r.DB.Find(r.Model, i...).Error
+}
+
 func (r *repository) Create() error {
 	return r.DB.Create(r.Model).Error
 }

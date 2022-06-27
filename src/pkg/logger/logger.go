@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -26,7 +25,7 @@ func HandleError(err error) (ok bool) {
 
 	if err != nil {
 		pc, fn, line, _ := runtime.Caller(1)
-		fmt.Printf("ERROR in %s \n[ %s:%d ] \n%v", runtime.FuncForPC(pc).Name(), fn, line, err)
+		log.Default().Printf("ERROR: %s\n[\n	%s:%d \n	%v\n]", runtime.FuncForPC(pc).Name(), fn, line, err)
 		return false
 	}
 	return true
