@@ -21,7 +21,7 @@ type (
 	}
 )
 
-func (d *Device) ID() uuid.UUID {
+func (d *Device) ID() interface{} {
 	return d.Id
 }
 

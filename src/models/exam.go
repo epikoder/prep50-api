@@ -18,7 +18,7 @@ type (
 	}
 )
 
-func (e *Exam) ID() uuid.UUID {
+func (e *Exam) ID() interface{} {
 	return e.Id
 }
 

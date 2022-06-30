@@ -18,7 +18,7 @@ type (
 	}
 )
 
-func (p *PasswordReset) ID() uuid.UUID {
+func (p *PasswordReset) ID() interface{} {
 	return p.Id
 }
 

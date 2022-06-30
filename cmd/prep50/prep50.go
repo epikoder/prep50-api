@@ -1,4 +1,4 @@
-package main
+package prep50
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/routes"
-	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 )
@@ -18,14 +17,8 @@ type Prep50 struct {
 	App *iris.Application
 }
 
-func main() {
-	prep50 := &Prep50{iris.New()}
-	prep50.registerAppRoutes()
-	prep50.registerMiddlewares()
-	prep50.RegisterStructValidation()
-	prep50.AuthConfig()
-	go queue.Run()
-	prep50.StartServer()
+func NewApp() *Prep50 {
+	return &Prep50{iris.New()}
 }
 
 func (prep50 *Prep50) RegisterStructValidation() {
@@ -36,13 +29,13 @@ func (prep50 *Prep50) RegisterStructValidation() {
 func (prep50 *Prep50) StartServer() {
 	serverConfigPath := "server.yml"
 	{
-		if env := os.Getenv("APP_ENV"); env == "local" || env == "devel" {
+		if env := os.Getenv("APP_ENV"); env != "production" || env == "" {
 			port, err := strconv.Atoi(os.Getenv("PORT"))
 			if err != nil && config.Conf.App.Port != 0 {
 				port = config.Conf.App.Port
 			}
 			addr := func() string {
-				if h := config.Conf.App.Host; h != "" && env != "devel" {
+				if h := config.Conf.App.Host; h != "" {
 					return fmt.Sprintf("%s:%d", h, port)
 				}
 				return fmt.Sprintf(":%d", port)
@@ -58,11 +51,11 @@ func (prep50 *Prep50) StartServer() {
 		iris.WithConfiguration(iris.YAML(serverConfigPath)))
 }
 
-func (prep50 *Prep50) registerMiddlewares() {
+func (prep50 *Prep50) RegisterMiddlewares() {
 	prep50.App.UseGlobal(middlewares.CORS)
 }
 
-func (prep50 *Prep50) registerAppRoutes() {
+func (prep50 *Prep50) RegisterAppRoutes() {
 	routes.RegisterApiRoutes(prep50.App)
 }
 

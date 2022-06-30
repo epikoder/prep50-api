@@ -14,7 +14,7 @@ type (
 	}
 )
 
-func (p *Provider) ID() uuid.UUID {
+func (p *Provider) ID() interface{} {
 	return p.Id
 }
 

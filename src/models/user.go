@@ -46,7 +46,7 @@ type (
 	}
 )
 
-func (u *User) ID() uuid.UUID {
+func (u *User) ID() interface{} {
 	return u.Id
 }
 

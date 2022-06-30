@@ -14,4 +14,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	app.Get("/password-reset", middlewares.RateLimiter(), controllers.PasswordReset)
 	app.Post("/password-reset", middlewares.RateLimiter(), controllers.CompletePasswordReset)
+
+	resources := app.Party("/resources")
+	resources.Get("/subjects", controllers.GetSubjects)
 }

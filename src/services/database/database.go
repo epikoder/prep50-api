@@ -25,6 +25,9 @@ func init() {
 }
 
 func connectDB(db string) (g *gorm.DB, err error) {
+	if config.Conf == nil {
+		return nil, fmt.Errorf("config not initialized")
+	}
 	dns := (func() string {
 		if config.Conf.Database.UseDB(db).Url != "" {
 			return config.Conf.Database.UseDB(db).Url

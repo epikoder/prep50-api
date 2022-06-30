@@ -1,25 +1,25 @@
 app:
   name: Prep50
-  host: api.prep50.com
+  host:
   port: 8081
   key: ""
   version: 1
   defaultApiVersion: 1.0.0
 database:
   core:
-    url: ikr3vl8eozfc3qba:t1rfqfvoq10tqe90@tcp(cxmgkzhk95kfgbq4.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/ngbrgd16w9e3o40v?parseTime=true
-    name:
-    user:
+    url:
+    name: prep50
+    user: root
     host:
-    port:
-    password:
+    port: 3306
+    password: beLL1923
   app:
-    url: h4b2q7rlnq2esxvw:zkg6z2hznlawr3se@tcp(kfgk8u2ogtoylkq9.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/xpjrbt2hy7943y8b?parseTime=true
-    name:
-    user:
+    url:
+    name: prep50core
+    user: root
     host:
-    port:
-    password:
+    port: 3306
+    password: beLL1923
 throttle:
   limit: 20
   burst: 5

@@ -30,8 +30,12 @@ func (r *repository) Get(i interface{}, condition ...string) (err error) {
 }
 
 func (r *repository) FindOne(i ...interface{}) (ok bool) {
-	r.DB.First(r.Model, i...)
-	return r.Model.ID() != uuid.Nil
+	tx := r.DB.First(r.Model, i...)
+	uid, ok := r.Model.ID().(uuid.UUID)
+	if !ok {
+		return tx.Error == nil
+	}
+	return uid != uuid.Nil
 }
 
 func (r *repository) FindMany(i ...interface{}) error {

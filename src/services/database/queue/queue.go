@@ -28,7 +28,10 @@ var (
 )
 
 func Dispatch(j Job) {
-	_queue <- j
+	select {
+	case _queue <- j:
+	default:
+	}
 }
 
 func Run() {

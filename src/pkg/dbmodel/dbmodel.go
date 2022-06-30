@@ -7,7 +7,6 @@ import (
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +22,7 @@ type (
 	}
 
 	DBModel interface {
-		ID() uuid.UUID
+		ID() interface{}
 		Tag() string
 		Database() *gorm.DB
 		Migrate() Migration

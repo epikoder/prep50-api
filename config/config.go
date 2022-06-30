@@ -93,7 +93,7 @@ func init() {
 	}
 
 	path = "config.yml"
-	if env := os.Getenv("APP_ENV"); env != "production" {
+	if env := os.Getenv("APP_ENV"); env == "" || env != "production" {
 		path = "config." + env + ".yml"
 	}
 
