@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
+	"github.com/Prep50mobileApp/prep50-api/src/services/payment"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
@@ -19,6 +20,8 @@ type (
 		Cors     cors
 		Jwt      jwt
 		Mail     mail
+		Payment  payment.PaymentConfig
+		Redis    redis
 	}
 )
 
@@ -71,6 +74,13 @@ type (
 		SmtpPort int    `yaml:"smtpPort"`
 		Password string
 	}
+
+	redis struct {
+		Host     string
+		Port     int
+		Password string
+		Database int
+	}
 )
 
 var (
@@ -93,11 +103,16 @@ func init() {
 	}
 
 	path = "config.yml"
-	if env := os.Getenv("APP_ENV"); env == "" || env != "production" {
+	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
 		path = "config." + env + ".yml"
 	}
 
 	var file *os.File
+	defer func() {
+		if file != nil {
+			file.Close()
+		}
+	}()
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
@@ -111,10 +126,15 @@ func init() {
 	}
 }
 
-func Save() {
+func Update() {
 	var file *os.File
 	var err error
 
+	defer func() {
+		if file != nil {
+			file.Close()
+		}
+	}()
 	__DIR__, err := os.Getwd()
 	if !logger.HandleError(err) {
 		panic(err)
