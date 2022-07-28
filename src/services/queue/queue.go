@@ -45,30 +45,24 @@ func Run() {
 				runFunc := func() {
 					j.hasRun = true
 					err := j.Func()
-					fmt.Println(err)
 					if !logger.HandleError(err) {
-						fmt.Println(err)
 						if j.Retries == 1 {
+							// TODO: save to db
 							fmt.Println("retries exceeded save to db")
 							return
 						}
-						fmt.Println("retrying failed job")
 						j.Retries--
 						j.Schedule = time.Now().Add(time.Second * 5)
 						Dispatch(j)
 					}
-					fmt.Println("success")
 				}
-				fmt.Println("start")
 				if time.Since(j.Schedule).Milliseconds() < 0 {
-					fmt.Println("is scheduled")
 					go func() {
 						time.Sleep(time.Duration(-time.Since(j.Schedule).Milliseconds() * int64(time.Millisecond)))
 						runFunc()
 					}()
 					continue
 				}
-				fmt.Println("is not scheduled")
 				runFunc()
 			}
 		default:
@@ -80,4 +74,8 @@ func Run() {
 
 func Len() int {
 	return len(_queue)
+}
+
+func SetDefaultRetries(i int) {
+	defaultRetries = i
 }

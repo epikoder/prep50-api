@@ -33,6 +33,14 @@ type (
 			Join() string
 		}
 	}
+
+	ModelColumnMigration interface {
+		MigrateColumn() IMigrateColumnMigration
+	}
+	IMigrateColumnMigration interface {
+		Up() []string
+		Down() []string
+	}
 )
 
 func NewMigration(model DBModel) (m Migration) {
@@ -54,6 +62,7 @@ func (migration Migration) Up() (err error) {
 			}
 		}
 	}
+
 	if err = migration.model.Database().Migrator().AutoMigrate(migration.model); err != nil {
 		fmt.Printf("%sError creating table:: %s \n%s", color.Red, name, color.Reset)
 		return err
@@ -83,6 +92,28 @@ func (migration Migration) Down() (err error) {
 		return err
 	}
 	fmt.Printf("%sDrop table:: %s successful%s\n", color.Blue, name, color.Reset)
+	return
+}
+
+func (migration Migration) MigrateColumnUp() (err error) {
+	if i, ok := migration.model.(ModelColumnMigration); ok && migration.model.Database().Migrator().HasTable(migration.model) {
+		for _, c := range i.MigrateColumn().Up() {
+			if err = _addColumnsToTable(migration.model.Database(), migration.model, c); err != nil {
+				return err
+			}
+		}
+	}
+	return
+}
+
+func (migration Migration) MigrateColumnDown() (err error) {
+	if i, ok := migration.model.(ModelColumnMigration); ok && migration.model.Database().Migrator().HasTable(migration.model) {
+		for _, c := range i.MigrateColumn().Up() {
+			if err = _dropColumnsFromTable(migration.model.Database(), migration.model, c); err != nil {
+				return err
+			}
+		}
+	}
 	return
 }
 

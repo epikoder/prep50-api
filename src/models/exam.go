@@ -11,11 +11,16 @@ import (
 
 type (
 	Exam struct {
-		Id        uuid.UUID
-		Name      string `gorm:"unique;index;notnull"`
-		CreatedAt time.Time
-		UpdatedAt time.Time
+		Id           uuid.UUID `sql:"type:uuid;" gorm:"unique" json:"-"`
+		Name         string    `gorm:"unique;index;notnull" json:"name"`
+		Price        int       `json:"price"`
+		SubjectCount int       `json:"subject_count"`
+		Status       bool      `json:"status"`
+		CreatedAt    time.Time `json:"-"`
+		UpdatedAt    time.Time `json:"-"`
 	}
+
+	ExamPackage struct{}
 )
 
 func (e *Exam) ID() interface{} {
@@ -23,7 +28,7 @@ func (e *Exam) ID() interface{} {
 }
 
 func (e *Exam) Tag() string {
-	return "exam_types"
+	return "exams"
 }
 
 func (e *Exam) Database() *gorm.DB {

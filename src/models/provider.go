@@ -9,7 +9,7 @@ import (
 
 type (
 	Provider struct {
-		Id   uuid.UUID `sql:"primary_key;index;type:uuid;default:uuid_generate_v4()" json:"-"`
+		Id   uuid.UUID `sql:"primary_key;index;unique;type:uuid;default:uuid_generate_v4()" json:"-"`
 		Name string    `gorm:"type:varchar(50);column:name" json:"name"`
 	}
 )

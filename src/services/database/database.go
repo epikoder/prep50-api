@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -51,8 +52,17 @@ func connectDB(db string) (g *gorm.DB, err error) {
 }
 
 func UseDB(db string) *gorm.DB {
+	debug := func(env string) bool {
+		return env != "" && env != "production"
+	}(os.Getenv("APP_ENV"))
 	if db == "app" {
+		if debug {
+			return dbConnection.Debug()
+		}
 		return dbConnection
+	}
+	if debug {
+		return dbConnectionCore.Debug()
 	}
 	return dbConnectionCore
 }

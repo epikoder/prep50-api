@@ -38,6 +38,8 @@ func getErrorMessage(err validator.FieldError) string {
 		default:
 			return "lenght is too short"
 		}
+	case "number":
+		return "numeric required"
 	default:
 		return fmt.Sprintf("validation failed for %s", err.Tag())
 	}

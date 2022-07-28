@@ -11,11 +11,10 @@ import (
 
 type (
 	Device struct {
-		Id         uuid.UUID
-		UserID     uuid.UUID `sql:"primary_key" gorm:"unique;index;notnull"`
+		Id         uuid.UUID `sql:"primary_key" gorm:"unique;index;notnull"`
+		UserID     uuid.UUID `gorm:"unique;index;notnull"`
 		Identifier string    `gorm:"unique;index;notnull"`
 		Name       string
-		Token      string `gorm:"type:text"`
 		CreatedAt  time.Time
 		UpdatedAt  time.Time
 	}

@@ -1,10 +1,11 @@
 package ijwt
 
 import (
+	"crypto/ecdsa"
+	"fmt"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/src/models"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/jwt"
@@ -29,23 +30,25 @@ var (
 	JwtGuardMiddleware iris.Handler
 	accessExpires      int = 15
 	refreshExpires     int = 168
+	secret             *ecdsa.PrivateKey
 )
 
 func init() {
-	secret, err := jwt.LoadPrivateKeyECDSA("jwt.key")
-	if err != nil {
-		logger.HandleError(err)
-		if secret, err = crypto.KeyGen(true); err != nil {
-			panic(err)
-		}
+	var err error
+	secret, err = jwt.LoadPrivateKeyECDSA("jwt.key")
+	if !logger.HandleError(err) {
+		panic(err)
 	}
-	AccessSigner = jwt.NewSigner(jwt.ES256, secret, 15*time.Minute)
 	Verifier := jwt.NewVerifier(jwt.ES256, secret)
-	Verifier.WithDefaultBlocklist()
+	Verifier = Verifier.WithDefaultBlocklist()
 	JwtGuardMiddleware = Verifier.Verify(func() interface{} {
 		return new(JWTClaims)
 	})
-	RefreshSigner = jwt.NewSigner(jwt.ES256, secret, 7*24*time.Hour)
+}
+
+func InitializeSigners() {
+	AccessSigner = jwt.NewSigner(jwt.ES256, secret, time.Duration(accessExpires)*time.Minute)
+	RefreshSigner = jwt.NewSigner(jwt.ES256, secret, time.Duration(refreshExpires)*time.Minute)
 }
 
 func SetAccessLife(d int) {
@@ -56,25 +59,38 @@ func SetRefreshLife(d int) {
 	refreshExpires = d
 }
 
-func GenerateToken(user *models.User) (token *JwtToken, err error) {
+func GenerateToken(i interface{}, key string) (token *JwtToken, err error) {
 	token = &JwtToken{}
 	{
-		claims := JWTClaims{user}
-		t, err := AccessSigner.Sign(claims)
+		claims := JWTClaims{i}
+		var buf = []byte{}
+		buf, err = AccessSigner.Sign(claims)
 		if err != nil {
 			return nil, err
 		}
-		token.Access = string(t)
+		token.Access = string(buf)
 		token.ExpiresAt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
+		fmt.Println(token.ExpiresAt, time.Duration(token.ExpiresAt.Unix()))
+		if err = cache.Set(fmt.Sprintf("%s.access", key), token.Access, Duration(token.ExpiresAt.Unix())); err != nil {
+			return
+		}
 	}
 	{
-		claims := JWTClaims{user}
-		t, err := RefreshSigner.Sign(claims)
+		claims := JWTClaims{i}
+		var buf = []byte{}
+		buf, err = RefreshSigner.Sign(claims)
 		if err != nil {
 			return nil, err
 		}
-		token.Refresh = string(t)
-		token.ExpiresRt = time.Now().Add(time.Duration(refreshExpires) * time.Hour)
+		token.Refresh = string(buf)
+		token.ExpiresRt = time.Now().Add(time.Duration(refreshExpires) * time.Minute)
+		if err = cache.Set(fmt.Sprintf("%s.refresh", key), token.Refresh, Duration(token.ExpiresRt.Unix())); err != nil {
+			return
+		}
 	}
 	return
+}
+
+func Duration(unix int64) time.Duration {
+	return time.Until(time.Unix(unix, 0))
 }

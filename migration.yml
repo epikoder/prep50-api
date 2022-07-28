@@ -1,0 +1,12 @@
+models:
+  - User
+  - Role
+  - Permission
+  - Provider
+  - PasswordReset
+  - Exam
+  - Device
+  - UserSubject
+  - Transaction
+  - WeeklyQuiz
+  - WeeklyQuestion

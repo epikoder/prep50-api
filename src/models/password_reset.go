@@ -11,7 +11,7 @@ import (
 
 type (
 	PasswordReset struct {
-		Id        uuid.UUID `sql:"primary_key;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
+		Id        uuid.UUID `sql:"primary_key;unique;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
 		Code      int       `gorm:"type:int(4);column:code;notnull;"`
 		Email     string    `gorm:"type:varchar(255);column:email;notnull;"`
 		CreatedAt time.Time
