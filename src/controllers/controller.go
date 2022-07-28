@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,14 +11,37 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
-	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
+	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
+	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+)
+
+type (
+	query struct {
+		Id      uuid.UUID
+		ExamId  uuid.UUID
+		Name    string
+		Session int
+		Status  bool
+	}
 )
 
 var (
 	internalServerError = apiResponse{
 		"status":  "failed",
 		"message": "error occcured",
+	}
+
+	getUser = func(ctx iris.Context) (u *models.User, err error) {
+		i, err := ctx.User().GetRaw()
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		if u, ok = i.(*models.User); !ok {
+			return nil, fmt.Errorf("user is nil")
+		}
+		return u, nil
 	}
 )
 
@@ -37,7 +61,7 @@ func PasswordReset(ctx iris.Context) {
 			ctx.StatusCode(http.StatusUnauthorized)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
-				"message": "user does not exist",
+				"message": "user not found",
 			})
 			return
 		}
@@ -46,7 +70,8 @@ func PasswordReset(ctx iris.Context) {
 			ctx.StatusCode(http.StatusForbidden)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
-				"message": "",
+				"code":    400,
+				"message": "password reset for available for this account",
 			})
 			return
 		}
@@ -63,7 +88,7 @@ func PasswordReset(ctx iris.Context) {
 
 	ctx.JSON(apiResponse{
 		"status":  "success",
-		"message": "Enter the code sent to your email address to continue",
+		"message": "Use the code sent to your email address to continue",
 	})
 }
 
@@ -108,7 +133,8 @@ func CompletePasswordReset(ctx iris.Context) {
 			ctx.StatusCode(http.StatusForbidden)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
-				"message": "",
+				"code":    400,
+				"message": "password reset for available for this account",
 			})
 			return
 		}
@@ -116,6 +142,7 @@ func CompletePasswordReset(ctx iris.Context) {
 			ctx.StatusCode(http.StatusForbidden)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
+				"code":    401,
 				"message": "New password is same as old password",
 			})
 			return

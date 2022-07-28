@@ -8,12 +8,34 @@ import (
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/iris-contrib/middleware/throttler"
 	"github.com/kataras/iris/v12"
 
 	"github.com/throttled/throttled/v2"
 	"github.com/throttled/throttled/v2/store/memstore"
+)
+
+type apiResponse map[string]interface{}
+
+var (
+	internalServerError = apiResponse{
+		"status":  "failed",
+		"message": "error occcured",
+	}
+
+	getUser = func(ctx iris.Context) (u *models.User, err error) {
+		i, err := ctx.User().GetRaw()
+		if err != nil {
+			return nil, err
+		}
+		var ok bool
+		if u, ok = i.(*models.User); !ok {
+			return nil, fmt.Errorf("user is nil")
+		}
+		return u, nil
+	}
 )
 
 func init() {

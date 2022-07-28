@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
@@ -14,7 +13,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
-	"github.com/Prep50mobileApp/prep50-api/src/services/database/queue"
+	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 )
@@ -96,12 +95,26 @@ func RegisterV1(ctx iris.Context) {
 			return
 		}
 	}
+	var referral string = ""
+	if data.Referral != "" {
+		u := models.User{}
+		if repository.NewRepository(&u).FindOne("username = ?", data.Referral) {
+			referral = u.UserName
+			defer func() {
+				{
+					// TODO: credit referral
+				}
+			}()
+		}
+	}
+
 	user = &models.User{
 		Id:       uuid.New(),
 		UserName: data.UserName,
 		Email:    data.Email,
 		Phone:    data.Phone,
 		Password: p,
+		Referral: referral,
 	}
 	if err := repository.NewRepository(user).Create(); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
@@ -118,10 +131,18 @@ func RegisterV1(ctx iris.Context) {
 }
 
 func LoginV1(ctx iris.Context) {
-	type UserDeviceLoginForm struct {
-		models.UserLoginFormStruct
-		UserDeviceForm
-	}
+	type (
+		UserDeviceLoginForm struct {
+			models.UserLoginFormStruct
+			UserDeviceForm
+		}
+		userWithExam struct {
+			models.User
+			Exam         []models.UserExam `json:"exams"`
+			RegisterExam bool              `json:"register_exam"`
+		}
+	)
+
 	data := UserDeviceLoginForm{}
 	if err := ctx.ReadJSON(&data); err != nil {
 		ctx.StatusCode(http.StatusBadRequest)
@@ -138,11 +159,12 @@ func LoginV1(ctx iris.Context) {
 		})
 		return
 	}
-	user := &models.User{}
+	var user = &models.User{}
 	{
 		if ok := repository.NewRepository(user).
-			Preload("Device", "Exam").
-			FindOne("username = ?", data.UserName); !ok {
+			Preload("Device").
+			Preload("Exams").
+			FindOne("username = ? OR email = ?", data.UserName, data.UserName); !ok {
 			ctx.StatusCode(http.StatusUnauthorized)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -171,7 +193,9 @@ func LoginV1(ctx iris.Context) {
 		}
 	}
 
-	token, err := ijwt.GenerateToken(user)
+	userExams := []models.UserExam{}
+	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	token, err := ijwt.GenerateToken(&userWithExam{*user, userExams, len(userExams) == 0}, user.UserName)
 	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
@@ -194,7 +218,6 @@ func LoginV1(ctx iris.Context) {
 				Id:         uuid.New(),
 				UserID:     user.Id,
 				Identifier: data.DeviceId,
-				Token:      token.Refresh,
 				Name:       data.DeviceName,
 			}
 
@@ -203,16 +226,8 @@ func LoginV1(ctx iris.Context) {
 				ctx.JSON(internalServerError)
 				return
 			}
-		} else if user.Device.Identifier == data.DeviceId &&
-			strings.TrimSpace(strings.ToLower(user.Device.Name)) == strings.TrimSpace(strings.ToLower(data.DeviceName)) {
-			user.Device.UpdatedAt = time.Now()
-			user.Device.Token = token.Refresh
-			if err := repository.NewRepository(&user.Device).Save(); !logger.HandleError(err) {
-				ctx.StatusCode(http.StatusInternalServerError)
-				ctx.JSON(internalServerError)
-				return
-			}
-		} else {
+		} else if user.Device.Identifier != data.DeviceId ||
+			!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName))) {
 			queue.Dispatch(queue.Job{
 				Type: queue.SendMail,
 				Func: func() error {
