@@ -99,33 +99,20 @@ func MustSubscribe(ctx iris.Context) {
 	if data.WithLesson {
 		user, _ := getUser(ctx)
 		session := settings.Get("examSession", time.Now().Year())
-		userExams := []models.UserExam{}
+		userExam := &models.UserExam{}
 		if err := database.UseDB("app").
-			Find(&userExams, "user_id = ? AND session = ? AND payment_status = ?",
+			Find(userExam, "user_id = ? AND session = ? AND payment_status = ?",
 				user.Id, session, models.Completed).Error; err != nil {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return
 		}
-		if len(userExams) == 0 {
-			ctx.StatusCode(http.StatusForbidden)
-			ctx.JSON(apiResponse{
-				"status":  "failed",
-				"code":    402,
-				"message": "No exam registered",
-			})
-			return
-		}
-		paid := false
-		for _, ue := range userExams {
-			paid = ue.PaymentStatus == models.Completed || paid
-		}
-		if !paid {
+		if userExam.Id == uuid.Nil {
 			ctx.StatusCode(http.StatusForbidden)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    403,
-				"message": "Please complete payment for one of selected exam",
+				"message": "Please complete payment for registered exam",
 			})
 			return
 		}
