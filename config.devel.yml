@@ -1,10 +1,10 @@
 app:
-  name: Prep50
-  host: api.prep50.com
-  port: 8081
-  key: ""
-  version: 1
-  defaultApiVersion: 1.0.0
+    name: Prep50
+    host: ""
+    port: 8081
+    key: ""
+    version: "1"
+    defaultApiVersion: 1.0.0
 database:
   core:
     url: ikr3vl8eozfc3qba:t1rfqfvoq10tqe90@tcp(cxmgkzhk95kfgbq4.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/ngbrgd16w9e3o40v?parseTime=true
@@ -21,24 +21,34 @@ database:
     port:
     password:
 throttle:
-  limit: 20
-  burst: 5
-cors:
-  origins:
-    - prep50.com
-  headers: "Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token"
-  allowCredentials: "true"
+    limit: 20
+    burst: 5
 aes:
-  key:
-  iv:
-# JWT expiration time in minutes
+    key: ""
+    iv: ""
+cors:
+    origins:
+        - prep50.com
+    headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token
+    allowCredentials: "true"
 jwt:
-  access: 15
-  refresh: 168
-
+    access: 15
+    refresh: 168
 mail:
-  username: youremail@gmail.com
-  password: youremailpasswordOrGmailAppPassword
-  from: prep50
-  smtpHost: smtp.gmail.com
-  smtpPort: 587
+    username: efedua.bell@gmail.com
+    from: prep50
+    smtpHost: smtp.gmail.com
+    smtpPort: 587
+    password: 
+redis:
+    host: 127.0.0.1
+    port: 6379
+    database: 0
+payment:
+    paystack:
+        live:
+            pk_key: ""
+            sk_key: ""
+        sandbox:
+            pk_key: ""
+            sk_key: ""
