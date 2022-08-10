@@ -40,6 +40,11 @@ var (
 		"Transaction":    &models.Transaction{},
 		"WeeklyQuiz":     &models.WeeklyQuiz{},
 		"WeeklyQuestion": &models.WeeklyQuestion{},
+		"Mock":           &models.Mock{},
+		"MockQuestion":   &models.MockQuestion{},
+		"Podcast":        &models.Podcast{},
+		"GeneralSetting": &models.GeneralSetting{},
+		"Newsfeed":       &models.Newsfeed{},
 	}
 	mT migrationModel = []dbmodel.DBModel{}
 )

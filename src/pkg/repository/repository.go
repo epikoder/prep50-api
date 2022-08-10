@@ -72,3 +72,7 @@ func (r *repository) Save(data ...Type) error {
 	}
 	return r.DB.Save(r.Model).Error
 }
+
+func (r *repository) Delete(v interface{}, args ...interface{}) error {
+	return r.DB.Delete(v, args...).Error
+}

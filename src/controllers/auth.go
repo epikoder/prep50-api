@@ -29,19 +29,11 @@ type (
 const googleOAuthUrl = "https://www.googleapis.com/userinfo/v2/me"
 
 func QueryUsernameV1(ctx iris.Context) {
-	type QueryUsername struct {
-		UserName string `validate:"required,alphanum"`
-	}
-	data := QueryUsername{}
-	if err := ctx.ReadJSON(&data); err != nil {
-		ctx.Write([]byte("0"))
+	if ok := repository.NewRepository(&models.User{}).FindOne("username = ? OR email = ?", ctx.URLParam("query"), ctx.URLParam("query")); ok {
+		ctx.Write([]byte("false"))
 		return
 	}
-	if ok := repository.NewRepository(&models.User{}).FindOne("username = ?", data.UserName); !ok {
-		ctx.Write([]byte("0"))
-		return
-	}
-	ctx.Write([]byte("1"))
+	ctx.Write([]byte("true"))
 }
 
 func RegisterV1(ctx iris.Context) {
@@ -255,7 +247,6 @@ func SocialV1(ctx iris.Context) {
 	provider := ctx.Params().Get("provider")
 	var providers []*models.Provider = []*models.Provider{}
 	repository.NewRepository(&models.Provider{}).Get(&providers)
-	fmt.Println(providers)
 	switch provider {
 	case "google":
 		type GoogleAuth struct {

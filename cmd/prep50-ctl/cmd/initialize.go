@@ -24,14 +24,14 @@ var (
 		{
 			Id:           uuid.New(),
 			Name:         "WAEC",
-			Price:        1000,
+			Amount:       1000,
 			SubjectCount: 9,
 			Status:       true,
 		},
 		{
 			Id:           uuid.New(),
 			Name:         "JAMB",
-			Price:        1000,
+			Amount:       1000,
 			SubjectCount: 4,
 			Status:       true,
 		},
@@ -76,6 +76,8 @@ func initializeExams(cmd *cobra.Command, args []string) {
 }
 
 func initializeAdmin(cmd *cobra.Command, args []string) {
+	gs := &models.GeneralSetting{}
+	repository.NewRepository(gs).Create()
 	var user = &models.User{}
 	var role = &models.Role{}
 	var permission = &models.Permission{}

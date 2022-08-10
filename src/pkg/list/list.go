@@ -99,3 +99,20 @@ func DeleteInt(s []int, index int) []int {
 	ret = append(ret, s[:index]...)
 	return append(ret, s[index+1:]...)
 }
+
+func DeleteUint(s []uint, index int) []uint {
+	ret := make([]uint, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
+}
+
+func Slug(s string) string {
+	s = strings.ReplaceAll(s, " ", "-")
+	s = strings.ReplaceAll(s, "/", "")
+	s = strings.ReplaceAll(s, "\\", "")
+	s = strings.ReplaceAll(s, ";", "")
+	s = strings.ReplaceAll(s, "^", "")
+	s = strings.ReplaceAll(s, "%", "")
+	s = strings.ToLower(s)
+	return s
+}

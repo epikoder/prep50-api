@@ -11,16 +11,18 @@ import (
 
 type (
 	WeeklyQuiz struct {
-		Id            uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
-		Prize         uint      `json:"prize"`
-		Message       string    `json:"message"`
-		QuestionCount uint      `json:"question_count"`
-		Duration      uint      `json:"duration"`
-		Completed     bool      `json:"completed"`
-		StartTime     time.Time `json:"start_time"`
-		CreatedAt     time.Time `json:"-"`
-		UpdatedAt     time.Time `json:"-"`
-		CreatedBy     string    `json:"-"`
+		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
+		Prize     uint      `json:"prize"`
+		Message   string    `json:"message"`
+		Duration  uint      `json:"duration"`
+		StartTime time.Time `json:"start_time"`
+		Week      uint      `json:"week"`
+		Session   uint      `json:"session"`
+		Results   []User    `gorm:"many2many:weekly_quizz_results;foreignKey:Id;" json:"results"`
+		CreatedAt time.Time `json:"-"`
+		UpdatedAt time.Time `json:"-"`
+		CreatedBy string    `json:"-"`
+		UpdatedBy string    `json:"-"`
 	}
 
 	WeeklyQuestion struct {
@@ -29,12 +31,26 @@ type (
 		CreatedBy  string
 	}
 
+	WeeklyQuizResult struct {
+		WeeklyQuizId uuid.UUID `gorm:"type:varchar(36);index;"`
+		UserId       uuid.UUID `gorm:"type:varchar(36);index;"`
+		Score        uint
+		Duration     uint
+	}
+
 	WeeklyQuizFormStruct struct {
-		Prize          uint `validate:"required,number"`
-		Message        string
-		Question_Count uint `validate:"required,number"`
-		Duration       uint `validate:"required,number"`
-		Start_Time     time.Time
+		Prize      uint `validate:"required,number"`
+		Message    string
+		Duration   uint `validate:"required,number"`
+		Start_Time time.Time
+	}
+
+	WeeklyQuizUpdateForm struct {
+		Id         uuid.UUID `validate:"required"`
+		Prize      uint
+		Message    string
+		Duration   uint
+		Start_Time time.Time
 	}
 )
 
@@ -88,4 +104,14 @@ func (u *WeeklyQuestion) Database() *gorm.DB {
 
 func (u *WeeklyQuestion) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(u)
+}
+
+func (*WeeklyQuiz) Relations() []interface{ Join() string } {
+	return []interface{ Join() string }{
+		WeeklyQuizResult{},
+	}
+}
+
+func (WeeklyQuizResult) Join() string {
+	return "Results"
 }

@@ -10,3 +10,8 @@ models:
   - Transaction
   - WeeklyQuiz
   - WeeklyQuestion
+  - Mock
+  - MockQuestion
+  - Podcast
+  - GeneralSetting
+  - Newsfeed

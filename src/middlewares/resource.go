@@ -17,6 +17,7 @@ import (
 type (
 	query struct {
 		Id           uuid.UUID
+		UserId       uuid.UUID
 		ExamId       uuid.UUID
 		Name         string
 		Session      int
@@ -37,9 +38,9 @@ func MustRegisterSubject(ctx iris.Context) {
 	{
 		q := []query{}
 		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.session, e.name, e.status, e.subject_count").
+			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status, e.subject_count").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("ue.session = ? AND e.status = ?", session, true).
+			Where("ue.session = ? AND e.status = ? AND e.status = 1 AND ue.user_id = ?", session, true, user.Id).
 			Scan(&q).Error; err != nil {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(internalServerError)

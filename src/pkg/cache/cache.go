@@ -70,3 +70,7 @@ func Forget(key string) error {
 }
 
 func Forever() {}
+
+func Duration(unix int64) time.Duration {
+	return time.Until(time.Unix(unix, 0))
+}

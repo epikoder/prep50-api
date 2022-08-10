@@ -71,7 +71,7 @@ func GenerateToken(i interface{}, key string) (token *JwtToken, err error) {
 		token.Access = string(buf)
 		token.ExpiresAt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
 		fmt.Println(token.ExpiresAt, time.Duration(token.ExpiresAt.Unix()))
-		if err = cache.Set(fmt.Sprintf("%s.access", key), token.Access, Duration(token.ExpiresAt.Unix())); err != nil {
+		if err = cache.Set(fmt.Sprintf("%s.access", key), token.Access, cache.Duration(token.ExpiresAt.Unix())); err != nil {
 			return
 		}
 	}
@@ -84,13 +84,9 @@ func GenerateToken(i interface{}, key string) (token *JwtToken, err error) {
 		}
 		token.Refresh = string(buf)
 		token.ExpiresRt = time.Now().Add(time.Duration(refreshExpires) * time.Minute)
-		if err = cache.Set(fmt.Sprintf("%s.refresh", key), token.Refresh, Duration(token.ExpiresRt.Unix())); err != nil {
+		if err = cache.Set(fmt.Sprintf("%s.refresh", key), token.Refresh, cache.Duration(token.ExpiresRt.Unix())); err != nil {
 			return
 		}
 	}
 	return
-}
-
-func Duration(unix int64) time.Duration {
-	return time.Until(time.Unix(unix, 0))
 }

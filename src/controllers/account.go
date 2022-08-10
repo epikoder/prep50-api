@@ -17,6 +17,32 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++++
+func UserExams(ctx iris.Context) {
+	type UserExamWithName struct {
+		Name          string               `json:"exam"`
+		Session       uint                 `gorm:"notnull" json:"session"`
+		PaymentStatus models.PaymentStatus `json:"payment_status"`
+		CreatedAt     time.Time            `json:"created_at"`
+	}
+	user, _ := getUser(ctx)
+	session := settings.Get("examSession", time.Now().Year())
+	userExams := []UserExamWithName{}
+	if err := database.UseDB("app").Table("user_exams as ue").
+		Select("ue.session, ue.payment_status, ue.created_at, e.name").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Where("user_id = ? AND session = ?", user.Id, session).
+		Scan(&userExams).Error; err != nil {
+		ctx.StatusCode(http.StatusInternalServerError)
+		ctx.JSON(internalServerError)
+		return
+	}
+
+	ctx.JSON(apiResponse{
+		"status": "success",
+		"data":   userExams,
+	})
+}
+
 func RegisterUserExams(ctx iris.Context) {
 	type RegisterExamForm struct {
 		Exams []string `validate:"required"`
@@ -78,10 +104,16 @@ func RegisterUserExams(ctx iris.Context) {
 	})
 }
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++
 func PayNow(ctx iris.Context) {
 
 }
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++
 // SUBJECTS
 func IndexUserSubjects(ctx iris.Context) {
 	type (
@@ -95,9 +127,9 @@ func IndexUserSubjects(ctx iris.Context) {
 	session := settings.Get("examSession", time.Now().Year())
 	q := []query{}
 	if err := database.UseDB("app").Table("user_exams as ue").
-		Select("ue.id, ue.exam_id, ue.session, e.name, e.status").
+		Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-		Where("ue.user_id = ? AND ue.session = ?", user.Id, session).
+		Where("ue.user_id = ? AND ue.session = ? AND e.status = 1 AND ue.user_id = ?", user.Id, session, user.Id).
 		Scan(&q).Error; err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
@@ -248,3 +280,5 @@ func CreateUserSubjects(ctx iris.Context) {
 		"message": "subjects added successfully",
 	})
 }
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
@@ -19,7 +18,7 @@ type (
 		Photo         string         `gorm:"type:varchar(255);column:photo" json:"photo"`
 		Password      string         `gorm:"type:varchar(64);column:password" json:"-"`
 		Referral      string         `json:"referral"`
-		ReferralBonus uint           `json:"referral_bonus"`
+		ReferralBonus uint           `json:"-"`
 		IsProvider    bool           `gorm:"type:tinyint(1);" json:"-"`
 		Locked        bool           `gorm:"type:tinyint(1);" json:"-"`
 		CreatedAt     time.Time      `json:"-"`
@@ -34,14 +33,13 @@ type (
 	}
 
 	UserExam struct {
-		Id            uuid.UUID     `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);notnull;index;" json:"id"`
+		Id            uuid.UUID     `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);notnull;index;" json:"-"`
 		UserId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;index;" json:"-"`
-		ExamId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;" json:"exam_id"`
+		ExamId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;" json:"-"`
 		TransactionId uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 		Session       uint          `gorm:"notnull" json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`
-		ExpiresAt     sql.NullTime  `json:"expires_at"`
 	}
 
 	UserProvider struct {
@@ -99,7 +97,7 @@ func (u *User) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(u)
 }
 
-func (u *User) Relations() []interface{ Join() string } {
+func (*User) Relations() []interface{ Join() string } {
 	return []interface{ Join() string }{
 		UserProvider{},
 		UserExam{},

@@ -11,22 +11,29 @@ type (
 	Subject struct {
 		Id          uint        `sql:"primary_key;" json:"id"`
 		Name        string      `json:"name"`
-		Descriotion string      `json:"description"`
+		Description string      `json:"description"`
 		Objectives  []Objective `json:"objectives"`
 		Lessons     []Lesson    `json:"-"`
 	}
 
 	Objective struct {
-		Id        uint   `sql:"primary_key;" json:"id"`
-		SubjectId int    `json:"subject_id"`
-		Title     string `json:"title"`
-		Details   string `json:"details"`
+		Id        uint                `sql:"primary_key;" json:"id"`
+		SubjectId int                 `json:"subject_id"`
+		Title     string              `json:"title"`
+		Details   string              `json:"details"`
+		Questions []ObjectiveQuestion `json:"questions"`
 	}
 
 	ObjectiveLesson struct {
 		Id          uint `sql:"primary_key;" json:"id"`
 		ObjectiveId int  `json:"objective_id"`
 		LessonId    int  `json:"lesson_id"`
+	}
+
+	ObjectiveQuestion struct {
+		Id          uint `sql:"primary_key;" json:"id"`
+		ObjectiveId int  `json:"objective_id"`
+		QuestionId  int  `json:"question_id"`
 	}
 
 	UserSubject struct {

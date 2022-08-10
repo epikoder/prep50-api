@@ -13,7 +13,7 @@ type (
 	Exam struct {
 		Id           uuid.UUID `sql:"type:uuid;" gorm:"unique" json:"-"`
 		Name         string    `gorm:"unique;index;notnull" json:"name"`
-		Price        int       `json:"price"`
+		Amount       int       `json:"price"`
 		SubjectCount int       `json:"subject_count"`
 		Status       bool      `json:"status"`
 		CreatedAt    time.Time `json:"-"`

@@ -19,10 +19,20 @@ import (
 type (
 	query struct {
 		Id      uuid.UUID
+		UserId  uuid.UUID
 		ExamId  uuid.UUID
 		Name    string
 		Session int
 		Status  bool
+	}
+
+	queryWithPayment struct {
+		Id            uuid.UUID
+		ExamId        uuid.UUID
+		Name          string
+		Session       int
+		Status        bool
+		PaymentStatus models.PaymentStatus
 	}
 )
 
@@ -45,9 +55,10 @@ var (
 	}
 )
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++
 func PasswordReset(ctx iris.Context) {
 	type PasswordResetStruct struct {
-		Email string `validate:"required,email"`
+		Email string `validate:"required"`
 	}
 	prs := PasswordResetStruct{}
 	if err := ctx.ReadJSON(&prs); err != nil {
@@ -57,8 +68,8 @@ func PasswordReset(ctx iris.Context) {
 	}
 	user := &models.User{}
 	{
-		if ok := repository.NewRepository(user).FindOne("email = ?", prs.Email); !ok {
-			ctx.StatusCode(http.StatusUnauthorized)
+		if ok := repository.NewRepository(user).FindOne("email = ? OR username = ?", prs.Email, prs.Email); !ok {
+			ctx.StatusCode(http.StatusNotFound)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"message": "user not found",
@@ -71,7 +82,7 @@ func PasswordReset(ctx iris.Context) {
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    400,
-				"message": "password reset for available for this account",
+				"message": "password reset not available for this account",
 			})
 			return
 		}
@@ -88,13 +99,13 @@ func PasswordReset(ctx iris.Context) {
 
 	ctx.JSON(apiResponse{
 		"status":  "success",
-		"message": "Use the code sent to your email address to continue",
+		"message": "Use the code sent to your email address to complete your request",
 	})
 }
 
 func CompletePasswordReset(ctx iris.Context) {
 	type CompletePasswordResetStruct struct {
-		Email    string `validate:"required,email"`
+		Email    string `validate:"required"`
 		Code     string `validate:"required,numeric"`
 		Password string `validate:"required,alphanum"`
 	}
@@ -108,7 +119,7 @@ func CompletePasswordReset(ctx iris.Context) {
 
 	{
 		pr := &models.PasswordReset{}
-		if ok := repository.NewRepository(pr).FindOne("code = ? AND email = ?", cprs.Code, cprs.Email); !ok || time.Since(pr.CreatedAt).Minutes() > 30 {
+		if ok := repository.NewRepository(pr).FindOne("code = ? AND (email = ? OR username = ?)", cprs.Code, cprs.Email, cprs.Email); !ok || time.Since(pr.CreatedAt).Minutes() > 30 {
 			ctx.StatusCode(http.StatusBadRequest)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -121,7 +132,7 @@ func CompletePasswordReset(ctx iris.Context) {
 	user := &models.User{}
 	{
 		if ok := repository.NewRepository(user).FindOne("email = ?", cprs.Email); !ok {
-			ctx.StatusCode(http.StatusUnauthorized)
+			ctx.StatusCode(http.StatusNotFound)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"message": "user does not exist",
@@ -134,7 +145,7 @@ func CompletePasswordReset(ctx iris.Context) {
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    400,
-				"message": "password reset for available for this account",
+				"message": "password reset not available for this account",
 			})
 			return
 		}
@@ -173,3 +184,10 @@ func CompletePasswordReset(ctx iris.Context) {
 		"message": "Password reset successful",
 	})
 }
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+func GetMocks(ctx iris.Context) {}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++
