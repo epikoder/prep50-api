@@ -13,16 +13,6 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
-func newSmtpClient() (*mail.SMTPClient, error) {
-	server := mail.NewSMTPClient()
-	server.Host = config.Conf.Mail.SmtpHost
-	server.Port = config.Conf.Mail.SmtpPort
-	server.Username = config.Conf.Mail.UserName
-	server.Password = config.Conf.Mail.Password
-	server.Encryption = mail.EncryptionTLS
-	return server.Connect()
-}
-
 func SendPasswordResetMail(user *models.User) (err error) {
 	var buf bytes.Buffer
 	code := crypto.RandomNumber(1000, 9999)
