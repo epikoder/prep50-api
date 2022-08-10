@@ -42,7 +42,7 @@ mail:
   password:
 redis:
   host: ec2-34-192-110-76.compute-1.amazonaws.com
-  port: 14660
+  port: 14659
   password: p29f2534f34033b53d432160d7987ec54c162f57d225531158e31b7afbb6a1db0
   database: 0
 payment:
