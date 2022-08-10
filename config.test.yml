@@ -6,20 +6,20 @@ app:
     version: "1"
     defaultApiVersion: 1.0.0
 database:
-  core:
-    url: ikr3vl8eozfc3qba:t1rfqfvoq10tqe90@tcp(cxmgkzhk95kfgbq4.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/ngbrgd16w9e3o40v?parseTime=true
-    name:
-    user:
-    host:
-    port:
-    password:
-  app:
-    url: h4b2q7rlnq2esxvw:zkg6z2hznlawr3se@tcp(kfgk8u2ogtoylkq9.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/xpjrbt2hy7943y8b?parseTime=true
-    name:
-    user:
-    host:
-    port:
-    password:
+    core:
+        url: ikr3vl8eozfc3qba:t1rfqfvoq10tqe90@tcp(cxmgkzhk95kfgbq4.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/ngbrgd16w9e3o40v?parseTime=true
+        name:
+        user:
+        host:
+        port:
+        password:
+    app:
+        url: h4b2q7rlnq2esxvw:zkg6z2hznlawr3se@tcp(kfgk8u2ogtoylkq9.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/xpjrbt2hy7943y8b?parseTime=true
+        name:
+        user:
+        host:
+        port:
+        password:
 throttle:
     limit: 20
     burst: 5
@@ -39,10 +39,11 @@ mail:
     from: prep50
     smtpHost: smtp.gmail.com
     smtpPort: 587
-    password: 
+    password:
 redis:
-    host: 127.0.0.1
-    port: 6379
+    host: ec2-34-192-110-76.compute-1.amazonaws.com
+    port: 14660
+    password: p29f2534f34033b53d432160d7987ec54c162f57d225531158e31b7afbb6a1db0
     database: 0
 payment:
     paystack:
