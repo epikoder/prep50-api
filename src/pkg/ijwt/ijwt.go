@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/jwt"
@@ -37,7 +38,9 @@ func init() {
 	var err error
 	secret, err = jwt.LoadPrivateKeyECDSA("jwt.key")
 	if !logger.HandleError(err) {
-		panic(err)
+		if _, err := crypto.KeyGen(true); err != nil {
+			panic(err)
+		}
 	}
 	Verifier := jwt.NewVerifier(jwt.ES256, secret)
 	Verifier = Verifier.WithDefaultBlocklist()
