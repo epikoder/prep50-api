@@ -29,6 +29,7 @@ aes:
 cors:
     origins:
         - prep50.com
+        - localhost:8080
     headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token
     allowCredentials: "true"
 jwt:

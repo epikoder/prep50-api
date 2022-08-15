@@ -45,8 +45,9 @@ func init() {
 func CORS(ctx iris.Context) {
 	origin := func() string {
 		i := config.Conf.App.Host
+		env := os.Getenv("APP_ENV")
 		protocol := func() string {
-			if os.Getenv("APP_ENV") == "local" {
+			if env != "" && env != "production" {
 				return "http://"
 			}
 			return "https://"
