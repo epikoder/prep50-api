@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -19,11 +20,21 @@ func init() {
 }
 
 func connect(db int) *redis.Client {
-	return redis.NewClient(&redis.Options{
+	var option *redis.Options
+	option = &redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", config.Conf.Redis.Host, config.Conf.Redis.Port),
 		Password: config.Conf.Redis.Password,
 		DB:       db,
-	})
+	}
+	if redisUrl := os.Getenv("REDIS_URL"); redisUrl != "" {
+		conf := strings.Split(strings.Split(redisUrl, "://:")[1], "@")
+		option = &redis.Options{
+			Addr:     conf[1],
+			Password: conf[0],
+			DB:       db,
+		}
+	}
+	return redis.NewClient(option)
 }
 
 func Set(key string, val interface{}, expires time.Duration) error {
