@@ -8,6 +8,7 @@ import (
 )
 
 func RegisterApiRoutes(app *iris.Application) {
+	app.AllowMethods(iris.MethodOptions)
 	app.HandleDir("/static", iris.Dir("./src/web/assets"), iris.DirOptions{Compress: true})
 	app.Get("/", func(ctx iris.Context) {
 		if err := ctx.ServeFile("./src/web/index.html"); err != nil {
