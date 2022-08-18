@@ -14,6 +14,7 @@ func RegisterApiRoutes(app *iris.Application) {
 		if err := ctx.ServeFile("./src/web/index.html"); err != nil {
 			ctx.StatusCode(404)
 			ctx.JSON(err.Error())
+			return
 		}
 	})
 
@@ -25,6 +26,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	app.Get("/password-reset", middlewares.RateLimiter(), controllers.PasswordReset)
 	app.Post("/password-reset", middlewares.RateLimiter(), controllers.CompletePasswordReset)
+	app.Get("/password-reset/verify", middlewares.RateLimiter(), controllers.VerifyPasswordResetCode)
 
 	resources := app.Party("/resources")
 	resources.Get("/subjects", controllers.GetSubjects)

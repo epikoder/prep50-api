@@ -103,6 +103,21 @@ func PasswordReset(ctx iris.Context) {
 	})
 }
 
+func VerifyPasswordResetCode(ctx iris.Context) {
+	pr := &models.PasswordReset{}
+	if ok := repository.NewRepository(pr).FindOne("code = ? AND email = ?", ctx.URLParam("code"), ctx.URLParam("email")); !ok || time.Since(pr.CreatedAt).Minutes() > 30 {
+		ctx.StatusCode(http.StatusBadRequest)
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "expired or invalid code",
+		})
+		return
+	}
+	ctx.JSON(apiResponse{
+		"status": "success",
+	})
+}
+
 func CompletePasswordReset(ctx iris.Context) {
 	type CompletePasswordResetStruct struct {
 		Email    string `validate:"required"`
@@ -125,8 +140,8 @@ func CompletePasswordReset(ctx iris.Context) {
 				"status":  "failed",
 				"message": "expired or invalid code",
 			})
+			return
 		}
-		return
 	}
 
 	user := &models.User{}
