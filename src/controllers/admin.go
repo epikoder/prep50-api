@@ -26,7 +26,8 @@ func AdminLogin(ctx iris.Context) {
 	type (
 		adminUser struct {
 			models.User
-			Permissions []string
+			Permissions []string `json:"permisions"`
+			Roles       []string `json:"roles"`
 		}
 	)
 
@@ -72,7 +73,11 @@ func AdminLogin(ctx iris.Context) {
 	for _, p := range user.Permissions {
 		permissions = append(permissions, p.Name)
 	}
-	token, err := ijwt.GenerateToken(&adminUser{*user, permissions}, user.UserName)
+	roles := []string{}
+	for _, r := range user.Roles {
+		roles = append(roles, r.Name)
+	}
+	token, err := ijwt.GenerateToken(&adminUser{*user, permissions, roles}, user.UserName)
 	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)

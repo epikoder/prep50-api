@@ -10,6 +10,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
 	"github.com/google/uuid"
@@ -203,6 +204,15 @@ func CompletePasswordReset(ctx iris.Context) {
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
-func GetMocks(ctx iris.Context) {}
+func GetMocks(ctx iris.Context) {
+	mocks := []models.Mock{}
+	if err := repository.NewRepository(&models.Mock{}).
+		FindMany(&mocks, "session = ? AND start_time < ?", settings.Get("examSession", time.Now().Year()), time.Now()); !logger.HandleError(err) {
+		ctx.StatusCode(500)
+		ctx.JSON(internalServerError)
+		return
+	}
+	ctx.JSON(mocks)
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
