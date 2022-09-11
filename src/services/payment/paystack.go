@@ -1,24 +1,30 @@
 package payment
 
 import (
-	"github.com/rpip/paystack-go"
+	"net/http"
+
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
+	"github.com/epikoder/paystack-go"
 )
 
 type (
 	ipaystack struct {
 		paystack.Client
 	}
-
-	ipaystackConfig struct {
-		PkKey string `yaml:"pk_key"`
-		SkKey string `yaml:"sk_key"`
-	}
 )
 
 func newIPaystack() *ipaystack {
-	return &ipaystack{}
+	mode := settings.GetString("paystack.mode", "live")
+
+	return &ipaystack{
+		Client: *paystack.NewClient(settings.GetString("paystack."+mode+".secretKey", ""), &http.Client{}),
+	}
 }
 
 func (p *ipaystack) ICharge() {
 	p.Client.Charge.Create(&paystack.ChargeRequest{})
+}
+
+func (p *ipaystack) IVerify(reference string) (interface{}, error) {
+	return p.Client.Transaction.Verify(reference)
 }

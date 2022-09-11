@@ -5,9 +5,9 @@ go 1.18
 
 require (
 	github.com/eknkc/amber v0.0.0-20171010120322-cdade1c07385
+	github.com/epikoder/paystack-go v0.0.0-20220907133558-b36fc83aa302
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
-	github.com/rpip/paystack-go v0.0.0-20210725234520-196191f8ab58
 	github.com/spf13/cobra v1.4.0
 	github.com/throttled/throttled/v2 v2.9.1
 	github.com/xhit/go-simple-mail/v2 v2.11.0
@@ -57,7 +57,7 @@ require (
 	github.com/mailgun/raymond/v2 v2.0.46 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.18 // indirect
-	github.com/mitchellh/mapstructure v0.0.0-20170125051937-db1efb556f84 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

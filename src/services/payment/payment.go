@@ -1,17 +1,14 @@
 package payment
 
 type (
-	Pay interface {
+	PaymentProvider interface {
 		ICharge()
-	}
-
-	PaymentConfig struct {
-		Paystack map[string]ipaystackConfig
+		IVerify(string) (interface{}, error)
 	}
 )
 
-func New(method string) Pay {
-	switch method {
+func New(provider string) PaymentProvider {
+	switch provider {
 	default:
 		return newIPaystack()
 	}

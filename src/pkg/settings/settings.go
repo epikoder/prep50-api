@@ -82,6 +82,15 @@ func Get(k string, d interface{}) (v interface{}) {
 	return
 }
 
+func GetString(k string, d string) (s string) {
+	SeedSettings()
+	v, ok := generalSettings[k]
+	if !ok {
+		return d
+	}
+	return v.(string)
+}
+
 func Set(k string, v interface{}) {
 	generalSettings[k] = v
 	Update()

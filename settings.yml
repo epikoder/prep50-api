@@ -1,2 +1,7 @@
 examSession: 2022
 quickQuizQuestions: 60
+paystack.mode: "sandbox"
+paystack.live.secretKey: ""
+paystack.live.publicKey: ""
+paystack.sandbox.secretKey: ""
+paystack.sandbox.publicKey: "pk_test_af4e0ef7bfdedcb27859289c27fd2a97100f1ba1"

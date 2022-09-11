@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
-	"github.com/Prep50mobileApp/prep50-api/src/services/payment"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +19,6 @@ type (
 		Cors     cors
 		Jwt      jwt
 		Mail     mail
-		Payment  payment.PaymentConfig
 		Redis    redis
 	}
 )
