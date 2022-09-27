@@ -40,9 +40,6 @@ func (prep50 *Prep50) StartServer() {
 				port = config.Conf.App.Port
 			}
 			addr := func() string {
-				if h := config.Conf.App.Host; h != "" {
-					return fmt.Sprintf("%s:%d", h, port)
-				}
 				return fmt.Sprintf(":%d", port)
 			}
 			prep50.App.Run(iris.Addr(addr()), iris.WithConfiguration(iris.YAML(serverConfigPath)))
