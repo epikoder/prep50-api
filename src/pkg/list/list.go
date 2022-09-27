@@ -1,8 +1,13 @@
 package list
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
+	"unicode"
+
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
+	"github.com/google/uuid"
 )
 
 func Contains(arr interface{}, el interface{}) bool {
@@ -107,12 +112,58 @@ func DeleteUint(s []uint, index int) []uint {
 }
 
 func Slug(s string) string {
-	s = strings.ReplaceAll(s, " ", "-")
-	s = strings.ReplaceAll(s, "/", "")
-	s = strings.ReplaceAll(s, "\\", "")
-	s = strings.ReplaceAll(s, ";", "")
-	s = strings.ReplaceAll(s, "^", "")
-	s = strings.ReplaceAll(s, "%", "")
-	s = strings.ToLower(s)
-	return s
+	_s := ""
+	for _, r := range strings.ReplaceAll(strings.TrimSpace(s), "	", " ") {
+		if unicode.IsLetter(r) {
+			_s = _s + string(r)
+			continue
+		}
+		if unicode.IsDigit(r) {
+			_s = _s + string(r)
+			continue
+		}
+		_s = strings.TrimSuffix(_s, "-")
+		_s = _s + "-"
+	}
+	return strings.TrimSuffix(_s, "-")
+}
+
+func UniqueSlug(model dbmodel.DBModel, slug string) (s string, err error) {
+	var i = 1
+	for {
+		s = fmt.Sprintf("%s%d", slug, i)
+		m := reflect.New(reflect.TypeOf(model).Elem()).Interface().(dbmodel.DBModel)
+		if err = model.Database().Find(m, "slug = ?", s).Error; err != nil {
+			return
+		}
+		uid, ok := m.ID().(uuid.UUID)
+		if !ok {
+			if id := m.ID().(int); id == 0 {
+				return
+			}
+		} else if uid == uuid.Nil {
+			return
+		}
+		i++
+	}
+}
+
+func UniqueByField(model dbmodel.DBModel, value, field string) (s string, err error) {
+	var i = 1
+	for {
+		s = fmt.Sprintf("%s%d", value, i)
+		m := reflect.New(reflect.TypeOf(model).Elem()).Interface().(dbmodel.DBModel)
+		if err = model.Database().Find(m, "? = ?", field, s).Error; err != nil {
+			return
+		}
+		uid, ok := m.ID().(uuid.UUID)
+		if !ok {
+			if id := m.ID().(int); id == 0 {
+				return
+			}
+		} else if uid == uuid.Nil {
+			return
+		}
+		i++
+	}
 }

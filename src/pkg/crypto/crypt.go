@@ -136,7 +136,7 @@ func RandomNumber(min, max int) int {
 	return randMath.Intn(max-min) + min
 }
 
-func Ase256Encode(plaintext string) (string, error) {
+func Aes256Encode(plaintext string) (string, error) {
 	bKey := []byte(config.Conf.Aes.Key)
 	bIV := []byte(config.Conf.Aes.Iv)
 	bPlaintext := PKCS5Padding([]byte(plaintext), aes.BlockSize, len(plaintext))
@@ -150,7 +150,7 @@ func Ase256Encode(plaintext string) (string, error) {
 	return hex.EncodeToString(ciphertext), nil
 }
 
-func Ase256Decode(cipherText string) (decryptedString string, err error) {
+func Aes256Decode(cipherText string) (decryptedString string, err error) {
 	bKey := []byte(config.Conf.Aes.Key)
 	bIV := []byte(config.Conf.Aes.Iv)
 	cipherTextDecoded, err := hex.DecodeString(cipherText)

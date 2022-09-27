@@ -2,6 +2,8 @@ package queue
 
 import (
 	"fmt"
+	"reflect"
+	"runtime"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -20,17 +22,21 @@ type (
 )
 
 var (
-	_queue   queue   = make(queue)
+	_queue   queue   = make(queue, 1024)
 	SendMail JobType = "mail"
+	Action   JobType = "action"
 	NilJob   JobType = "nil"
 
 	defaultRetries = 3
 )
 
 func Dispatch(j Job) {
+	fmt.Println("Scheduling Job: ", j.Type)
 	select {
 	case _queue <- j:
+		fmt.Println("Scheduled Job: ", j.Type, runtime.FuncForPC(reflect.ValueOf(j.Func).Pointer()).Name())
 	default:
+		fmt.Println("Failed to Schedule Job: ", j.Type)
 	}
 }
 
@@ -55,6 +61,7 @@ func Run() {
 						j.Schedule = time.Now().Add(time.Second * 5)
 						Dispatch(j)
 					}
+					fmt.Println("Completed Job: ", j.Type, runtime.FuncForPC(reflect.ValueOf(j.Func).Pointer()).Name())
 				}
 				if time.Since(j.Schedule).Milliseconds() < 0 {
 					go func() {

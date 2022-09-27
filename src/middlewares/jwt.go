@@ -19,7 +19,7 @@ func Protected(ctx iris.Context) {
 		ctx.StatusCode(http.StatusUnauthorized)
 		return
 	}
-	userInfo, ok := claims.Audience.(map[string]interface{})
+	userInfo, ok := claims.Aud.(map[string]interface{})
 	if !ok {
 		ctx.StatusCode(http.StatusUnauthorized)
 		return

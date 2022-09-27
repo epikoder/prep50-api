@@ -1,0 +1,11 @@
+div Dear #{user.UserName},
+div You are trying to login your Prep50 account on a new device #{device.Name}, continue by clicking the button below.
+br 
+div Note: you'll be logged-out from your current device, and cannot change device until after 72 hours
+a[href=link]
+    div Continue
+br
+div Having a hard time using the button?
+a[href=link] #{link}
+div Link expires in 10 minutes
+div if you did not make this request, please secure your account now.

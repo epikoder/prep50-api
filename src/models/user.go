@@ -14,7 +14,7 @@ type (
 		Id            uuid.UUID      `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		UserName      string         `gorm:"type:varchar(50);unique;column:username;notnull" json:"username"`
 		Email         string         `gorm:"type:varchar(255);column:email;unique;index;notnull;" json:"email"`
-		Phone         string         `gorm:"type:varchar(20);column:phone;unique;index;notnull" json:"phone"`
+		Phone         string         `gorm:"type:varchar(20);column:phone;" json:"phone"`
 		Photo         string         `gorm:"type:varchar(255);column:photo" json:"photo"`
 		Password      string         `gorm:"type:varchar(64);column:password" json:"-"`
 		Referral      string         `json:"referral"`
@@ -45,6 +45,7 @@ type (
 	UserProvider struct {
 		UserId     uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		ProviderId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
+		IsLoggedIn bool      `gorm:"type:tinyint(1);" json:"-"`
 		Token      string
 	}
 
@@ -69,7 +70,8 @@ type (
 	}
 
 	UserLoginFormStruct struct {
-		UserName string `validate:"required"`
+		UserName string
+		User     string
 		Password string `validate:"required,alphanum"`
 	}
 
@@ -156,4 +158,8 @@ func (UserRole) Join() string {
 
 func (UserPermission) Join() string {
 	return "Permissions"
+}
+
+func (*User) OverrideMigration() bool {
+	return true
 }

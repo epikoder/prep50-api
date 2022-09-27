@@ -32,10 +32,10 @@ type (
 	}
 
 	WeeklyQuizResult struct {
-		WeeklyQuizId uuid.UUID `gorm:"type:varchar(36);index;"`
-		UserId       uuid.UUID `gorm:"type:varchar(36);index;"`
-		Score        uint
-		Duration     uint
+		WeeklyQuizId uuid.UUID `gorm:"type:varchar(36);index;" json:"quiz_id"`
+		UserId       uuid.UUID `gorm:"type:varchar(36);index;" json:"user_id"`
+		Score        uint      `json:"score"`
+		Duration     uint      `json:"duration"`
 	}
 
 	WeeklyQuizFormStruct struct {
@@ -87,6 +87,19 @@ func (w *WeeklyQuiz) Questions() (q []Question, err error) {
 		ids = append(ids, q.QuestionId)
 	}
 	err = database.UseDB("core").Find(&q, "id IN ?", ids).Error
+	return
+}
+
+func (w *WeeklyQuiz) QuestionsWithoutAnswer() (q []QuestionsWithoutAnswer, err error) {
+	wq, err := w.WeeklyQuestions()
+	if err != nil {
+		return nil, err
+	}
+	ids := []uint{}
+	for _, q := range wq {
+		ids = append(ids, q.QuestionId)
+	}
+	err = database.UseDB("core").Table((&Question{}).Tag()).Find(&q, "id IN ?", ids).Error
 	return
 }
 

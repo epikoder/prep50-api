@@ -44,11 +44,3 @@ redis:
     host: 127.0.0.1
     port: 6379
     database: 0
-payment:
-    paystack:
-        live:
-            pk_key: ""
-            sk_key: ""
-        sandbox:
-            pk_key: ""
-            sk_key: ""

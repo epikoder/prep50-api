@@ -19,6 +19,25 @@ import (
 
 type apiResponse map[string]interface{}
 
+const (
+	xFrameOptions                = "X-Frame-Options"
+	xFrameOptionsValue           = "DENY"
+	xContentTypeOptions          = "X-Content-Type-Options"
+	xContentTypeOptionsValue     = "nosniff"
+	xssProtection                = "X-XSS-Protection"
+	xssProtectionValue           = "1; mode=block"
+	strictTransportSecurity      = "Strict-Transport-Security"
+	strictTransportSecurityValue = "max-age=31536000; includeSubDomains; preload"
+)
+
+func Security(ctx iris.Context) {
+	ctx.Header(xFrameOptions, xFrameOptionsValue)
+	ctx.Header(xContentTypeOptions, xContentTypeOptionsValue)
+	ctx.Header(xssProtection, xssProtectionValue)
+	ctx.Header(strictTransportSecurity, strictTransportSecurityValue)
+	ctx.Next()
+}
+
 var (
 	internalServerError = apiResponse{
 		"status":  "failed",

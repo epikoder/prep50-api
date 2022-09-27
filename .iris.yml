@@ -15,6 +15,7 @@ Watcher:
         - .toml
         - .tml
         - .ini
+        - .amber
     Frontend:
         - .html
         - .htm
@@ -42,4 +43,3 @@ Files:
     - ./
 BuildFiles: []
 MD5PackageJSON: []
-Running: true

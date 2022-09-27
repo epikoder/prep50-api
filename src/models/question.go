@@ -19,14 +19,32 @@ type (
 		Question           string    `json:"question"`
 		QuestionDetails    string    `json:"question_details"`
 		QuestionImage      string    `json:"question_image"`
-		Option1            string    `json:"option_1"`
-		Option2            string    `json:"option_2"`
-		Option3            string    `json:"option_3"`
-		Option4            string    `json:"option_4"`
+		Option_1           string    `json:"option_1"`
+		Option_2           string    `json:"option_2"`
+		Option_3           string    `json:"option_3"`
+		Option_4           string    `json:"option_4"`
 		ShortAnswer        string    `json:"short_answer"`
 		FullAnswer         string    `json:"full_answer"`
 		AnswerImage        string    `json:"answer_image"`
 		AnswerDetails      string    `json:"answer_details"`
+		QuestionYear       uint      `json:"question_year"`
+		QuestionYearNumber uint      `json:"question_year_number"`
+		CreatedAt          time.Time `json:"-"`
+		UpdatedAt          time.Time `json:"-"`
+	}
+
+	QuestionsWithoutAnswer struct {
+		Id                 uint      `sql:"primary_key;" json:"id"`
+		SubjectId          uint      `json:"subject_id"`
+		SourceId           uint      `json:"source_id"`
+		QuestionTypeId     uint      `json:"question_type_id"`
+		Question           string    `json:"question"`
+		QuestionDetails    string    `json:"question_details"`
+		QuestionImage      string    `json:"question_image"`
+		Option_1           string    `json:"option_1"`
+		Option_2           string    `json:"option_2"`
+		Option_3           string    `json:"option_3"`
+		Option_4           string    `json:"option_4"`
 		QuestionYear       uint      `json:"question_year"`
 		QuestionYearNumber uint      `json:"question_year_number"`
 		CreatedAt          time.Time `json:"-"`
@@ -59,6 +77,16 @@ func (u *Question) Migrate() dbmodel.Migration {
 func RandomizeQuestions(arr []Question) (r []Question) {
 	rand.Seed(time.Now().Unix() * rand.Int63())
 	r = make([]Question, 0)
+	for i := len(arr) - 1; i > 0; i-- {
+		rIndex := rand.Intn(i)
+		r = append(r, arr[rIndex])
+	}
+	return r
+}
+
+func RandomizeQuestionWithoutAnswer(arr []QuestionsWithoutAnswer) (r []QuestionsWithoutAnswer) {
+	rand.Seed(time.Now().Unix() * rand.Int63())
+	r = make([]QuestionsWithoutAnswer, 0)
 	for i := len(arr) - 1; i > 0; i-- {
 		rIndex := rand.Intn(i)
 		r = append(r, arr[rIndex])

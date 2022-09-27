@@ -2,23 +2,38 @@ package sendmail
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/google/uuid"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
-func SendPasswordResetMail(user *models.User) (err error) {
+type VerificationToken struct {
+	Email   string
+	Expires time.Time
+}
+
+func SendPasswordResetMail(user *models.User, host string) (err error) {
+	b, err := json.Marshal(VerificationToken{
+		Email:   user.Email,
+		Expires: time.Now().Add(time.Minute * 30),
+	})
+	if err != nil {
+		return err
+	}
+	token, err := crypto.Aes256Encode(string(b))
+	if err != nil {
+		return err
+	}
 	var buf bytes.Buffer
-	code := crypto.RandomNumber(1000, 9999)
-	if err = page.Compile(&buf, "password_reset", map[string]interface{}{
+	if err = page.Compile(&buf, "auth/password_reset", map[string]interface{}{
 		"user": user,
-		"code": code,
+		"url":  fmt.Sprintf("%s/password-reset?token=%s", host, token),
 	}); err != nil {
 		return
 	}
@@ -28,18 +43,11 @@ func SendPasswordResetMail(user *models.User) (err error) {
 		return err
 	}
 
-	if err := repository.NewRepository(&models.PasswordReset{
-		Id:    uuid.New(),
-		Code:  code,
-		Email: user.Email,
-	}).Save(); err != nil {
-		return err
-	}
-
 	email := mail.NewMSG()
 	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName))
 	email.AddTo(user.Email)
 	email.SetSubject("Password Reset")
 	email.SetBody(mail.TextHTML, buf.String())
+	email.AddHeader("Message-ID", "password-reset-"+crypto.Random(10))
 	return email.Send(smtpClient)
 }

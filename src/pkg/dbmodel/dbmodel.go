@@ -34,12 +34,24 @@ type (
 		}
 	}
 
+	ModelColumnAdd interface {
+		AddColumn() []string
+	}
+
+	ModelColumnDrop interface {
+		DropColumn() []string
+	}
+
 	ModelColumnMigration interface {
 		MigrateColumn() IMigrateColumnMigration
 	}
 	IMigrateColumnMigration interface {
 		Up() []string
 		Down() []string
+	}
+
+	ModelOverride interface {
+		OverrideMigration() bool
 	}
 )
 
@@ -50,9 +62,37 @@ func NewMigration(model DBModel) (m Migration) {
 
 func (migration Migration) Up() (err error) {
 	name := strings.Split(reflect.TypeOf(migration.model).String(), ".")[1]
+	if i, ok := migration.model.(ModelOverride); ok && i.OverrideMigration() && migration.model.Database().Migrator().HasTable(migration.model) {
+		return migration.model.Database().AutoMigrate(migration.model)
+	}
+
 	if migration.model.Database().Migrator().HasTable(migration.model) {
+		if i, ok := migration.model.(ModelColumnDrop); ok {
+			for _, v := range i.DropColumn() {
+				if !migration.model.Database().Migrator().HasColumn(migration.model, v) {
+					continue
+				}
+				if err := migration.model.Database().Migrator().DropColumn(migration.model, v); err != nil {
+					fmt.Println(err)
+					return err
+				}
+			}
+		}
+
+		if i, ok := migration.model.(ModelColumnAdd); ok {
+			for _, v := range i.AddColumn() {
+				if migration.model.Database().Migrator().HasColumn(migration.model, v) {
+					continue
+				}
+				if err := migration.model.Database().Migrator().AddColumn(migration.model, v); err != nil {
+					fmt.Println(err)
+					return err
+				}
+			}
+		}
 		return
 	}
+
 	fmt.Printf("%sCreating table:: %s ...%s\n", color.Yellow, name, color.Reset)
 	if i, ok := migration.model.(ModelExt); ok {
 		for _, v := range i.Relations() {

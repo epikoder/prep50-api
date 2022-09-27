@@ -1,0 +1,14 @@
+extends layouts/app
+
+block append meta
+    meta[name="keywords"][content="foo bar"]
+block content
+    div#app.text-sm
+        center
+            h2.text-gray-500 Hello #{Name}!
+            div.list 
+                each $v in data
+                    p[id=$v] #{$v}
+
+            div.list
+                p hellowb

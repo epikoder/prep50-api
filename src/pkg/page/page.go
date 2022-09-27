@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	templateDir = "./src/templates"
+	templateDir = "./templates/email"
 )
 
 func Compile(wr io.Writer, s string, i interface{}) (err error) {

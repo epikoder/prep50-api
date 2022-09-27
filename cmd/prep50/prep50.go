@@ -58,6 +58,7 @@ func (prep50 *Prep50) StartServer() {
 
 func (prep50 *Prep50) RegisterMiddlewares() {
 	prep50.App.UseGlobal(middlewares.CORS)
+	prep50.App.UseGlobal(middlewares.Security)
 }
 
 func (prep50 *Prep50) RegisterAppRoutes() {
@@ -87,7 +88,7 @@ func (prep50 *Prep50) RegisterViews() {
 	prep50.App.HandleDir("/static", "public/assets", iris.DirOptions{Compress: true})
 }
 
-func (prep50 *Prep50) Log() {
+func (prep50 *Prep50) StartLogging() {
 	var ac *accesslog.AccessLog
 	var output io.Writer
 	if os.Getenv("APP_ENV") == "local" || os.Getenv("LOG_STACK") == "file" {

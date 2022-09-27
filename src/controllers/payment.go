@@ -12,10 +12,11 @@ import (
 
 func VerifyPayment(ctx iris.Context) {
 	type paymentData struct {
-		Action   string
-		Type     string `validate:"required"`
-		Provider string
-		Id       string
+		Action    string
+		Type      string `validate:"required_if=id"`
+		Provider  string
+		Reference string `validate:"required" `
+		Id        string
 	}
 	data := &paymentData{}
 	if err := ctx.ReadJSON(data); err != nil {
@@ -23,9 +24,10 @@ func VerifyPayment(ctx iris.Context) {
 		ctx.StatusCode(400)
 		return
 	}
+	fmt.Println(data)
 
 	provider := payment.New(data.Provider)
-	res, err := provider.IVerify(data.Id)
+	res, err := provider.IVerify(data.Reference)
 	if !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status": "failed",
@@ -37,15 +39,18 @@ func VerifyPayment(ctx iris.Context) {
 	default:
 		{
 			tx, ok := res.(*paystack.Transaction)
-			if ok {
+			if !ok || tx.Status != "success" {
 				ctx.JSON(apiResponse{
 					"status": "failed",
 				})
 				return
 			}
-			fmt.Println(tx)
 		}
 	}
+	ctx.JSON(apiResponse{
+		"status":  "success",
+		"message": "Transaction successful",
+	})
 }
 
 func HandlePayment(ctx iris.Context) {

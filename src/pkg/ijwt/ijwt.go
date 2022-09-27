@@ -2,25 +2,37 @@ package ijwt
 
 import (
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/jwt"
+	_jwt "github.com/kataras/jwt"
 )
 
 type (
 	JWTClaims struct {
-		Audience interface{} `json:"aud"`
+		Aud interface{} `json:"aud"`
+		Sub string      `json:"sub"`
+		Id  string      `json:"id"`
+		Iss string      `json:"iss"`
+		Exp int64       `json:"exp"`
+		Iat int64       `json:"iat"`
+		Aid string      `json:"aid,omitempty"`
 	}
 	JwtToken struct {
-		Access    string    `json:"access"`
-		Refresh   string    `json:"refresh"`
-		ExpiresAt time.Time `json:"access_expires_at"`
-		ExpiresRt time.Time `json:"refresh_expires_at"`
+		Access      string    `json:"access"`
+		AccessUUID  string    `json:"-"`
+		ExpiresAt   time.Time `json:"access_expires_at"`
+		RefreshUUID string    `json:"-"`
+		Refresh     string    `json:"refresh"`
+		ExpiresRt   time.Time `json:"refresh_expires_at"`
 	}
 )
 
@@ -65,31 +77,101 @@ func SetRefreshLife(d int) {
 func GenerateToken(i interface{}, key string) (token *JwtToken, err error) {
 	token = &JwtToken{}
 	{
-		claims := JWTClaims{i}
+		key := fmt.Sprintf("%s.access", key)
+		claims := JWTClaims{
+			Aud: i,
+			Id:  key,
+			Sub: "access_token",
+			Iss: config.Conf.App.Name,
+			Iat: time.Now().Unix(),
+		}
+		token.AccessUUID = claims.Id
+		token.ExpiresAt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
+		claims.Exp = token.ExpiresAt.Unix()
+
 		var buf = []byte{}
 		buf, err = AccessSigner.Sign(claims)
 		if err != nil {
 			return nil, err
 		}
 		token.Access = string(buf)
-		token.ExpiresAt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
-		fmt.Println(token.ExpiresAt, time.Duration(token.ExpiresAt.Unix()))
-		if err = cache.Set(fmt.Sprintf("%s.access", key), token.Access, cache.Duration(token.ExpiresAt.Unix())); err != nil {
+		if err = cache.Set(key, token.Access, cache.Duration(token.ExpiresAt.Unix())); err != nil {
 			return
 		}
 	}
 	{
-		claims := JWTClaims{i}
+		key := fmt.Sprintf("%s.refresh", key)
+		claims := JWTClaims{
+			Aud: i,
+			Id:  key,
+			Sub: "refresh_token",
+			Iss: config.Conf.App.Name,
+			Iat: time.Now().Unix(),
+		}
+		claims.Aid = token.AccessUUID
+		token.RefreshUUID = claims.Id
+		token.ExpiresRt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
+		claims.Exp = token.ExpiresAt.Unix()
+
 		var buf = []byte{}
 		buf, err = RefreshSigner.Sign(claims)
 		if err != nil {
 			return nil, err
 		}
 		token.Refresh = string(buf)
-		token.ExpiresRt = time.Now().Add(time.Duration(refreshExpires) * time.Minute)
-		if err = cache.Set(fmt.Sprintf("%s.refresh", key), token.Refresh, cache.Duration(token.ExpiresRt.Unix())); err != nil {
+		if err = cache.Set(key, token.Refresh, cache.Duration(token.ExpiresRt.Unix())); err != nil {
 			return
 		}
+	}
+	return
+}
+
+func RefreshToken(i interface{}, c JwtToken, key string) (token *JwtToken, err error) {
+	token = &JwtToken{}
+	{
+		key = fmt.Sprintf("%s.access", key)
+		claims := JWTClaims{
+			Aud: i,
+			Id:  key,
+			Sub: "access_token",
+			Iss: config.Conf.App.Name,
+			Iat: time.Now().Unix(),
+		}
+		token.AccessUUID = claims.Id
+		token.ExpiresAt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
+		claims.Exp = token.ExpiresAt.Unix()
+
+		var buf = []byte{}
+		buf, err = AccessSigner.Sign(claims)
+		if err != nil {
+			return nil, err
+		}
+		token.Access = string(buf)
+		token.ExpiresRt = c.ExpiresRt
+		token.Refresh = c.Refresh
+		if err = cache.Set(key, token.Access, cache.Duration(token.ExpiresAt.Unix())); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func RefreshTokenWithAuth(i interface{}, key string, t JwtToken) (token *JwtToken, err error) {
+	token, err = RefreshToken(i, t, key)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func Decrypt(s string) (claims *JWTClaims, err error) {
+	token, err := _jwt.Decode([]byte(strings.TrimPrefix(s, "Bearer ")))
+	if err != nil {
+		return
+	}
+	claims = &JWTClaims{}
+	if err = json.Unmarshal(token.Payload, claims); err != nil {
+		return
 	}
 	return
 }

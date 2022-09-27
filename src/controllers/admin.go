@@ -94,6 +94,30 @@ func AdminLogin(ctx iris.Context) {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+func GetCurrentWeekQuiz(ctx iris.Context) {
+	quiz := &models.WeeklyQuiz{}
+	year, week := time.Now().ISOWeek()
+	if ok := repository.NewRepository(quiz).
+		FindOne("week = ? AND session = ?", week, settings.Get("examSession", year)); !ok {
+		ctx.StatusCode(404)
+		ctx.JSON(internalServerError)
+		return
+	}
+	questions, err := quiz.Questions()
+	if err != nil {
+		ctx.StatusCode(500)
+		ctx.JSON(internalServerError)
+		return
+	}
+	ctx.JSON(apiResponse{
+		"status": "success",
+		"data": apiResponse{
+			"quiz":      quiz,
+			"questions": questions,
+		},
+	})
+}
+
 func IndexWeeklyQuiz(ctx iris.Context) {
 	weeklyQuizzes := []models.WeeklyQuiz{}
 	if err := repository.NewRepository(&models.WeeklyQuiz{}).FindMany(&weeklyQuizzes); err != nil {

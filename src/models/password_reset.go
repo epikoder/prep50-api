@@ -13,7 +13,7 @@ type (
 	PasswordReset struct {
 		Id        uuid.UUID `sql:"primary_key;unique;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
 		Code      int       `gorm:"type:int(4);column:code;notnull;"`
-		Email     string    `gorm:"type:varchar(255);column:email;notnull;"`
+		User      string    `gorm:"type:varchar(255);notnull;"`
 		CreatedAt time.Time
 	}
 )

@@ -5,28 +5,21 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/mvc"
 )
 
 func RegisterApiRoutes(app *iris.Application) {
 	app.AllowMethods(iris.MethodOptions)
-	app.HandleDir("/static", iris.Dir("./src/web/assets"), iris.DirOptions{Compress: true})
-	app.Get("/", func(ctx iris.Context) {
-		if err := ctx.ServeFile("./src/web/index.html"); err != nil {
-			ctx.StatusCode(404)
-			ctx.JSON(err.Error())
-			return
-		}
-	})
+
+	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
+	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
 
 	auth := app.Party("/auth")
 	auth.Get("/query", controllers.QueryUsernameV1)
 	auth.Post("/register", controllers.RegisterV1)
 	auth.Post("/login", controllers.LoginV1)
 	auth.Post("/provider/{provider:string}", controllers.SocialV1)
-
-	app.Get("/password-reset", middlewares.RateLimiter(), controllers.PasswordReset)
-	app.Post("/password-reset", middlewares.RateLimiter(), controllers.CompletePasswordReset)
-	app.Get("/password-reset/verify", middlewares.RateLimiter(), controllers.VerifyPasswordResetCode)
+	auth.Post("/refresh-token", ijwt.JwtGuardMiddleware, controllers.Refresh)
 
 	resources := app.Party("/resources")
 	resources.Get("/subjects", controllers.GetSubjects)
@@ -39,10 +32,8 @@ func RegisterApiRoutes(app *iris.Application) {
 	user := app.Party("/user", ijwt.JwtGuardMiddleware, middlewares.Protected)
 	user.Get("/exams", controllers.UserExams)
 	user.Post("/exams", controllers.RegisterUserExams)
-	user.Get("/subjects", controllers.IndexUserSubjects)
-	user.Post("/subjects", controllers.CreateUserSubjects)
-	user.Put("/subjects")
-	user.Delete("/subjects")
+
+	mvc.New(user.Party("/subjects")).Handle(new(controllers.UserSubjectController))
 
 	study := app.Party("/study", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject)
 	study.Post("/subjects", controllers.StudySubjects)
@@ -50,10 +41,13 @@ func RegisterApiRoutes(app *iris.Application) {
 	study.Post("/podcast", middlewares.MustSubscribe, controllers.StudyPodcasts)
 	study.Post("/quiz", controllers.QuickQuiz)
 
-	quiz := app.Party("/weekly-quiz", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject, middlewares.MustSubscribe)
-	quiz.Get("/", controllers.WeekQuiz)
-	quiz.Post("/", controllers.WeekUserScore)
-	quiz.Get("/results", controllers.WeekLeaderBoard)
+	weeklyQuizApiv1 := app.Party("/weekly-quiz",
+		ijwt.JwtGuardMiddleware,
+		middlewares.Protected,
+		middlewares.MustRegisterSubject,
+		middlewares.MustSubscribe)
+	mvc.New(weeklyQuizApiv1).Handle(new(controllers.WeeklyQuizController))
+	weeklyQuizApiv1.Get("/result", controllers.LeaderBoard)
 
 	mock := app.Party("/mock", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject, middlewares.MustSubscribe)
 	mock.Get("/", controllers.UserMock)
@@ -62,6 +56,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	// Admin Protected Routes
 	app.Post("/admin", controllers.AdminLogin)
 	admin := app.Party("/admin", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.AdminUser)
+	admin.Get("/weekly", middlewares.ResourcePermission, controllers.GetCurrentWeekQuiz)
 	admin.Get("/weekly/index", middlewares.ResourcePermission, controllers.IndexWeeklyQuiz)
 	admin.Get("/weekly/view", middlewares.ResourcePermission, controllers.ViewWeeklyQuizQuestions)
 	admin.Post("/weekly/create", middlewares.ResourcePermission, controllers.CreateWeeklyQuiz)
@@ -90,4 +85,14 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	admin.Get("/settings/{setting:string}", controllers.Settings)
 	admin.Post("/settings/{setting:string}", controllers.SetSettings)
+}
+
+func RegisterWebRoutes(app *iris.Application) {
+	app.Get("/", func(ctx iris.Context) {
+		if err := ctx.ServeFile("./public/index.html"); err != nil {
+			ctx.StatusCode(404)
+			ctx.JSON(err.Error())
+			return
+		}
+	})
 }
