@@ -36,6 +36,16 @@ var (
 			Status:       true,
 		},
 	}
+	authProviders = []models.Provider{
+		{
+			Id:   uuid.New(),
+			Name: "Google",
+		},
+		{
+			Id:   uuid.New(),
+			Name: "Facebook",
+		},
+	}
 
 	dbNotMigrated = func(s ...string) {
 		fmt.Print(color.Red)
@@ -48,6 +58,9 @@ var (
 func initialize(cmd *cobra.Command, args []string) {
 	if cmd.Flag("exams").Value.String() == "true" {
 		initializeExams(cmd, args)
+	}
+	if cmd.Flag("providers").Value.String() == "true" {
+		initializeAuthenticationProvider(cmd, args)
 	}
 	if cmd.Flag("admin").Value.String() == "true" {
 		initializeAdmin(cmd, args)
@@ -73,6 +86,24 @@ func initializeExams(cmd *cobra.Command, args []string) {
 		}
 	}
 	fmt.Println(color.Blue, "Initialized:: Exam Type table successful", color.Reset)
+}
+
+func initializeAuthenticationProvider(cmd *cobra.Command, args []string) {
+	var providers = &models.Provider{}
+	if !providers.Database().Migrator().HasTable(providers) {
+		dbNotMigrated()
+		return
+	}
+	fmt.Println(color.Yellow, "Initializing:: Auth Providers table...", color.Reset)
+	for _, v := range authProviders {
+		var provider *models.Provider = &models.Provider{}
+		if ok := repository.NewRepository(provider).FindOne("name = ?", v.Name); !ok {
+			if err := repository.NewRepository(&v).Create(); !logger.HandleError(err) {
+				panic(err)
+			}
+		}
+	}
+	fmt.Println(color.Blue, "Initialized:: Auth provider table successful", color.Reset)
 }
 
 func initializeAdmin(cmd *cobra.Command, args []string) {
@@ -218,7 +249,10 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 			return
 		}
 	}
-	if _, err := crypto.KeyGen(true); err != nil {
-		panic(err)
+	if _, err := os.OpenFile("jwt.key", os.O_RDWR|os.O_APPEND, 0755); err != nil || cmd.Flag("jwtf").Value.String() == "true" {
+		if _, err := crypto.KeyGen(true); err != nil {
+			panic(err)
+		}
 	}
+
 }
