@@ -1,6 +1,6 @@
 app:
     name: Prep50
-    host: ""
+    host: "prep50.herokuapp.com"
     port: 8081
     key: ""
     version: "1"
@@ -30,11 +30,12 @@ cors:
     origins:
         - prep50.com
         - localhost:8080
-    headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token
+        - prep50.herokuapp.com
+    headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization
     allowCredentials: "true"
 jwt:
-    access: 15
-    refresh: 168
+    access: 60
+    refresh: 10080
 mail:
     username: efedua.bell@gmail.com
     from: prep50
@@ -46,11 +47,3 @@ redis:
     port: 14659
     password: p29f2534f34033b53d432160d7987ec54c162f57d225531158e31b7afbb6a1db0
     database: 0
-payment:
-    paystack:
-        live:
-            pk_key: ""
-            sk_key: ""
-        sandbox:
-            pk_key: ""
-            sk_key: ""

@@ -3,5 +3,5 @@ quickQuizQuestions: 60
 paystack.mode: "sandbox"
 paystack.live.secretKey: ""
 paystack.live.publicKey: ""
-paystack.sandbox.secretKey: ""
+paystack.sandbox.secretKey: "sk_test_26564ae24578cddeb710f465d89d125c9bdfe4f7"
 paystack.sandbox.publicKey: "pk_test_af4e0ef7bfdedcb27859289c27fd2a97100f1ba1"
