@@ -44,7 +44,7 @@ func Refresh(ctx iris.Context) {
 		return
 	}
 
-	shouldGenerate := time.Until(time.Unix(claims.Exp, 0)).Hours() < 24
+	shouldGenerate := time.Until(time.Unix(claims.Exp, 0)).Hours() < 60
 	token, err := func() (*ijwt.JwtToken, error) {
 		if shouldGenerate {
 			return ijwt.GenerateToken(user, user.UserName)

@@ -128,10 +128,14 @@ type (
 		models.UserLoginFormStruct
 		UserDeviceForm
 	}
-	userWithExam struct {
+	UserWithExam struct {
 		models.User
-		Exam         []models.UserExam `json:"exams"`
-		RegisterExam bool              `json:"register_exam"`
+		Exam              []models.UserExam `json:"exams"`
+		HasRegisteredExam bool              `json:"has_registered_exam"`
+	}
+	LoginResponse struct {
+		*ijwt.JwtToken
+		User *UserWithExam `json:"user"`
 	}
 )
 
@@ -261,16 +265,23 @@ func LoginV1(ctx iris.Context) {
 
 	userExams := []models.UserExam{}
 	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
-	token, err := ijwt.GenerateToken(&userWithExam{*user, userExams, len(userExams) == 0}, user.UserName)
+
+	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
+	token, err := ijwt.GenerateToken(userWithExam, user.UserName)
 	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
 	}
+
+	response := LoginResponse{
+		token, userWithExam,
+	}
+
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "logged in successfully",
-		"data":    token,
+		"data":    response,
 	})
 }
 
@@ -470,15 +481,21 @@ func SocialV1(ctx iris.Context) {
 
 	userExams := []models.UserExam{}
 	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
-	token, err := ijwt.GenerateToken(&userWithExam{*user, userExams, len(userExams) == 0}, user.UserName)
+	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
+
+	token, err := ijwt.GenerateToken(userWithExam, user.UserName)
 	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
 	}
+
+	response := LoginResponse{
+		token, userWithExam,
+	}
 	ctx.JSON(apiResponse{
 		"status":  "success",
-		"message": "logged in successfully",
-		"data":    token,
+		"message": "Logged in successfully",
+		"data":    response,
 	})
 }
