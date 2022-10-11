@@ -17,6 +17,8 @@ type (
 		Phone         string         `gorm:"type:varchar(20);column:phone;" json:"phone"`
 		Photo         string         `gorm:"type:varchar(255);column:photo" json:"photo"`
 		Password      string         `gorm:"type:varchar(64);column:password" json:"-"`
+		Address       string         `json:"address"`
+		Gender        Gender         `gorm:"type:varchar(1)" json:"gender"`
 		Referral      string         `json:"referral"`
 		ReferralBonus uint           `json:"-"`
 		IsProvider    bool           `gorm:"type:tinyint(1);" json:"-"`
@@ -76,11 +78,15 @@ type (
 	}
 
 	PaymentStatus string
+	Gender        string
 )
 
-var (
+const (
 	Pending   PaymentStatus = "pending"
 	Completed PaymentStatus = "completed"
+
+	Male   Gender = "M"
+	Female Gender = "F"
 )
 
 func (u *User) ID() interface{} {

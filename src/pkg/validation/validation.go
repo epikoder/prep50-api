@@ -9,7 +9,7 @@ import (
 
 func Errors(err error) interface{} {
 	var m map[string]interface{} = make(map[string]interface{})
-	m["status"] = false
+	m["status"] = "failed"
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
 		m["message"] = "invalid request body"

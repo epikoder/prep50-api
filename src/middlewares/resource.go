@@ -77,12 +77,12 @@ func MustRegisterSubject(ctx iris.Context) {
 	}
 
 	for e, s := range examSubject {
-		if l := len(s); e.SubjectCount > l {
+		if l := len(s); l < 1 {
 			ctx.StatusCode(http.StatusForbidden)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    401,
-				"message": fmt.Sprintf("you need to register at least %d subjects on %s, registered %d", e.SubjectCount, e.Name, l),
+				"message": fmt.Sprintf("you need to register at least 1 subjects on %s, registered %d", e.Name, l),
 			})
 			return
 		}
@@ -92,31 +92,31 @@ func MustRegisterSubject(ctx iris.Context) {
 }
 
 func MustSubscribe(ctx iris.Context) {
-	type form struct {
-		WithLesson bool
-	}
-	data := &form{}
-	ctx.ReadJSON(data)
-	if data.WithLesson {
-		user, _ := getUser(ctx)
-		session := settings.Get("examSession", time.Now().Year())
-		userExam := &models.UserExam{}
-		if err := database.UseDB("app").
-			Find(userExam, "user_id = ? AND session = ? AND payment_status = ?",
-				user.Id, session, models.Completed).Error; err != nil {
-			ctx.StatusCode(500)
-			ctx.JSON(internalServerError)
-			return
-		}
-		if userExam.Id == uuid.Nil {
-			ctx.StatusCode(http.StatusForbidden)
-			ctx.JSON(apiResponse{
-				"status":  "failed",
-				"code":    403,
-				"message": "Please complete payment for registered exam",
-			})
-			return
-		}
-	}
+	// type form struct {
+	// 	WithLesson bool
+	// }
+	// data := &form{}
+	// ctx.ReadJSON(data)
+	// if data.WithLesson {
+	// 	user, _ := getUser(ctx)
+	// 	session := settings.Get("examSession", time.Now().Year())
+	// 	userExam := &models.UserExam{}
+	// 	if err := database.UseDB("app").
+	// 		Find(userExam, "user_id = ? AND session = ? AND payment_status = ?",
+	// 			user.Id, session, models.Completed).Error; err != nil {
+	// 		ctx.StatusCode(500)
+	// 		ctx.JSON(internalServerError)
+	// 		return
+	// 	}
+	// 	if userExam.Id == uuid.Nil {
+	// 		ctx.StatusCode(http.StatusForbidden)
+	// 		ctx.JSON(apiResponse{
+	// 			"status":  "failed",
+	// 			"code":    403,
+	// 			"message": "Please complete payment for registered exam",
+	// 		})
+	// 		return
+	// 	}
+	// }
 	ctx.Next()
 }

@@ -13,6 +13,7 @@ type (
 	Exam struct {
 		Id           uuid.UUID `sql:"type:uuid;" gorm:"unique" json:"-"`
 		Name         string    `gorm:"unique;index;notnull" json:"name"`
+		Description  string    `json:"description"`
 		Amount       int       `json:"price"`
 		SubjectCount int       `json:"subject_count"`
 		Status       bool      `json:"status"`
@@ -37,4 +38,8 @@ func (e *Exam) Database() *gorm.DB {
 
 func (e *Exam) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(e)
+}
+
+func (e *Exam) OverrideMigration() bool {
+	return true
 }

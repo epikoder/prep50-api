@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"strings"
+
 	"github.com/Prep50mobileApp/prep50-api/src/controllers"
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
@@ -11,8 +13,27 @@ import (
 func RegisterApiRoutes(app *iris.Application) {
 	app.AllowMethods(iris.MethodOptions)
 
+	app.HandleDir("storage", iris.Dir("./storage"), iris.DirOptions{Compress: true})
+
 	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
 	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
+
+	newsfeedApi := app.Party("/newsfeed", ijwt.JwtGuardMiddleware, middlewares.Protected)
+	newsfeedApi.Any("/{action:string}", func(ctx iris.Context) {
+		if a := ctx.Params().Get("action"); strings.EqualFold(a, "report-comment") {
+			controllers.NewsFeedReportComment(ctx)
+			return
+		}
+		switch ctx.Method() {
+		case "POST":
+			controllers.NewsFeedInteract(ctx)
+		case "GET":
+			controllers.NewsFeedView(ctx)
+		default:
+			ctx.StatusCode(405)
+		}
+	})
+	mvc.New(newsfeedApi).Handle(new(controllers.NewsFeedController))
 
 	auth := app.Party("/auth")
 	auth.Get("/query", controllers.QueryUsernameV1)
@@ -30,10 +51,12 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	// User Protected Routes
 	user := app.Party("/user", ijwt.JwtGuardMiddleware, middlewares.Protected)
-	user.Get("/exams", controllers.UserExams)
-	user.Post("/exams", controllers.RegisterUserExams)
 
-	mvc.New(user.Party("/subjects")).Handle(new(controllers.UserSubjectController))
+	userExamApi := user.Party("/exams")
+	mvc.New(userExamApi).Handle(new(controllers.UserExamController))
+
+	userSubjectApi := user.Party("/subjects")
+	mvc.New(userSubjectApi).Handle(new(controllers.UserSubjectController))
 
 	study := app.Party("/study", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject)
 	study.Post("/subjects", controllers.StudySubjects)

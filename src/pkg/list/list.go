@@ -125,7 +125,7 @@ func Slug(s string) string {
 		_s = strings.TrimSuffix(_s, "-")
 		_s = _s + "-"
 	}
-	return strings.TrimSuffix(_s, "-")
+	return strings.ToLower(strings.TrimSuffix(_s, "-"))
 }
 
 func UniqueSlug(model dbmodel.DBModel, slug string) (s string, err error) {

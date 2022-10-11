@@ -2,9 +2,9 @@ package repository
 
 import (
 	"os"
+	"reflect"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,6 +22,13 @@ func NewRepository(model dbmodel.DBModel) (r *repository) {
 	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
 		r.DB = r.DB.Debug()
 	}
+	v := reflect.ValueOf(model)
+	if v.IsValid() {
+		f := v.Elem().FieldByName("Session")
+		if f.IsValid() {
+			r.DB = r.DB.Order("session DESC")
+		}
+	}
 	return
 }
 
@@ -38,15 +45,8 @@ func (r *repository) First() error {
 	return r.DB.First(r.Model).Error
 }
 func (r *repository) FindOne(i ...interface{}) (ok bool) {
-	tx := r.DB.First(r.Model, i...)
-	if tx.Error != nil {
-		return
-	}
-	uid, ok := r.Model.ID().(uuid.UUID)
-	if !ok {
-		return tx.Error == nil
-	}
-	return uid != uuid.Nil
+	return r.DB.First(r.Model, i...).Error == nil
+
 }
 
 func (r *repository) FindOneDst(dst interface{}, i ...interface{}) error {

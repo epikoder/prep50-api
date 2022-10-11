@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
@@ -35,12 +36,13 @@ func (c *UserSubjectController) Get() {
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-		Where("ue.user_id = ? AND ue.session = ? AND e.status = 1 AND ue.user_id = ?", user.Id, session, user.Id).
+		Where("ue.user_id = ? AND ue.session = ? AND e.status = 1", user.Id, session).
 		Scan(&q).Error; err != nil {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
 		return
 	}
+	fmt.Println(color.Red, q, color.Reset)
 
 	qid := []uuid.UUID{}
 	for _, i := range q {
@@ -89,7 +91,7 @@ func (c *UserSubjectController) Get() {
 
 type (
 	UserSubjectForm map[string][]int
-	createQuery     struct {
+	UserExamQuery   struct {
 		Id           uuid.UUID
 		ExamId       uuid.UUID
 		Name         string
@@ -115,18 +117,37 @@ func (c *UserSubjectController) Post() {
 			continue
 		}
 		v = list.Unique(v).([]int)
-		q := createQuery{}
+
+	QUERY_USER_EXAM:
+		q := UserExamQuery{}
 		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.session, e.name, e.subject_count, e.status").
+			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("e.name = ? AND ue.session = ?", e, session).
-			Scan(&q).Error; err != nil || q.Id == uuid.Nil {
-			c.Ctx.StatusCode(http.StatusNotFound)
-			c.Ctx.JSON(apiResponse{
-				"status":  "failed",
-				"message": fmt.Sprintf("exam :%s not found", e),
-			})
-			return
+			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
+			First(&q).Error; err != nil {
+			exam := &models.Exam{}
+			if !repository.NewRepository(exam).FindOne("name = ?", e) {
+				c.Ctx.StatusCode(http.StatusNotFound)
+				c.Ctx.JSON(apiResponse{
+					"status":  "failed",
+					"message": fmt.Sprintf("Exam :%s not found", e),
+				})
+				return
+			}
+			userExams := &models.UserExam{
+				Id:            uuid.New(),
+				UserId:        user.Id,
+				ExamId:        exam.Id,
+				Session:       (uint)(session.(int)),
+				PaymentStatus: models.Pending,
+				CreatedAt:     time.Now(),
+			}
+			if err := database.UseDB("app").Create(userExams).Error; err != nil {
+				c.Ctx.StatusCode(http.StatusInternalServerError)
+				c.Ctx.JSON(internalServerError)
+				return
+			}
+			goto QUERY_USER_EXAM
 		}
 
 		if q.SubjectCount < len(v) {
@@ -166,7 +187,7 @@ func (c *UserSubjectController) Post() {
 			c.Ctx.JSON(internalServerError)
 			return
 		}
-		fmt.Println(color.Red, q, q.SubjectCount, len(currentUserSubjects), len(userExamSubject), color.Reset)
+
 		if q.SubjectCount < len(currentUserSubjects)+len(userExamSubject) {
 			c.Ctx.StatusCode(http.StatusForbidden)
 			c.Ctx.JSON(apiResponse{
@@ -194,5 +215,93 @@ func (c *UserSubjectController) Post() {
 }
 
 func (c *UserSubjectController) Put() {
+	type SubjectUpdateForm map[string]struct {
+		Action string
+		Id     []uint
+	}
+	data := SubjectUpdateForm{}
+	if err := c.Ctx.ReadJSON(&data); err != nil {
+		c.Ctx.StatusCode(400)
+		c.Ctx.JSON(validation.Errors(err))
+		return
+	}
 
+	user, _ := getUser(c.Ctx)
+	session := settings.Get("examSession", time.Now().Year())
+	for e, v := range data {
+		q := UserExamQuery{}
+		if err := database.UseDB("app").Table("user_exams as ue").
+			Select("ue.id, ue.exam_id, ue.session, e.name, e.subject_count, e.status").
+			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
+			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
+			First(&q).Error; err != nil {
+			c.Ctx.StatusCode(http.StatusNotFound)
+			c.Ctx.JSON(apiResponse{
+				"status":  "failed",
+				"message": fmt.Sprintf("exam :%s not found", e),
+			})
+			return
+		}
+
+		currentUserSubjects := []models.UserSubject{}
+		if err := repository.NewRepository(user).FindMany(&currentUserSubjects, "user_id = ? AND user_exam_id = ?", user.Id, q.Id); err != nil {
+			c.Ctx.StatusCode(http.StatusInternalServerError)
+			c.Ctx.JSON(internalServerError)
+			return
+		}
+
+		switch action := v.Action; strings.ToLower(action) {
+		case "remove":
+			{
+				for i, us := range currentUserSubjects {
+					if list.Contains(v.Id, us.SubjectId) && len(currentUserSubjects) > 0 {
+						if err := us.Database().Delete(us).Error; logger.HandleError(err) {
+							currentUserSubjects = append(append(make([]models.UserSubject, 0), currentUserSubjects[:i]...), currentUserSubjects[i+1:]...)
+						}
+					}
+				}
+			}
+		default:
+			{
+				for _, us := range currentUserSubjects {
+					tmp := v.Id
+					for index, id := range tmp {
+						if id == us.SubjectId {
+							v.Id = append(append(make([]uint, 0), v.Id[:index]...), v.Id[index+1:]...)
+						}
+					}
+				}
+
+				if len(currentUserSubjects)+len(v.Id) > q.SubjectCount {
+					c.Ctx.JSON(apiResponse{
+						"statsu":  "failed",
+						"message": fmt.Sprintf("Maximum number of subject for %s exceeded", q.Name),
+					})
+					return
+				}
+
+				if len(v.Id) > 0 {
+					subs := []models.UserSubject{}
+					for _, id := range v.Id {
+						subs = append(subs, models.UserSubject{
+							Id:         uuid.New(),
+							UserId:     user.Id,
+							UserExamId: q.Id,
+							SubjectId:  id,
+						})
+					}
+					if err := database.UseDB("app").Create(subs).Error; err != nil {
+						c.Ctx.StatusCode(500)
+						c.Ctx.JSON(internalServerError)
+						return
+					}
+				}
+			}
+		}
+
+		c.Ctx.JSON(apiResponse{
+			"status":  "success",
+			"message": "Subjects updated successfully",
+		})
+	}
 }

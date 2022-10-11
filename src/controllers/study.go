@@ -143,7 +143,7 @@ func StudyTopics(ctx iris.Context) {
 		repo.Preload("Objectives.Lessons")
 	}
 
-	if err := repo.FindMany(&topics, "subject_id in ? order by subject_id asc", allowedIds); err != nil {
+	if err := repo.FindMany(&topics, "subject_id IN ? order by subject_id asc", allowedIds); err != nil {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return

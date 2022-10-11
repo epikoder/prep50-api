@@ -240,7 +240,8 @@ func UpdateWeeklyQuizQuestion(ctx iris.Context) {
 		ctx.JSON(internalServerError)
 		return
 	}
-	for i, q := range quizQues {
+	tmpQuizQues := quizQues
+	for i, q := range tmpQuizQues {
 		if list.Contains(data.Remove, q.QuestionId) && !list.Contains(data.Add, q.QuestionId) {
 			if err := quiz.Database().Delete(q, "quiz_id = ? AND question_id = ?", quiz.Id, q.QuestionId).Error; !logger.HandleError(err) {
 				ctx.StatusCode(500)
@@ -463,7 +464,9 @@ func UpdateMockQuestion(ctx iris.Context) {
 		ctx.JSON(internalServerError)
 		return
 	}
-	for i, q := range mockQues {
+
+	tmpMockQues := mockQues
+	for i, q := range tmpMockQues {
 		if list.Contains(data.Remove, q.QuestionId) && !list.Contains(data.Add, q.QuestionId) {
 			if err := mock.Database().Delete(q, "mock_id = ? AND question_id = ?", mock.Id, q.QuestionId).Error; !logger.HandleError(err) {
 				ctx.StatusCode(500)
