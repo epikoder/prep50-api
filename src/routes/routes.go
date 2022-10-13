@@ -29,6 +29,8 @@ func RegisterApiRoutes(app *iris.Application) {
 			controllers.NewsFeedInteract(ctx)
 		case "GET":
 			controllers.NewsFeedView(ctx)
+		case "PUT":
+			controllers.NewsFeedInteractUpdateComment(ctx)
 		default:
 			ctx.StatusCode(405)
 		}
@@ -78,6 +80,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	// Admin Protected Routes
 	app.Post("/admin", controllers.AdminLogin)
+	app.Post("/admin/refresh-token", ijwt.JwtGuardMiddleware, controllers.Refresh)
 	admin := app.Party("/admin", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.AdminUser)
 	admin.Get("/weekly", middlewares.ResourcePermission, controllers.GetCurrentWeekQuiz)
 	admin.Get("/weekly/index", middlewares.ResourcePermission, controllers.IndexWeeklyQuiz)

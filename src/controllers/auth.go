@@ -135,7 +135,7 @@ type (
 	}
 	LoginResponse struct {
 		*ijwt.JwtToken
-		User *UserWithExam `json:"user"`
+		User interface{} `json:"user"`
 	}
 )
 

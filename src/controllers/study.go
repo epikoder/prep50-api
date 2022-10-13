@@ -108,7 +108,8 @@ func StudyTopics(ctx iris.Context) {
 		Table("user_subjects as us").
 		Select("us.subject_id").
 		Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
-		Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
+		// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
+		Where("us.user_id = ? AND ue.session = ?", user.Id, session).
 		Find(&ids).Error; err != nil {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
@@ -205,7 +206,8 @@ func StudyPodcasts(ctx iris.Context) {
 		Table("user_subjects as us").
 		Select("us.subject_id").
 		Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
-		Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
+		// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
+		Where("us.user_id = ? AND ue.session = ?", user.Id, session).
 		Find(&ids).Error; err != nil {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
@@ -302,7 +304,8 @@ func QuickQuiz(ctx iris.Context) {
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.id, ue.exam_id, ue.session, ue.user_id, e.name, e.status, ue.payment_status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-		Where("ue.session = ? AND e.status = 1 AND ue.payment_status = ? AND ue.user_id = ?", session, models.Completed, user.Id).
+		// Where("ue.session = ? AND e.status = 1 AND ue.payment_status = ? AND ue.user_id = ?", session, models.Completed, user.Id).
+		Where("ue.session = ? AND e.status = 1 AND ue.user_id = ?", session, user.Id).
 		Scan(&q).Error; err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)

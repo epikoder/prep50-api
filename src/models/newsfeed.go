@@ -52,7 +52,7 @@ type (
 		Comment    string    `gorm:"type:mediumtext" json:"comment"`
 		Reports    []User    `gorm:"many2many:newsfeed_comment_reports" json:"-"`
 		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"-"`
+		UpdatedAt  time.Time `json:"updated_at"`
 	}
 
 	NewsfeedReport struct {

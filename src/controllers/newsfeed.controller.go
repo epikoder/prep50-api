@@ -176,28 +176,14 @@ func NewsFeedInteract(ctx iris.Context) {
 	switch strings.ToLower(action) {
 	case "comment":
 		{
-			feedComment := &models.NewsfeedComment{}
-			if err := repository.NewRepository(feed).
-				FindOneDst(feedComment,
-					"newsfeed_id = ? AND user_id = ?",
-					feed.Id,
-					user.Id); err != nil && err != gorm.ErrRecordNotFound {
-				ctx.StatusCode(500)
-				ctx.JSON(internalServerError)
-				return
-			} else if err == gorm.ErrRecordNotFound {
-				feedComment = &models.NewsfeedComment{
+			if data.Comment != "" {
+				feedComment := &models.NewsfeedComment{
 					Id:         uuid.New(),
 					NewsfeedId: feed.Id,
 					UserId:     user.Id,
+					Comment:    data.Comment,
 				}
-				feedComment.Comment = data.Comment
 				database.UseDB("app").Create(feedComment)
-			} else {
-				feedComment.Comment = data.Comment
-				feedComment.UpdatedAt = time.Now()
-				database.UseDB("app").Where("newsfeed_id = ? AND user_id = ?", feed.Id, user.Id).
-					Save(feedComment)
 			}
 		}
 	case "like":
@@ -249,6 +235,39 @@ func NewsFeedInteract(ctx iris.Context) {
 			}
 		}
 	}
+
+	ctx.JSON(apiResponse{
+		"status":  "success",
+		"message": "Updated successfully",
+	})
+}
+
+func NewsFeedInteractUpdateComment(ctx iris.Context) {
+	data := struct {
+		Id      string `validate:"required"`
+		Comment string `validate:"required"`
+	}{}
+
+	if err := ctx.ReadJSON(&data); err != nil {
+		ctx.StatusCode(400)
+		ctx.JSON(validation.Errors(err))
+		return
+	}
+	user, _ := getUser(ctx)
+	feedComment := &models.NewsfeedComment{}
+	if ok := repository.
+		NewRepository(feedComment).
+		FindOne("id = ? AND user_id = ?", data.Id, user.Id); !ok {
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "comment not found",
+		})
+		return
+	}
+
+	feedComment.Comment = data.Comment
+	feedComment.UpdatedAt = time.Now()
+	database.UseDB("app").Save(feedComment)
 
 	ctx.JSON(apiResponse{
 		"status":  "success",

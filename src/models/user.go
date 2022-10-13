@@ -23,6 +23,7 @@ type (
 		ReferralBonus uint           `json:"-"`
 		IsProvider    bool           `gorm:"type:tinyint(1);" json:"-"`
 		Locked        bool           `gorm:"type:tinyint(1);" json:"-"`
+		IsAdmin       bool           `json:"-"`
 		CreatedAt     time.Time      `json:"-"`
 		UpdatedAt     time.Time      `json:"-"`
 		DeletedAt     gorm.DeletedAt `json:"-"`
