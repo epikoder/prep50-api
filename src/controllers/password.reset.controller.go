@@ -8,6 +8,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/helper"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
@@ -27,7 +28,7 @@ func (c *PasswordResetController) Get() {
 		return
 	}
 	token := sendmail.VerificationToken{}
-	if err := json.Unmarshal([]byte(_token), &token); err != nil {
+	if err := json.Unmarshal([]byte(_token), &token); !logger.HandleError(err) {
 		c.Ctx.View("password_reset", iris.Map{
 			"message": "Invalid/Expired Link",
 		})

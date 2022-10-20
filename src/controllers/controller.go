@@ -40,7 +40,7 @@ var (
 
 	getUser = func(ctx iris.Context) (u *models.User, err error) {
 		i, err := ctx.User().GetRaw()
-		if err != nil {
+		if !logger.HandleError(err) {
 			return nil, err
 		}
 		var ok bool

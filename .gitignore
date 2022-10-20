@@ -24,3 +24,4 @@ server.crt
 server.key
 bin
 *.DS_Store
+firebase-service-account.json

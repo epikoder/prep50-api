@@ -55,7 +55,7 @@ func (c *WeeklyQuizController) Get() {
 	}
 	if started {
 		var err error
-		if questions, err = quiz.QuestionsWithoutAnswer(); err != nil {
+		if questions, err = quiz.QuestionsWithoutAnswer(); !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
 			return
@@ -70,7 +70,7 @@ func (c *WeeklyQuizController) Get() {
 
 func (c *WeeklyQuizController) Post() {
 	var userAnswer Answer
-	if err := c.Ctx.ReadJSON(&userAnswer); err != nil {
+	if err := c.Ctx.ReadJSON(&userAnswer); !logger.HandleError(err) {
 		c.Ctx.StatusCode(400)
 		c.Ctx.JSON(validation.Errors(err))
 		return
@@ -104,9 +104,9 @@ SKIP:
 	_time := time.Now()
 	key := fmt.Sprintf("weekly.quiz.answer.%d.%d", session, week)
 	ans, ok := cache.Get(key)
-	if err := answers.UnmarshalBinary([]byte(ans)); !ok || err != nil {
+	if err := answers.UnmarshalBinary([]byte(ans)); !ok || !logger.HandleError(err) {
 		questions, err := quiz.Questions()
-		if err != nil {
+		if !logger.HandleError(err) {
 			c.Ctx.StatusCode(500)
 			c.Ctx.JSON(internalServerError)
 			return
@@ -153,7 +153,7 @@ SKIP:
 		UserId:       user.Id,
 		Score:        score,
 		Duration:     uint(quiz.StartTime.Sub(_time).Minutes()),
-	}).Error; err != nil {
+	}).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(500)
 		c.Ctx.JSON(internalServerError)
 		return
@@ -210,7 +210,7 @@ func LeaderBoard(ctx iris.Context) {
 		Table("weekly_quiz_results as wr").
 		Select("wr.score, u.username, u.email, u.photo").
 		Joins("LEFT JOIN users as u ON u.id = wr.user_id").
-		Find(&results, "weekly_quiz_id = ?", quiz.Id).Error; err != nil {
+		Find(&results, "weekly_quiz_id = ?", quiz.Id).Error; !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		return
 	}

@@ -51,8 +51,14 @@ func RegisterApiRoutes(app *iris.Application) {
 	resources.Get("/mock", controllers.GetMocks)
 	resources.Get("/static/{page:string}", controllers.GetStatic)
 
+	support := app.Party("/support")
+	faqApi := support.Party("/faq")
+	mvc.New(faqApi).Handle(new(controllers.FaqController))
+
 	// User Protected Routes
 	user := app.Party("/user", ijwt.JwtGuardMiddleware, middlewares.Protected)
+	user.Post("/change-password", controllers.ChangePassword)
+	mvc.New(user.Party("/profile")).Handle(new(controllers.AccountController))
 
 	userExamApi := user.Party("/exams")
 	mvc.New(userExamApi).Handle(new(controllers.UserExamController))

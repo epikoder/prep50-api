@@ -34,7 +34,7 @@ func (c *UserExamController) Get() {
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ? AND session = ?", user.Id, session).
-		Scan(&userExams).Error; err != nil {
+		Scan(&userExams).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
 		return
@@ -72,7 +72,7 @@ func (c *UserExamController) Post() {
 		}
 		uRECS := &models.UserExam{}
 		if err := repository.NewRepository(&models.Exam{}).
-			FindOneDst(uRECS, "exam_id = ? AND user_id = ? AND session = ?", e.Id, user.Id, session); err != nil &&
+			FindOneDst(uRECS, "exam_id = ? AND user_id = ? AND session = ?", e.Id, user.Id, session); !logger.HandleError(err) &&
 			!strings.Contains(err.Error(), "not found") {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)

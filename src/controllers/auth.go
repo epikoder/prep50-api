@@ -39,7 +39,7 @@ func QueryUsernameV1(ctx iris.Context) {
 
 func RegisterV1(ctx iris.Context) {
 	data := models.UserRegisterFormStruct{}
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusBadRequest)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -141,7 +141,7 @@ type (
 
 func LoginV1(ctx iris.Context) {
 	data := UserDeviceLoginForm{}
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusBadRequest)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -294,7 +294,7 @@ type ProviderLogin struct {
 
 func SocialV1(ctx iris.Context) {
 	data := ProviderLogin{}
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(400)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -337,7 +337,7 @@ func SocialV1(ctx iris.Context) {
 
 		if err := database.UseDB("app").
 			First(&models.UserProvider{}, "user_id = ? AND provider_id = ?", user.Id, provider.Id).
-			Error; err != nil {
+			Error; !logger.HandleError(err) {
 			_provider := &struct {
 				Name string
 			}{}
@@ -440,7 +440,7 @@ func SocialV1(ctx iris.Context) {
 		data.UserName = strings.ToLower(data.UserName)
 		if ok := repository.NewRepository(user).FindOne("username = ?", data.UserName); ok {
 			username, err := list.UniqueByField(user, data.UserName, "username")
-			if err != nil {
+			if !logger.HandleError(err) {
 				ctx.JSON(apiResponse{
 					"status":  "failed",
 					"message": "Unable to assign username",
@@ -472,7 +472,7 @@ func SocialV1(ctx iris.Context) {
 			UserId:     user.Id,
 			ProviderId: provider.Id,
 			IsLoggedIn: true,
-		}).Error; err != nil {
+		}).Error; !logger.HandleError(err) {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(internalServerError)
 			return

@@ -36,7 +36,7 @@ func StudySubjects(ctx iris.Context) {
 			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("ue.session = ? AND e.status = 1 AND ue.user_id = ?", session, user.Id).
-			Scan(&q).Error; err != nil {
+			Scan(&q).Error; !logger.HandleError(err) {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(internalServerError)
 			return
@@ -68,7 +68,7 @@ func StudySubjects(ctx iris.Context) {
 	}
 	for e := range examSubject {
 		subjects := []models.Subject{}
-		if err := repo.FindMany(&subjects, "id IN ?", ids[e.Name]); err != nil {
+		if err := repo.FindMany(&subjects, "id IN ?", ids[e.Name]); !logger.HandleError(err) {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(internalServerError)
 			return
@@ -110,7 +110,7 @@ func StudyTopics(ctx iris.Context) {
 		Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
 		// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
 		Where("us.user_id = ? AND ue.session = ?", user.Id, session).
-		Find(&ids).Error; err != nil {
+		Find(&ids).Error; !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -144,7 +144,7 @@ func StudyTopics(ctx iris.Context) {
 		repo.Preload("Objectives.Lessons")
 	}
 
-	if err := repo.FindMany(&topics, "subject_id IN ? order by subject_id asc", allowedIds); err != nil {
+	if err := repo.FindMany(&topics, "subject_id IN ? order by subject_id asc", allowedIds); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -208,7 +208,7 @@ func StudyPodcasts(ctx iris.Context) {
 		Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
 		// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
 		Where("us.user_id = ? AND ue.session = ?", user.Id, session).
-		Find(&ids).Error; err != nil {
+		Find(&ids).Error; !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -239,7 +239,7 @@ func StudyPodcasts(ctx iris.Context) {
 		}
 	}
 
-	if err := repo.FindMany(&topics, "subject_id in ? order by subject_id asc", allowedIds); err != nil {
+	if err := repo.FindMany(&topics, "subject_id in ? order by subject_id asc", allowedIds); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -306,7 +306,7 @@ func QuickQuiz(ctx iris.Context) {
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 		// Where("ue.session = ? AND e.status = 1 AND ue.payment_status = ? AND ue.user_id = ?", session, models.Completed, user.Id).
 		Where("ue.session = ? AND e.status = 1 AND ue.user_id = ?", session, user.Id).
-		Scan(&q).Error; err != nil {
+		Scan(&q).Error; !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
@@ -317,7 +317,7 @@ func QuickQuiz(ctx iris.Context) {
 			if q.Id != uuid.Nil {
 				userSubjects := []models.UserSubject{}
 				if err = repository.NewRepository(&models.UserSubject{}).
-					FindMany(&userSubjects, "user_exam_id = ?", q.Id); err != nil {
+					FindMany(&userSubjects, "user_exam_id = ?", q.Id); !logger.HandleError(err) {
 					return
 				}
 				for _, us := range userSubjects {
@@ -327,7 +327,7 @@ func QuickQuiz(ctx iris.Context) {
 		}
 		return
 	}(q)
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
@@ -347,7 +347,7 @@ func QuickQuiz(ctx iris.Context) {
 	if len(allowedSubjectIds) == 0 {
 		for _, id := range form.Subject {
 			_questions := []models.Question{}
-			if err := database.UseDB("core").Find(&_questions, "subject_id = ? LIMIT 4", id).Error; err != nil {
+			if err := database.UseDB("core").Find(&_questions, "subject_id = ? LIMIT 4", id).Error; !logger.HandleError(err) {
 				ctx.StatusCode(500)
 				ctx.JSON(internalServerError)
 				return
@@ -367,7 +367,7 @@ func QuickQuiz(ctx iris.Context) {
 		subs := []models.Subject{}
 		if err := repository.NewRepository(&models.Subject{}).
 			Preload("Objectives.Questions").
-			FindMany(&subs, "id IN ?", form.Subject); err != nil {
+			FindMany(&subs, "id IN ?", form.Subject); !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return

@@ -46,6 +46,7 @@ var (
 		"GeneralSetting":  &models.GeneralSetting{},
 		"Newsfeed":        &models.Newsfeed{},
 		"NewsfeedComment": &models.NewsfeedComment{},
+		"Faq":             &models.Faq{},
 	}
 	mT migrationModel = []dbmodel.DBModel{}
 )

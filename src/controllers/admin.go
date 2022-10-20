@@ -33,7 +33,7 @@ type (
 func AdminLogin(ctx iris.Context) {
 
 	data := models.UserLoginFormStruct{}
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusBadRequest)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -107,7 +107,7 @@ func GetCurrentWeekQuiz(ctx iris.Context) {
 		return
 	}
 	questions, err := quiz.Questions()
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -123,7 +123,7 @@ func GetCurrentWeekQuiz(ctx iris.Context) {
 
 func IndexWeeklyQuiz(ctx iris.Context) {
 	weeklyQuizzes := []models.WeeklyQuiz{}
-	if err := repository.NewRepository(&models.WeeklyQuiz{}).FindMany(&weeklyQuizzes); err != nil {
+	if err := repository.NewRepository(&models.WeeklyQuiz{}).FindMany(&weeklyQuizzes); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -145,7 +145,7 @@ func ViewWeeklyQuizQuestions(ctx iris.Context) {
 		return
 	}
 	ques, err := quizz.Questions()
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -161,7 +161,7 @@ func ViewWeeklyQuizQuestions(ctx iris.Context) {
 
 func CreateWeeklyQuiz(ctx iris.Context) {
 	data := &models.WeeklyQuizFormStruct{}
-	if err := ctx.ReadJSON(data); err != nil {
+	if err := ctx.ReadJSON(data); !logger.HandleError(err) {
 		res := validation.Errors(err).(map[string]interface{})
 		ctx.StatusCode(http.StatusBadRequest)
 		if strings.Contains(data.Start_Time.String(), "0001-01-01") {
@@ -197,7 +197,7 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 		StartTime: data.Start_Time,
 		CreatedBy: user.Id.String(),
 	}
-	if err := repository.NewRepository(w).Create(); err != nil {
+	if err := repository.NewRepository(w).Create(); !logger.HandleError(err) {
 		ctx.JSON(internalServerError)
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
@@ -318,7 +318,7 @@ func UpdateWeeklyQuiz(ctx iris.Context) {
 		_, week := data.Start_Time.ISOWeek()
 		quiz.Week = uint(week)
 	}
-	if err := repository.NewRepository(quiz).Save(); err != nil {
+	if err := repository.NewRepository(quiz).Save(); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -340,7 +340,7 @@ func DeleteWeeklyQuizz(ctx iris.Context) {
 	}
 
 	if err := repository.NewRepository(&models.WeeklyQuiz{}).
-		Delete(quiz); err != nil {
+		Delete(quiz); !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "delete failed",
@@ -358,7 +358,7 @@ func DeleteWeeklyQuizz(ctx iris.Context) {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 func IndexMock(ctx iris.Context) {
 	mock := []models.Mock{}
-	if err := repository.NewRepository(&models.Mock{}).FindMany(&mock); err != nil {
+	if err := repository.NewRepository(&models.Mock{}).FindMany(&mock); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -380,7 +380,7 @@ func ViewMockQuestions(ctx iris.Context) {
 		return
 	}
 	ques, err := mock.Questions()
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -396,7 +396,7 @@ func ViewMockQuestions(ctx iris.Context) {
 
 func CreateMock(ctx iris.Context) {
 	data := &models.MockForm{}
-	if err := ctx.ReadJSON(data); err != nil {
+	if err := ctx.ReadJSON(data); !logger.HandleError(err) {
 		res := validation.Errors(err).(map[string]interface{})
 		ctx.StatusCode(http.StatusBadRequest)
 		if strings.Contains(data.Start_Time.String(), "0001-01-01") {
@@ -421,7 +421,7 @@ func CreateMock(ctx iris.Context) {
 		Session:   uint(settings.Get("examSession", time.Now().Year()).(int)),
 		CreatedBy: user.Id.String(),
 	}
-	if err := repository.NewRepository(mock).Create(); err != nil {
+	if err := repository.NewRepository(mock).Create(); !logger.HandleError(err) {
 		ctx.JSON(internalServerError)
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
@@ -544,7 +544,7 @@ func UpdateMock(ctx iris.Context) {
 	if !strings.Contains(data.End_Time.String(), "0001-01-01") {
 		mock.EndTime = data.End_Time
 	}
-	if err := repository.NewRepository(mock).Save(); err != nil {
+	if err := repository.NewRepository(mock).Save(); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -566,7 +566,7 @@ func DeleteMock(ctx iris.Context) {
 	}
 
 	if err := repository.NewRepository(&models.Mock{}).
-		Delete(mock); err != nil {
+		Delete(mock); !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "delete failed",
@@ -584,7 +584,7 @@ func DeleteMock(ctx iris.Context) {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 func IndexPodcast(ctx iris.Context) {
 	podcasts := []models.Podcast{}
-	if err := repository.NewRepository(&models.Podcast{}).FindMany(&podcasts); err != nil {
+	if err := repository.NewRepository(&models.Podcast{}).FindMany(&podcasts); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -614,12 +614,12 @@ func ViewPodcast(ctx iris.Context) {
 
 func CreatePodcast(ctx iris.Context) {
 	_, h, err := ctx.FormFile("file")
-	if err != nil {
+	if !logger.HandleError(err) {
 		return
 	}
 	fmt.Println(h.Filename, h.Size, h.Header)
 	data := &models.PodcastForm{}
-	if err := ctx.ReadForm(data); err != nil {
+	if err := ctx.ReadForm(data); !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusBadRequest)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -633,7 +633,7 @@ func CreatePodcast(ctx iris.Context) {
 		Title:       data.Title,
 		Url:         "",
 	}
-	if err := repository.NewRepository(podcast).Create(); err != nil {
+	if err := repository.NewRepository(podcast).Create(); !logger.HandleError(err) {
 		ctx.JSON(internalServerError)
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
@@ -657,7 +657,7 @@ func UpdatePodcast(ctx iris.Context) {
 		return
 	}
 
-	if err := repository.NewRepository(podcast).Save(); err != nil {
+	if err := repository.NewRepository(podcast).Save(); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -679,7 +679,7 @@ func DeletePodcast(ctx iris.Context) {
 	}
 
 	if err := repository.NewRepository(&models.Mock{}).
-		Delete(podcast); err != nil {
+		Delete(podcast); !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "delete failed",
@@ -697,7 +697,7 @@ func DeletePodcast(ctx iris.Context) {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 func IndexNewsfeed(ctx iris.Context) {
 	newsfeed := []models.Newsfeed{}
-	if err := repository.NewRepository(&models.Newsfeed{}).FindMany(&newsfeed); err != nil {
+	if err := repository.NewRepository(&models.Newsfeed{}).FindMany(&newsfeed); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -726,13 +726,13 @@ func ViewNewsfeed(ctx iris.Context) {
 
 func CreateNewsfeed(ctx iris.Context) {
 	data := &models.NewsfeedForm{}
-	if err := ctx.ReadJSON(data); err != nil {
+	if err := ctx.ReadJSON(data); !logger.HandleError(err) {
 		ctx.JSON(validation.Errors(err))
 		return
 	}
 
 	slug, err := models.UniqueSlug(&models.Newsfeed{}, list.Slug(data.Title))
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.JSON(internalServerError)
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
@@ -746,7 +746,7 @@ func CreateNewsfeed(ctx iris.Context) {
 		Content: data.Content,
 	}
 
-	if err := repository.NewRepository(newsfeed).Create(); err != nil {
+	if err := repository.NewRepository(newsfeed).Create(); !logger.HandleError(err) {
 		ctx.JSON(internalServerError)
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
@@ -777,7 +777,7 @@ func UpdateNewsfeed(ctx iris.Context) {
 		newsfeed.Content = data.Content
 	}
 
-	if err := repository.NewRepository(newsfeed).Save(); err != nil {
+	if err := repository.NewRepository(newsfeed).Save(); !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -799,7 +799,7 @@ func DeleteNewsfeed(ctx iris.Context) {
 	}
 
 	if err := repository.NewRepository(&models.Mock{}).
-		Delete(newsfeed); err != nil {
+		Delete(newsfeed); !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "delete failed",
@@ -826,7 +826,7 @@ func Settings(ctx iris.Context) {
 		})
 	case "privacy", "terms":
 		gs := &models.GeneralSetting{}
-		if err := repository.NewRepository(gs).FindOneDst(gs); err != nil {
+		if err := repository.NewRepository(gs).FindOneDst(gs); !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return
@@ -869,12 +869,12 @@ func SetSettings(ctx iris.Context) {
 		})
 	case "privacy", "terms":
 		gs := &models.GeneralSetting{}
-		if err := repository.NewRepository(gs).FindOneDst(gs); err != nil {
+		if err := repository.NewRepository(gs).FindOneDst(gs); !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return
 		}
-		if err := database.UseDB("app").Model(gs).Update(setting, v).Error; err != nil {
+		if err := database.UseDB("app").Model(gs).Update(setting, v).Error; !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return

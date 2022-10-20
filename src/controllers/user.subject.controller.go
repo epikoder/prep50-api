@@ -37,7 +37,7 @@ func (c *UserSubjectController) Get() {
 		Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 		Where("ue.user_id = ? AND ue.session = ? AND e.status = 1", user.Id, session).
-		Scan(&q).Error; err != nil {
+		Scan(&q).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
 		return
@@ -51,7 +51,7 @@ func (c *UserSubjectController) Get() {
 
 	userSubjects := []models.UserSubject{}
 	if err := repository.NewRepository(&models.UserSubject{}).
-		FindMany(&userSubjects, "user_id = ? AND user_exam_id IN ?", user.Id, qid); err != nil {
+		FindMany(&userSubjects, "user_id = ? AND user_exam_id IN ?", user.Id, qid); !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
 		return
@@ -103,7 +103,7 @@ type (
 
 func (c *UserSubjectController) Post() {
 	var form UserSubjectForm
-	if err := c.Ctx.ReadJSON(&form); err != nil {
+	if err := c.Ctx.ReadJSON(&form); !logger.HandleError(err) {
 		c.Ctx.StatusCode(400)
 		c.Ctx.JSON(validation.Errors(err))
 		return
@@ -124,7 +124,7 @@ func (c *UserSubjectController) Post() {
 			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
-			First(&q).Error; err != nil {
+			First(&q).Error; !logger.HandleError(err) {
 			exam := &models.Exam{}
 			if !repository.NewRepository(exam).FindOne("name = ?", e) {
 				c.Ctx.StatusCode(http.StatusNotFound)
@@ -142,7 +142,7 @@ func (c *UserSubjectController) Post() {
 				PaymentStatus: models.Pending,
 				CreatedAt:     time.Now(),
 			}
-			if err := database.UseDB("app").Create(userExams).Error; err != nil {
+			if err := database.UseDB("app").Create(userExams).Error; !logger.HandleError(err) {
 				c.Ctx.StatusCode(http.StatusInternalServerError)
 				c.Ctx.JSON(internalServerError)
 				return
@@ -182,7 +182,7 @@ func (c *UserSubjectController) Post() {
 			})
 		}
 		currentUserSubjects := []models.UserSubject{}
-		if err := repository.NewRepository(user).FindMany(&currentUserSubjects, "user_id = ? AND user_exam_id = ?", user.Id, q.Id); err != nil {
+		if err := repository.NewRepository(user).FindMany(&currentUserSubjects, "user_id = ? AND user_exam_id = ?", user.Id, q.Id); !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
 			return
@@ -201,7 +201,7 @@ func (c *UserSubjectController) Post() {
 	}
 
 	if len(userSubjects) > 0 {
-		if err := repository.NewRepository(&models.UserSubject{}).Save(userSubjects); err != nil {
+		if err := repository.NewRepository(&models.UserSubject{}).Save(userSubjects); !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
 			return
@@ -220,7 +220,7 @@ func (c *UserSubjectController) Put() {
 		Id     []uint
 	}
 	data := SubjectUpdateForm{}
-	if err := c.Ctx.ReadJSON(&data); err != nil {
+	if err := c.Ctx.ReadJSON(&data); !logger.HandleError(err) {
 		c.Ctx.StatusCode(400)
 		c.Ctx.JSON(validation.Errors(err))
 		return
@@ -234,7 +234,7 @@ func (c *UserSubjectController) Put() {
 			Select("ue.id, ue.exam_id, ue.session, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
-			First(&q).Error; err != nil {
+			First(&q).Error; !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusNotFound)
 			c.Ctx.JSON(apiResponse{
 				"status":  "failed",
@@ -244,7 +244,7 @@ func (c *UserSubjectController) Put() {
 		}
 
 		currentUserSubjects := []models.UserSubject{}
-		if err := repository.NewRepository(user).FindMany(&currentUserSubjects, "user_id = ? AND user_exam_id = ?", user.Id, q.Id); err != nil {
+		if err := repository.NewRepository(user).FindMany(&currentUserSubjects, "user_id = ? AND user_exam_id = ?", user.Id, q.Id); !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
 			return
@@ -290,7 +290,7 @@ func (c *UserSubjectController) Put() {
 							SubjectId:  id,
 						})
 					}
-					if err := database.UseDB("app").Create(subs).Error; err != nil {
+					if err := database.UseDB("app").Create(subs).Error; !logger.HandleError(err) {
 						c.Ctx.StatusCode(500)
 						c.Ctx.JSON(internalServerError)
 						return

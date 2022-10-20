@@ -90,6 +90,15 @@ const (
 	Female Gender = "F"
 )
 
+func GetGender(s string) Gender {
+	switch t := Gender(s); t {
+	case Male, Female:
+		return t
+	default:
+		return Gender("")
+	}
+}
+
 func (u *User) ID() interface{} {
 	return u.Id
 }

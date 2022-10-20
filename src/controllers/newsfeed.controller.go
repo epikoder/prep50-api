@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
@@ -55,7 +56,7 @@ func (c *NewsFeedController) Post() {
 		Type    string `validate:"required"`
 		Message string `validate:"required"`
 	}{}
-	if err := c.Ctx.ReadJSON(&data); err != nil {
+	if err := c.Ctx.ReadJSON(&data); !logger.HandleError(err) {
 		c.Ctx.StatusCode(400)
 		c.Ctx.JSON(validation.Errors(err))
 		return
@@ -87,7 +88,7 @@ func (c *NewsFeedController) Post() {
 		UserId:     user.Id,
 		Type:       data.Type,
 		Message:    data.Message,
-	}).Error; err != nil {
+	}).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(500)
 		c.Ctx.JSON(internalServerError)
 		return
@@ -121,13 +122,13 @@ func NewsFeedView(ctx iris.Context) {
 			SUM(CASE WHEN is_bookmarked = 1 AND user_id = ? THEN 1 ELSE 0 END) as bookmarked
 			FROM newsfeed_interactions GROUP BY newsfeed_id ) ni ON ni.newsfeed_id = n.id
 		`, user.Id, user.Id).
-		First(&feed, "slug = ?", ctx.URLParam("slug")).Error; err != nil && err == gorm.ErrRecordNotFound {
+		First(&feed, "slug = ?", ctx.URLParam("slug")).Error; !logger.HandleError(err) && err == gorm.ErrRecordNotFound {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "News not found",
 		})
 		return
-	} else if err != nil {
+	} else if !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
@@ -156,7 +157,7 @@ func NewsFeedInteract(ctx iris.Context) {
 		Bookmark bool
 	}{}
 
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(400)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -193,7 +194,7 @@ func NewsFeedInteract(ctx iris.Context) {
 				FindOneDst(feedInteraction,
 					"newsfeed_id = ? AND user_id = ?",
 					feed.Id,
-					user.Id); err != nil && err != gorm.ErrRecordNotFound {
+					user.Id); !logger.HandleError(err) && err != gorm.ErrRecordNotFound {
 				ctx.StatusCode(500)
 				ctx.JSON(internalServerError)
 				return
@@ -217,7 +218,7 @@ func NewsFeedInteract(ctx iris.Context) {
 				FindOneDst(feedInteraction,
 					"newsfeed_id = ? AND user_id = ?",
 					feed.Id,
-					user.Id); err != nil && err != gorm.ErrRecordNotFound {
+					user.Id); !logger.HandleError(err) && err != gorm.ErrRecordNotFound {
 				ctx.StatusCode(500)
 				ctx.JSON(internalServerError)
 				return
@@ -248,7 +249,7 @@ func NewsFeedInteractUpdateComment(ctx iris.Context) {
 		Comment string `validate:"required"`
 	}{}
 
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(400)
 		ctx.JSON(validation.Errors(err))
 		return
@@ -281,14 +282,14 @@ func NewsFeedReportComment(ctx iris.Context) {
 		Type    string `validate:"required"`
 		Message string `validate:"required"`
 	}{}
-	if err := ctx.ReadJSON(&data); err != nil {
+	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
 		ctx.StatusCode(400)
 		ctx.JSON(validation.Errors(err))
 		return
 	}
 
 	comment := &models.NewsfeedComment{}
-	if err := database.UseDB("app").First(comment, "id = ?", data.Id).Error; err != nil {
+	if err := database.UseDB("app").First(comment, "id = ?", data.Id).Error; !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "Comment not found",
@@ -312,7 +313,7 @@ func NewsFeedReportComment(ctx iris.Context) {
 		UserId:            user.Id,
 		Type:              data.Type,
 		Message:           data.Message,
-	}).Error; err != nil {
+	}).Error; !logger.HandleError(err) {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return
