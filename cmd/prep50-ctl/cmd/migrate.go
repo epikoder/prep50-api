@@ -13,7 +13,6 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
@@ -47,6 +46,8 @@ var (
 		"Newsfeed":        &models.Newsfeed{},
 		"NewsfeedComment": &models.NewsfeedComment{},
 		"Faq":             &models.Faq{},
+		"Notification":    &models.Notification{},
+		"Fcm":             &models.Fcm{},
 	}
 	mT migrationModel = []dbmodel.DBModel{}
 )
@@ -125,8 +126,10 @@ func migrate(cmd *cobra.Command, args []string) {
 }
 
 func _authenticateUser() (ok bool, err error) {
-	env := strings.ToLower(os.Getenv("APP_ENV"))
-	production := env == "" || env == "production"
+	production := func(env string) bool {
+		return env == "" || env == "production"
+	}(strings.ToLower(os.Getenv("APP_ENV")))
+
 	if production {
 		fmt.Println(color.Red)
 		fmt.Println("!!! WARNING !!!")
@@ -135,19 +138,17 @@ func _authenticateUser() (ok bool, err error) {
 		fmt.Printf("Do you wish to continue?  [y/N] %s: ", color.Reset)
 		var yn string
 		fmt.Scan(&yn)
-		if yn != "y" && yn != "Y" {
+		if !strings.EqualFold(yn, "y") {
 			fmt.Println(color.Red, "\nAborted :)", color.Reset)
 			return
 		}
 	}
 	if database.UseDB("app").Migrator().HasTable("users") && production {
 		{
-			var user *models.User
-			if err := database.UseDB("app").First(user).Error; err != nil {
-				return false, err
-			}
-			if user.Id == uuid.Nil {
-				goto SKIP_AUTH
+			user := &models.User{}
+			if err = database.UseDB("app").Table("users as u").Joins("LEFT JOIN user_roles as ur ON ur.user_id = u.id").
+				Joins("LEFT JOIN roles as r ON r.id = ur.role_id").First(user, "r.name = ?", "super-admin").Error; err != nil {
+				return true, nil
 			}
 		}
 		var username, password string
@@ -156,30 +157,29 @@ func _authenticateUser() (ok bool, err error) {
 		fmt.Print(color.Blue)
 		fmt.Printf("Username%s : ", color.Reset)
 		fmt.Scan(&username)
+		user := &models.User{}
+		if err = database.UseDB("app").Table("users as u").
+			Joins("LEFT JOIN user_roles as ur ON ur.user_id = u.id").
+			Joins("LEFT JOIN roles as r ON r.id = ur.role_id").
+			First(user, "r.name = ? AND u.username = ?", "super-admin", username).Error; err != nil {
+			return false, fmt.Errorf("user not found")
+		}
 
 		fmt.Print(color.Green)
-		fmt.Println("password is invisible for security reason")
+		fmt.Println("**password is invisible for security reason**")
 		fmt.Print(color.Blue)
 		fmt.Printf("Password%s : ", color.Reset)
-		b, err := term.ReadPassword(1)
+		var b []byte
+		b, err = term.ReadPassword(1)
 		if err != nil {
 			return false, err
 		}
 		password = string(b)
 		fmt.Println()
-
-		user := &models.User{}
-		if err := database.UseDB("app").Find(user, "username = ?", username).Error; err != nil {
-			return false, err
-		}
-		if user.Id == uuid.Nil {
-			return ok, fmt.Errorf("user not found")
-		}
 		if ok := hash.CheckHash(user.Password, password); !ok {
 			return ok, fmt.Errorf("password incorrect")
 		}
 	}
 
-SKIP_AUTH:
 	return true, nil
 }
