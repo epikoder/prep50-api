@@ -17,7 +17,7 @@ type MockController struct {
 
 func (c *MockController) Get() {
 	user, _ := getUser(c.Ctx)
-	mocks := []struct {
+	mock := struct {
 		models.Mock
 		Available  bool `json:"available"`
 		Registered bool `json:"registered"`
@@ -34,11 +34,10 @@ func (c *MockController) Get() {
 		END as available`, user.Id, time.Now()).
 		Joins("LEFT JOIN user_mocks as um ON m.id = um.mock_id").
 		Order("start_time DESC").
-		Limit(10).
-		Find(&mocks)
+		First(&mock)
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   mocks,
+		"data":   mock,
 	})
 }
 
