@@ -4,6 +4,7 @@ type (
 	PaymentProvider interface {
 		ICharge()
 		IVerify(string) (interface{}, error)
+		Name() string
 	}
 )
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/kataras/iris/v12"
@@ -33,6 +34,7 @@ func Protected(ctx iris.Context) {
 	authToken := strings.TrimSpace(strings.ReplaceAll(ctx.GetHeader("authorization"), "Bearer ", ""))
 	access, ok := cache.Get(user.UserName + ".access")
 	if !ok || access != authToken {
+		fmt.Println(color.Green, access, "\n", color.Blue, authToken, color.Reset)
 		ctx.StatusCode(http.StatusUnauthorized)
 		return
 	}

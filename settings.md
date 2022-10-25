@@ -2,7 +2,7 @@
 
 | Key | Default | Type |
 | - | - | - |
-|examSession | 2022 | number |
+|exam.session | 2022 | number |
 
 
 

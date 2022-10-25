@@ -24,7 +24,7 @@
                     <div>
                         <input id="password" type="password" value="password" style="padding: 5px;" />
                     </div>
-                    <button onclick="authenticate()">
+                    <button onclick="authenticate()" style="padding: .4rem;">
                         LOGIN
                     </button>
                 </div>
@@ -51,9 +51,16 @@
                             <option value="jamb"> PAY </option>
                         </select>
                     </div>
+                    <div>
+                        <input type="checkbox" name="shouldVerify" id="shouldVerify">
+                        <span> Should Verify</span>
+                    </div>
                     <button onclick="onPay()">
                         TEST PAY
                     </button>
+                    <div style="padding: 1rem;" id="tx">
+
+                    </div>
                 </div>
             </form>
         </center>

@@ -13,10 +13,13 @@ type (
 	Transaction struct {
 		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
 		UserId    uuid.UUID `json:"user_id"`
+		Item      string    `json:"-"`
+		Amount    uint      `json:"amount"`
+		Reference string    `json:"reference"`
 		Provider  string    `json:"provider"`
 		Status    string    `json:"status"`
 		Session   uint      `gorm:"notnull" json:"session"`
-		Response  string    `json:"response"`
+		Response  string    `gorm:"type:longtext" json:"response"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
@@ -36,4 +39,8 @@ func (t *Transaction) Database() *gorm.DB {
 
 func (t *Transaction) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(t)
+}
+
+func (t *Transaction) OverrideMigration() bool {
+	return true
 }

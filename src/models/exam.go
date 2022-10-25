@@ -14,7 +14,7 @@ type (
 		Id           uuid.UUID `sql:"type:uuid;" gorm:"unique" json:"-"`
 		Name         string    `gorm:"unique;index;notnull" json:"name"`
 		Description  string    `json:"description"`
-		Amount       int       `json:"price"`
+		Amount       uint      `json:"price"`
 		SubjectCount int       `json:"subject_count"`
 		Status       bool      `json:"status"`
 		CreatedAt    time.Time `json:"-"`

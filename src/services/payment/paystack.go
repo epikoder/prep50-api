@@ -21,6 +21,10 @@ func newIPaystack() *ipaystack {
 	}
 }
 
+func (p *ipaystack) Name() string {
+	return "paystack"
+}
+
 func (p *ipaystack) ICharge() {
 	p.Client.Charge.Create(&paystack.ChargeRequest{})
 }

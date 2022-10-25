@@ -29,7 +29,7 @@ func (c *UserExamController) Get() {
 		CreatedAt     time.Time            `json:"created_at"`
 	}
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	userExams := []UserExamWithName{}
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
@@ -50,7 +50,7 @@ func (c *UserExamController) Post() {
 	type RegisterExamForm struct {
 		Exams []string `validate:"required"`
 	}
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	data := &RegisterExamForm{}
 	if err := c.Ctx.ReadJSON(data); !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusBadRequest)

@@ -31,7 +31,7 @@ func (c *UserSubjectController) Get() {
 		}
 	)
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	q := []query{}
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
@@ -110,7 +110,7 @@ func (c *UserSubjectController) Post() {
 	}
 
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	userSubjects := []models.UserSubject{}
 	for e, v := range form {
 		if len(v) == 0 {
@@ -227,7 +227,7 @@ func (c *UserSubjectController) Put() {
 	}
 
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	for e, v := range data {
 		q := UserExamQuery{}
 		if err := database.UseDB("app").Table("user_exams as ue").

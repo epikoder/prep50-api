@@ -17,3 +17,5 @@ models:
   - Newsfeed
   - NewsfeedComment
   - Faq
+  - Notification
+  - Fcm

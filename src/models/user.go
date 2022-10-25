@@ -28,11 +28,14 @@ type (
 		UpdatedAt     time.Time      `json:"-"`
 		DeletedAt     gorm.DeletedAt `json:"-"`
 		Device        Device         `json:"-"`
+		Fcm           Fcm            `json:"-"`
+		Mock          []Mock         `gorm:"many2many:user_mocks;" json:"mocks,omitempty"`
 		Providers     []Provider     `gorm:"many2many:user_providers;" json:"-"`
 		Exams         []Exam         `gorm:"many2many:user_exams;" json:"exams"`
 		Roles         []Role         `gorm:"many2many:user_roles" json:"-"`
 		Permissions   []Permission   `gorm:"many2many:user_permissions" json:"-"`
 		Transactions  []Transaction  `json:"-"`
+		Notifications []Notification `json:"-"`
 	}
 
 	UserExam struct {

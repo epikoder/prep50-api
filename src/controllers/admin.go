@@ -101,7 +101,7 @@ func GetCurrentWeekQuiz(ctx iris.Context) {
 	quiz := &models.WeeklyQuiz{}
 	year, week := time.Now().ISOWeek()
 	if ok := repository.NewRepository(quiz).
-		FindOne("week = ? AND session = ?", week, settings.Get("examSession", year)); !ok {
+		FindOne("week = ? AND session = ?", week, settings.Get("exam.session", year)); !ok {
 		ctx.StatusCode(404)
 		ctx.JSON(internalServerError)
 		return
@@ -178,7 +178,7 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 	}
 	user, _ := getUser(ctx)
 	_, week := data.Start_Time.ISOWeek()
-	session := settings.Get("examSession", time.Now().Year()).(int)
+	session := settings.Get("exam.session", time.Now().Year()).(int)
 
 	if repository.NewRepository(&models.WeeklyQuiz{}).FindOne("week = ? AND session = ?", week, session) {
 		ctx.JSON(apiResponse{
@@ -418,7 +418,7 @@ func CreateMock(ctx iris.Context) {
 		EndTime:   data.End_Time,
 		Amount:    data.Amount,
 		Duration:  data.Duration,
-		Session:   uint(settings.Get("examSession", time.Now().Year()).(int)),
+		Session:   uint(settings.Get("exam.session", time.Now().Year()).(int)),
 		CreatedBy: user.Id.String(),
 	}
 	if err := repository.NewRepository(mock).Create(); !logger.HandleError(err) {
@@ -822,7 +822,7 @@ func Settings(ctx iris.Context) {
 	case "session":
 		ctx.JSON(apiResponse{
 			"status": "success",
-			"data":   settings.Get("examSession", time.Now().Year()),
+			"data":   settings.Get("exam.session", time.Now().Year()),
 		})
 	case "privacy", "terms":
 		gs := &models.GeneralSetting{}
@@ -862,7 +862,7 @@ func SetSettings(ctx iris.Context) {
 	}
 	switch setting {
 	case "session":
-		settings.Set("examSession", v)
+		settings.Set("exam.session", v)
 		ctx.JSON(apiResponse{
 			"status":  "success",
 			"message": "updated successfully",

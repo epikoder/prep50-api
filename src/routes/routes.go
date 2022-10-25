@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/controllers"
+	admin_controllers "github.com/Prep50mobileApp/prep50-api/src/controllers/admin"
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/kataras/iris/v12"
@@ -43,12 +44,12 @@ func RegisterApiRoutes(app *iris.Application) {
 	auth.Post("/login", controllers.LoginV1)
 	auth.Post("/provider/{provider:string}", controllers.SocialV1)
 	auth.Post("/refresh-token", ijwt.JwtGuardMiddleware, controllers.Refresh)
+	auth.Get("/logout", ijwt.JwtGuardMiddleware, controllers.Logout)
 
 	resources := app.Party("/resources")
 	resources.Get("/subjects", controllers.GetSubjects)
 	resources.Get("/exams", controllers.GetExamTypes)
 	resources.Get("/question-types", controllers.GetQuestionTypes)
-	resources.Get("/mock", controllers.GetMocks)
 	resources.Get("/static/{page:string}", controllers.GetStatic)
 
 	support := app.Party("/support")
@@ -59,6 +60,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	user := app.Party("/user", ijwt.JwtGuardMiddleware, middlewares.Protected)
 	user.Post("/change-password", controllers.ChangePassword)
 	mvc.New(user.Party("/profile")).Handle(new(controllers.AccountController))
+	mvc.New(user.Party("/notifications")).Handle(new(controllers.NotificationController))
 
 	userExamApi := user.Party("/exams")
 	mvc.New(userExamApi).Handle(new(controllers.UserExamController))
@@ -81,8 +83,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	weeklyQuizApiv1.Get("/result", controllers.LeaderBoard)
 
 	mock := app.Party("/mock", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject, middlewares.MustSubscribe)
-	mock.Get("/", controllers.UserMock)
-	mock.Post("/", controllers.StartMockExam)
+	mvc.New(mock).Handle(new(controllers.MockController))
 
 	// Admin Protected Routes
 	app.Post("/admin", controllers.AdminLogin)
@@ -117,6 +118,11 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	admin.Get("/settings/{setting:string}", controllers.Settings)
 	admin.Post("/settings/{setting:string}", controllers.SetSettings)
+
+	adminFaqsApi := admin.Party("/faqs")
+	mvc.New(adminFaqsApi).Handle(new(admin_controllers.AdminFaqController))
+
+	mvc.New(admin.Party("/notifications")).Handle(new(admin_controllers.AdminNotificationController))
 }
 
 func RegisterWebRoutes(app *iris.Application) {

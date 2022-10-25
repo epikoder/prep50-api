@@ -33,7 +33,7 @@ func MustRegisterSubject(ctx iris.Context) {
 		return
 	}
 	user, _ := i.(*models.User)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	examSubject := map[query][]models.UserSubject{}
 	{
 		q := []query{}
@@ -99,7 +99,7 @@ func MustSubscribe(ctx iris.Context) {
 	// ctx.ReadJSON(data)
 	// if data.WithLesson {
 	// 	user, _ := getUser(ctx)
-	// 	session := settings.Get("examSession", time.Now().Year())
+	// 	session := settings.Get("exam.session", time.Now().Year())
 	// 	userExam := &models.UserExam{}
 	// 	if err := database.UseDB("app").
 	// 		Find(userExam, "user_id = ? AND session = ? AND payment_status = ?",

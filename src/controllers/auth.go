@@ -499,3 +499,11 @@ func SocialV1(ctx iris.Context) {
 		"data":    response,
 	})
 }
+
+func Logout(ctx iris.Context) {
+	// TODO: Logout
+	ctx.JSON(apiResponse{
+		"status":  "success",
+		"message": "Logged out successfully",
+	})
+}

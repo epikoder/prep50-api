@@ -78,7 +78,7 @@ func (c *WeeklyQuizController) Post() {
 
 	answers := Answer{}
 	year, week := time.Now().ISOWeek()
-	session := settings.Get("examSession", year)
+	session := settings.Get("exam.session", year)
 	quiz := &models.WeeklyQuiz{}
 	if ok := repository.NewRepository(quiz).FindOne("week = ? AND session = ?", week, session); !ok {
 		c.Ctx.JSON(apiResponse{
@@ -188,7 +188,7 @@ func LeaderBoard(ctx iris.Context) {
 	ctx.ReadBody(query)
 
 	year, week := time.Now().ISOWeek()
-	session := settings.Get("examSession", year)
+	session := settings.Get("exam.session", year)
 	if query.Week == 0 {
 		query.Week = uint(week)
 	}

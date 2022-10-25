@@ -43,10 +43,11 @@ const onPay = () => {
             action: action,
         },
         callback: (response) => {
-            if (response.status === 'success') {
+            document.getElementById('tx').innerText = response.reference
+            if (response.status !== 'success') return alert('Transaction Failed')
+            if (document.getElementById('shouldVerify').checked) {
                 return verifyTranx(response.reference, type)
             }
-            alert('Transaction Failed')
         }
     });
 }

@@ -28,7 +28,7 @@ func StudySubjects(ctx iris.Context) {
 	data := &subjectForm{}
 	ctx.ReadJSON(data)
 	user, _ := getUser(ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	examSubject := map[query][]models.UserSubject{}
 	{
 		q := []query{}
@@ -98,7 +98,7 @@ func StudyTopics(ctx iris.Context) {
 	}
 
 	user, _ := getUser(ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	type ID struct {
 		SubjectId     int
 		PaymentStatus models.PaymentStatus
@@ -196,7 +196,7 @@ func StudyPodcasts(ctx iris.Context) {
 	}
 
 	user, _ := getUser(ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 	type ID struct {
 		SubjectId     int
 		PaymentStatus models.PaymentStatus
@@ -298,7 +298,7 @@ func QuickQuiz(ctx iris.Context) {
 	form := &quizForm{}
 	ctx.ReadJSON(form)
 	user, _ := getUser(ctx)
-	session := settings.Get("examSession", time.Now().Year())
+	session := settings.Get("exam.session", time.Now().Year())
 
 	q := []queryWithPayment{}
 	if err := database.UseDB("app").Table("user_exams as ue").
@@ -361,7 +361,7 @@ func QuickQuiz(ctx iris.Context) {
 		return
 	}
 
-	quickQuizQuestions := settings.Get("quickQuizQuestions", 60).(int)
+	qquizquestions := settings.Get("qquiz.questions", 60).(int)
 	rand.Seed(time.Now().Unix() * rand.Int63())
 	if hasObjectiveFilter := len(form.Objective) > 0; !hasObjectiveFilter {
 		subs := []models.Subject{}
@@ -384,25 +384,27 @@ func QuickQuiz(ctx iris.Context) {
 			}
 
 			q := []interface{}{}
-			if l := len(ids); l >= (quickQuizQuestions) {
+			if l := len(ids); l >= (qquizquestions) {
 				r := []uint{}
 				for i := len(ids) - 1; i != 0; i-- {
 					rIndex := rand.Intn(i)
 					r = append(r, ids[rIndex])
 				}
-				ids = r[:quickQuizQuestions]
-				q = append(q, "id IN ? AND question_type_id = ? AND subject_id = ? ORDER BY RAND() LIMIT ?", ids, models.OBJECTIVE, s.Id, quickQuizQuestions)
+				ids = r[:qquizquestions]
+				q = append(q, "id IN ? AND question_type_id = ? AND subject_id = ? ORDER BY RAND() LIMIT ?",
+					ids, models.OBJECTIVE, s.Id, qquizquestions)
 			} else {
-				q = append(q, "id IN ? AND question_type_id = ? AND subject_id = ?  ORDER BY RAND() LIMIT ?", ids, models.OBJECTIVE, s.Id, quickQuizQuestions)
+				q = append(q, "id IN ? AND question_type_id = ? AND subject_id = ?  ORDER BY RAND() LIMIT ?",
+					ids, models.OBJECTIVE, s.Id, qquizquestions)
 			}
 			_questions := []models.Question{}
 			database.UseDB("core").Find(&_questions, q...)
 			questions = append(questions, _questions...)
 			l := len(_questions)
-			if r := quickQuizQuestions - l; l < quickQuizQuestions {
+			if r := qquizquestions - l; l < qquizquestions {
 				database.UseDB("core").
 					Find(&_questions, "id NOT IN ? AND question_type_id = ? AND subject_id = ? ORDER BY RAND() LIMIT ?", ids, models.OBJECTIVE, s.Id, r+1)
-				questions = append(questions, _questions[:quickQuizQuestions-l+1]...)
+				questions = append(questions, _questions[:qquizquestions-l+1]...)
 			}
 		}
 	} else {
@@ -410,7 +412,8 @@ func QuickQuiz(ctx iris.Context) {
 			Select("*").
 			Joins("LEFT JOIN objective_questions oq on oq.id  = q.id").
 			Joins("LEFT JOIN objectives o on o.id = oq.objective_id").
-			Where("o.id IN ? AND q.subject_id IN ? AND question_type_id = ? ORDER BY RAND() LIMIT ?", form.Objective, form.Subject, models.OBJECTIVE, len(form.Subject)*quickQuizQuestions).
+			Where("o.id IN ? AND q.subject_id IN ? AND question_type_id = ? ORDER BY RAND() LIMIT ?",
+				form.Objective, form.Subject, models.OBJECTIVE, len(form.Subject)*qquizquestions).
 			Scan(&questions)
 	}
 	ctx.JSON(apiResponse{

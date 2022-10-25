@@ -30,10 +30,10 @@ type (
 	}
 
 	MockForm struct {
-		Amount     uint
-		Start_Time time.Time
-		End_Time   time.Time
-		Duration   uint
+		Amount     uint      `validate:"required"`
+		Start_Time time.Time `validate:"required"`
+		End_Time   time.Time `validate:"required"`
+		Duration   uint      `validate:"required"`
 	}
 
 	MockUpdateForm struct {

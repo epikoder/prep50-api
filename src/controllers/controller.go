@@ -2,12 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 )
@@ -50,19 +47,5 @@ var (
 		return u, nil
 	}
 )
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-func GetMocks(ctx iris.Context) {
-	mocks := []models.Mock{}
-	if err := repository.NewRepository(&models.Mock{}).
-		FindMany(&mocks, "session = ? AND start_time < ?", settings.Get("examSession", time.Now().Year()), time.Now()); !logger.HandleError(err) {
-		ctx.StatusCode(500)
-		ctx.JSON(internalServerError)
-		return
-	}
-	ctx.JSON(mocks)
-}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
