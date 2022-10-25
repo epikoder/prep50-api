@@ -44,7 +44,7 @@ func (c *MockController) Get() {
 func (c *MockController) Post() {
 	data := struct {
 		Id      string `validate:"required"`
-		Subject []int  `validate:"required"`
+		Subject []int  `validate:"required,max=4"`
 	}{}
 
 	if err := c.Ctx.ReadJSON(&data); err != nil {

@@ -17,6 +17,7 @@ type (
 		StartTime time.Time `json:"start_time"`
 		EndTime   time.Time `json:"end_time"`
 		Session   uint      `json:"session"`
+		Video     string    `json:"video"`
 		CreatedAt time.Time `json:"-"`
 		UpdatedAt time.Time `json:"-"`
 		CreatedBy string    `json:"-"`

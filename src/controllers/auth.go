@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
@@ -501,7 +502,9 @@ func SocialV1(ctx iris.Context) {
 }
 
 func Logout(ctx iris.Context) {
-	// TODO: Logout
+	user, _ := getUser(ctx)
+	cache.Forget(user.UserName + ".access")
+	cache.Forget(user.UserName + ".refresh")
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "Logged out successfully",
