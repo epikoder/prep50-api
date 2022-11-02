@@ -115,11 +115,19 @@ func RegisterV1(ctx iris.Context) {
 		ctx.JSON(internalServerError)
 		return
 	}
+	token, err := ijwt.GenerateToken(user, user.UserName)
+	if err != nil {
+		ctx.StatusCode(http.StatusInternalServerError)
+		ctx.JSON(internalServerError)
+		return
+	}
+
+	user.Exams = []models.Exam{}
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "Account created successfully",
-		"data": apiResponse{
-			"user": user,
+		"data": LoginResponse{
+			token, user,
 		},
 	})
 }
