@@ -109,7 +109,7 @@ func NewsFeedView(ctx iris.Context) {
 	feed := News{}
 	comments := []struct {
 		models.NewsfeedComment
-		Username string
+		Username string `json:"username"`
 	}{}
 	user, _ := getUser(ctx)
 	if err := database.UseDB("app").Table("newsfeeds as n").
