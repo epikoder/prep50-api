@@ -123,6 +123,8 @@ func RegisterApiRoutes(app *iris.Application) {
 	mvc.New(adminFaqsApi).Handle(new(admin_controllers.AdminFaqController))
 
 	mvc.New(admin.Party("/notifications")).Handle(new(admin_controllers.AdminNotificationController))
+
+	mvc.New(admin.Party("/users")).Handle(new(admin_controllers.UserController))
 }
 
 func RegisterWebRoutes(app *iris.Application) {
