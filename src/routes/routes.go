@@ -44,7 +44,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	auth.Post("/login", controllers.LoginV1)
 	auth.Post("/provider/{provider:string}", controllers.SocialV1)
 	auth.Post("/refresh-token", ijwt.JwtGuardMiddleware, controllers.Refresh)
-	auth.Get("/logout", ijwt.JwtGuardMiddleware, controllers.Logout)
+	auth.Get("/logout", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.Logout)
 
 	resources := app.Party("/resources")
 	resources.Get("/subjects", controllers.GetSubjects)
