@@ -516,7 +516,7 @@ func Logout(ctx iris.Context) {
 	device := user.Device
 	device.Name = ""
 	device.Identifier = ""
-	database.UseDB("app").Save(device)
+	database.UseDB("app").Save(&device)
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "Logged out successfully",
