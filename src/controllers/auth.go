@@ -513,6 +513,7 @@ func Logout(ctx iris.Context) {
 	user, _ := getUser(ctx)
 	cache.Forget(user.UserName + ".access")
 	cache.Forget(user.UserName + ".refresh")
+
 	device := &models.Device{}
 	if ok := repository.NewRepository(device).FindOne("user_id = ?", user.Id); ok {
 		fmt.Println(device)
