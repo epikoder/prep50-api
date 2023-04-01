@@ -254,8 +254,9 @@ func LoginV1(ctx iris.Context) {
 				ctx.JSON(internalServerError)
 				return
 			}
-		} else if user.Device.Identifier != data.DeviceId ||
-			!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName))) {
+		} else if len(strings.TrimSpace(user.Device.Identifier)) > 0 && (user.Device.Identifier != data.DeviceId ||
+			!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName)))) {
+
 			queue.Dispatch(queue.Job{
 				Type: queue.SendMail,
 				Func: func() error {
@@ -404,8 +405,9 @@ func SocialV1(ctx iris.Context) {
 					ctx.JSON(internalServerError)
 					return
 				}
-			} else if user.Device.Identifier != data.DeviceId ||
-				!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName))) {
+			} else if len(strings.TrimSpace(user.Device.Identifier)) > 0 && (user.Device.Identifier != data.DeviceId ||
+				!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName)))) {
+
 				queue.Dispatch(queue.Job{
 					Type: queue.SendMail,
 					Func: func() error {
