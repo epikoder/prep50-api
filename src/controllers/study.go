@@ -83,10 +83,12 @@ func StudySubjects(ctx iris.Context) {
 
 func StudyTopics(ctx iris.Context) {
 	type topicForm struct {
-		Subject       []int
-		Objective     []int
-		WithObjective bool
-		WithLesson    bool
+		Subject              []int
+		Objective            []int
+		WithObjective        bool
+		WithLesson           bool
+		FilterEmptyTopic     bool
+		FilterEmptyObjective bool
 	}
 	data := &topicForm{}
 	ctx.ReadJSON(data)
@@ -166,6 +168,28 @@ func StudyTopics(ctx iris.Context) {
 			} else {
 				topics = append(topics, t)
 			}
+		}
+	}
+
+	if data.FilterEmptyTopic || data.FilterEmptyObjective {
+		tmp := topics
+		topics = []models.Topic{}
+		for _, t := range tmp {
+			if data.FilterEmptyTopic && len(t.Objectives) == 0 {
+				continue
+			}
+			tmpObj := t.Objectives
+			t.Objectives = []models.TopicObjective{}
+			for _, o := range tmpObj {
+				if data.FilterEmptyObjective && len(o.Lessons) == 0 {
+					continue
+				}
+				t.Objectives = append(t.Objectives, o)
+			}
+			if data.FilterEmptyTopic && len(t.Objectives) == 0 {
+				continue
+			}
+			topics = append(topics, t)
 		}
 	}
 
