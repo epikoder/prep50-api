@@ -1,5 +1,5 @@
-examSession: 2022
-quickQuizQuestions: 60
+exam.session: 2023
+qquiz.questions: 60
 paystack.mode: "sandbox"
 paystack.live.secretKey: ""
 paystack.live.publicKey: ""

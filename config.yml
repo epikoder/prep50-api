@@ -32,8 +32,8 @@ cors:
   headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token
   allowCredentials: "true"
 jwt:
-  access: 15
-  refresh: 168
+  access: 4320
+  refresh: 20160
 mail:
   username: efedua.bell@gmail.com
   from: prep50

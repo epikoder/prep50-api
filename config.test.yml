@@ -1,49 +1,48 @@
 app:
-    name: Prep50
-    host: "prep50.herokuapp.com"
-    port: 8081
-    key: ""
-    version: "1"
-    defaultApiVersion: 1.0.0
+  name: Prep50
+  host: "prep50.herokuapp.com"
+  port: 8081
+  key: ""
+  version: "1"
+  defaultApiVersion: 1.0.0
 database:
-    core:
-        url: ikr3vl8eozfc3qba:t1rfqfvoq10tqe90@tcp(cxmgkzhk95kfgbq4.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/ngbrgd16w9e3o40v?parseTime=true
-        name:
-        user:
-        host:
-        port:
-        password:
-    app:
-        url: h4b2q7rlnq2esxvw:zkg6z2hznlawr3se@tcp(kfgk8u2ogtoylkq9.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306)/xpjrbt2hy7943y8b?parseTime=true
-        name:
-        user:
-        host:
-        port:
-        password:
-throttle:
-    limit: 20
-    burst: 5
-aes:
-    key: ""
-    iv: ""
-cors:
-    origins:
-        - prep50.com
-        - localhost:8080
-        - prep50.herokuapp.com
-    headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization
-    allowCredentials: "true"
-jwt:
-    access: 4320
-    refresh: 20160
-mail:
-    username: efedua.bell@gmail.com
-    from: prep50
-    smtpHost: smtp.gmail.com
-    smtpPort: 587
+  core:
+    url:
+    name: prep50?parseTime=true
+    user: admin
+    host: localhost
+    port: 3306
     password:
+  app:
+    url:
+    name: prep50app?parseTime=true
+    user: admin
+    host: localhost
+    port: 3306
+    password:
+throttle:
+  limit: 20
+  burst: 5
+aes:
+  key: ""
+  iv: ""
+cors:
+  origins:
+    - prep50.com
+    - localhost:8081
+  headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization
+  allowCredentials: "true"
+jwt:
+  access: 4320
+  refresh: 20160
+mail:
+  username: efedua.bell@gmail.com
+  from: prep50
+  smtpHost: smtp.gmail.com
+  smtpPort: 587
+  password:
 redis:
-    host: ec2-34-192-110-76.compute-1.amazonaws.com
-    port: 14659
-    password: p29f2534f34033b53d432160d7987ec54c162f57d225531158e31b7afbb6a1db0
-    database: 0
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  database: 0
