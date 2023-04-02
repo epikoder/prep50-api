@@ -175,9 +175,6 @@ func StudyTopics(ctx iris.Context) {
 		tmp := topics
 		topics = []models.Topic{}
 		for _, t := range tmp {
-			if data.FilterEmptyTopic && len(t.Objectives) == 0 {
-				continue
-			}
 			tmpObj := t.Objectives
 			t.Objectives = []models.TopicObjective{}
 			for _, o := range tmpObj {
@@ -204,10 +201,11 @@ func StudyTopics(ctx iris.Context) {
 //++++++++++++++++++++++++++++++++++++++++++++++++
 func StudyPodcasts(ctx iris.Context) {
 	type topicForm struct {
-		Subject       []int
-		Objective     []int
-		WithObjective bool
-		WithLesson    bool
+		Subject              []int
+		Objective            []int
+		WithObjective        bool
+		FilterEmptyTopic     bool
+		FilterEmptyObjective bool
 	}
 
 	data := &topicForm{}
@@ -269,9 +267,9 @@ func StudyPodcasts(ctx iris.Context) {
 		return
 	}
 
-	podcastsTopic := []models.PodcastTopic{}
+	podcastsTopics := []models.PodcastTopic{}
 	for _, t := range topics {
-		podcastObjective := []models.PodcastObjective{}
+		podcastObjectives := []models.PodcastObjective{}
 		for _, o := range t.Objectives {
 			if len(data.Objective) > 0 {
 				if list.Contains(data.Objective, int(o.Id)) {
@@ -283,7 +281,7 @@ func StudyPodcasts(ctx iris.Context) {
 						Details:     o.Details,
 					}
 					po.Podcasts = po.GetPodcasts()
-					podcastObjective = append(podcastObjective, po)
+					podcastObjectives = append(podcastObjectives, po)
 				}
 			} else {
 				po := models.PodcastObjective{
@@ -294,21 +292,40 @@ func StudyPodcasts(ctx iris.Context) {
 					Details:     o.Details,
 				}
 				po.Podcasts = po.GetPodcasts()
-				podcastObjective = append(podcastObjective, po)
+				podcastObjectives = append(podcastObjectives, po)
 			}
 		}
-		podcastsTopic = append(podcastsTopic, models.PodcastTopic{
+		podcastsTopics = append(podcastsTopics, models.PodcastTopic{
 			Id:         t.Id,
 			SubjectId:  t.SubjectId,
 			Title:      t.Title,
 			Details:    t.Details,
-			Objectives: podcastObjective,
+			Objectives: podcastObjectives,
 		})
+	}
+
+	if data.FilterEmptyTopic || data.FilterEmptyObjective {
+		tmp := podcastsTopics
+		podcastsTopics = []models.PodcastTopic{}
+		for _, pt := range tmp {
+			tmpPO := pt.Objectives
+			pt.Objectives = []models.PodcastObjective{}
+			for _, po := range tmpPO {
+				if data.FilterEmptyObjective && len(po.Podcasts) == 0 {
+					continue
+				}
+				pt.Objectives = append(pt.Objectives, po)
+			}
+			if data.FilterEmptyTopic && len(pt.Objectives) == 0 {
+				continue
+			}
+			podcastsTopics = append(podcastsTopics, pt)
+		}
 	}
 
 	ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   podcastsTopic,
+		"data":   podcastsTopics,
 	})
 }
 
