@@ -122,6 +122,18 @@ func init() {
 	if err = yaml.Unmarshal(buf, &Conf); !logger.HandleError(err) {
 		panic(err)
 	}
+
+	if len(Conf.Database.App.Url) == 0 {
+		if len(Conf.Database.App.Password) == 0 {
+			Conf.Database.App.Password = os.Getenv("DB_APP_PASSWORD")
+		}
+	}
+
+	if len(Conf.Database.Core.Url) == 0 {
+		if len(Conf.Database.Core.Password) == 0 {
+			Conf.Database.Core.Password = os.Getenv("DB_CORE_PASSWORD")
+		}
+	}
 }
 
 func Update() {
