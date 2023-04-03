@@ -150,7 +150,7 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 	if err := repository.NewRepository(user).Preload("Roles").First(); err != nil && strings.Contains(err.Error(), "not found") || user.Id == uuid.Nil {
 		_createAdmin(role)
 	}
-	fmt.Println("You are all set!!!")
+	fmt.Println(color.Green, "You are all set!!!", color.Reset)
 }
 
 func _createAdmin(role *models.Role) (user *models.User, err error) {

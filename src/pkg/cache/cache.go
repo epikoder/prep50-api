@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -41,6 +42,7 @@ func Set(key string, val interface{}, expires time.Duration) error {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Set(ctx, key, val, expires).Result()
+	logger.HandleError(err)
 	return err
 }
 
@@ -48,6 +50,7 @@ func Get(key string) (string, bool) {
 	ctx := context.Background()
 	defer ctx.Done()
 	s, err := _redis.Get(ctx, key).Result()
+	logger.HandleError(err)
 	return s, err == nil
 }
 
@@ -56,6 +59,7 @@ func Pull(key string) (string, bool) {
 	defer ctx.Done()
 	s, err := _redis.GetDel(ctx, key).Result()
 	if err != redis.Nil {
+		logger.HandleError(err)
 		if strings.Contains(err.Error(), "getdel") {
 			v, ok := Get(key)
 			Forget(key)
@@ -70,6 +74,7 @@ func Exist(key string) bool {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Get(ctx, key).Result()
+	logger.HandleError(err)
 	return err != redis.Nil
 }
 
@@ -77,6 +82,7 @@ func Forget(key string) error {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Del(ctx, key).Result()
+	logger.HandleError(err)
 	return err
 }
 
