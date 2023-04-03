@@ -8,14 +8,14 @@ app:
 database:
   core:
     url:
-    name: prep50?parseTime=true
+    name: "prep50?parseTime=true"
     user: admin
     host: localhost
     port: 3306
     password:
   app:
     url:
-    name: prep50app?parseTime=true
+    name: "prep50app?parseTime=true"
     user: admin
     host: localhost
     port: 3306

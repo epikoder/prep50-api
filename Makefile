@@ -5,8 +5,8 @@ ctl:
 	go build -o ./bin/prep50_ctl cmd/prep50-ctl/prep50_ctl.go
 
 all: 
-	${main}
-	${ctl}
+	go build -o ./bin/prep50 main.go
+	go build -o ./bin/prep50_ctl cmd/prep50-ctl/prep50_ctl.go
 
 build:
 	${all}
