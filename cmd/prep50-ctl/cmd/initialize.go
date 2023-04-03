@@ -81,7 +81,8 @@ func initializeExams(cmd *cobra.Command, args []string) {
 		var exam *models.Exam = &models.Exam{}
 		if ok := repository.NewRepository(exam).FindOne("name = ?", v.Name); !ok {
 			if err := repository.NewRepository(&v).Create(); !logger.HandleError(err) {
-				panic(err)
+				fmt.Println(color.Red, err, color.Reset)
+				panic(1)
 			}
 		}
 	}
@@ -99,7 +100,8 @@ func initializeAuthenticationProvider(cmd *cobra.Command, args []string) {
 		var provider *models.Provider = &models.Provider{}
 		if ok := repository.NewRepository(provider).FindOne("name = ?", v.Name); !ok {
 			if err := repository.NewRepository(&v).Create(); !logger.HandleError(err) {
-				panic(err)
+				fmt.Println(color.Red, err, color.Reset)
+				panic(1)
 			}
 		}
 	}
@@ -121,14 +123,16 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 		permission.Id = uuid.New()
 		permission.Name = "*.*"
 		if err := repository.NewRepository(permission).Create(); err != nil {
-			panic(err)
+			fmt.Println(color.Red, err, color.Reset)
+			panic(1)
 		}
 	}
 	if ok := repository.NewRepository(role).Preload("Permissions").FindOne("name = ?", "super-admin"); !ok {
 		role.Id = uuid.New()
 		role.Name = "super-admin"
 		if err := repository.NewRepository(role).Create(); err != nil {
-			panic(err)
+			fmt.Println(color.Red, err, color.Reset)
+			panic(1)
 		}
 	}
 	if !list.Contains(role.Permissions, *permission) {
@@ -138,7 +142,8 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 			PermissionId: permission.Id,
 			CreatedBy:    "system",
 		}).Error; err != nil {
-			panic(err)
+			fmt.Println(color.Red, err, color.Reset)
+			panic(1)
 		}
 	}
 
@@ -206,7 +211,8 @@ GET_PASSWORD:
 
 	p, err := hash.MakeHash(password)
 	if err != nil {
-		panic(err)
+		fmt.Println(color.Red, err, color.Reset)
+		panic(1)
 	}
 	fmt.Println(color.Yellow)
 	fmt.Println("Creating administrator account. please wait....")
@@ -219,16 +225,16 @@ GET_PASSWORD:
 		Password: p,
 	}
 	if err = repository.NewRepository(user).Create(); err != nil {
-		fmt.Println(color.Red)
-		panic(err)
+		fmt.Println(color.Red, err, color.Reset)
+		panic(1)
 	}
 	if err = database.UseDB("app").Create(models.UserRole{
 		UserId:    user.Id,
 		RoleId:    role.Id,
 		CreatedBy: "system",
 	}).Error; err != nil {
-		fmt.Println(color.Red)
-		panic(err)
+		fmt.Println(color.Red, err, color.Reset)
+		panic(1)
 	}
 	fmt.Println(color.Green)
 	fmt.Println("Account created successfully!")
@@ -251,7 +257,8 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 	}
 	if _, err := os.OpenFile("jwt.key", os.O_RDWR|os.O_APPEND, 0755); err != nil || cmd.Flag("jwtf").Value.String() == "true" {
 		if _, err := crypto.KeyGen(true); err != nil {
-			panic(err)
+			fmt.Println(color.Red, err, color.Reset)
+			panic(1)
 		}
 	}
 
