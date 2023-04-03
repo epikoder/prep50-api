@@ -18,7 +18,7 @@ config.local.*
 .vscode
 logs
 .env
-.env
+.env.*
 jwt.key
 server.crt
 server.key
