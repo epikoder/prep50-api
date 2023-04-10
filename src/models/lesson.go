@@ -10,16 +10,15 @@ import (
 
 type (
 	Lesson struct {
-		Id          int       `sql:"primary_key;" json:"id"`
-		SubjectId   int       `json:"subject_id"`
-		ObjectiveId int       `json:"objective_id"`
-		Title       string    `json:"title"`
-		Content     string    `sql:"type:longtext" json:"content"`
-		DocUrl      string    `json:"docs_url"`
-		SlideUrl    string    `json:"slide_url"`
-		VideoUrl    string    `json:"video_url"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"update_at"`
+		Id        int       `sql:"primary_key;" json:"id"`
+		SubjectId int       `json:"subject_id"`
+		Title     string    `json:"title"`
+		Content   string    `sql:"type:longtext" json:"content"`
+		DocUrl    string    `json:"docs_url"`
+		SlideUrl  string    `json:"slide_url"`
+		VideoUrl  string    `json:"video_url"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"update_at"`
 	}
 )
 
