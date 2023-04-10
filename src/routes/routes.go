@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterApiRoutes(app *iris.Application) {
+	app.Use(iris.Compression)
 	app.AllowMethods(iris.MethodOptions)
 
 	app.HandleDir("storage", iris.Dir("./storage"), iris.DirOptions{Compress: true})
