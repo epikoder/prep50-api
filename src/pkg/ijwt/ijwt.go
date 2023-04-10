@@ -34,6 +34,10 @@ type (
 		Refresh     string    `json:"refresh"`
 		ExpiresRt   time.Time `json:"refresh_expires_at"`
 	}
+	LoginResponse struct {
+		*JwtToken
+		User interface{} `json:"user"`
+	}
 )
 
 var (

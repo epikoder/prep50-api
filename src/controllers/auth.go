@@ -126,8 +126,8 @@ func RegisterV1(ctx iris.Context) {
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "Account created successfully",
-		"data": LoginResponse{
-			token, user,
+		"data": ijwt.LoginResponse{
+			JwtToken: token, User: user,
 		},
 	})
 }
@@ -141,10 +141,6 @@ type (
 		models.User
 		Exam              []models.UserExam `json:"exams"`
 		HasRegisteredExam bool              `json:"has_registered_exam"`
-	}
-	LoginResponse struct {
-		*ijwt.JwtToken
-		User interface{} `json:"user"`
 	}
 )
 
@@ -284,8 +280,8 @@ func LoginV1(ctx iris.Context) {
 		return
 	}
 
-	response := LoginResponse{
-		token, userWithExam,
+	response := ijwt.LoginResponse{
+		JwtToken: token, User: userWithExam,
 	}
 
 	ctx.JSON(apiResponse{
@@ -501,8 +497,8 @@ func SocialV1(ctx iris.Context) {
 		return
 	}
 
-	response := LoginResponse{
-		token, userWithExam,
+	response := ijwt.LoginResponse{
+		JwtToken: token, User: userWithExam,
 	}
 	ctx.JSON(apiResponse{
 		"status":  "success",

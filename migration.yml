@@ -19,3 +19,4 @@ models:
   - Faq
   - Notification
   - Fcm
+  - UserProgress

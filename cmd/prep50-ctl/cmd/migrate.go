@@ -48,6 +48,7 @@ var (
 		"Faq":             &models.Faq{},
 		"Notification":    &models.Notification{},
 		"Fcm":             &models.Fcm{},
+		"UserProgress":    &models.UserProgress{},
 	}
 	mT migrationModel = []dbmodel.DBModel{}
 )

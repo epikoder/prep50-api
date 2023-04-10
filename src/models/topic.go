@@ -8,20 +8,20 @@ import (
 
 type (
 	Topic struct {
-		Id         uint             `sql:"primary_key;" json:"id"`
-		SubjectId  int              `json:"subject_id"`
-		Title      string           `json:"title"`
-		Details    string           `json:"details"`
-		Objectives []TopicObjective `json:"objectives"`
+		Id         uint        `sql:"primary_key;" json:"id"`
+		SubjectId  int         `json:"subject_id"`
+		Title      string      `json:"title"`
+		Details    string      `json:"details"`
+		Objectives []Objective `gorm:"many2many:topic_objectives; foreignKey:Id; joinForeignKey:TopicId; joinReferences:Id" json:"objectives"`
 	}
 
-	TopicObjective struct {
-		Id          uint     `sql:"primary_key;" json:"id"`
-		TopicId     int      `json:"topic_id"`
-		ObjectiveId int      `json:"objective_id"`
-		Title       string   `json:"title"`
-		Details     string   `json:"details"`
-		Lessons     []Lesson `gorm:"many2many:objective_lessons; foreignKey:ObjectiveId; joinForeignKey:ObjectiveId; references:Id; joinReferences:LessonId" json:"lessons"`
+	UserTopicProgress struct {
+		Id         uint                    `sql:"primary_key;" json:"id"`
+		SubjectId  int                     `json:"subject_id"`
+		Title      string                  `json:"title"`
+		Details    string                  `json:"details"`
+		Objectives []UserObjectiveProgress `json:"objectives"`
+		Progress   uint                    `json:"-"`
 	}
 )
 

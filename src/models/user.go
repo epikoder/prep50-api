@@ -83,6 +83,12 @@ type (
 
 	PaymentStatus string
 	Gender        string
+
+	AdminUser struct {
+		User
+		Permissions []string `json:"permisions"`
+		Roles       []string `json:"roles"`
+	}
 )
 
 const (

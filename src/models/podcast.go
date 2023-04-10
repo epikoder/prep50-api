@@ -22,7 +22,6 @@ type (
 
 	PodcastForm struct {
 		Title     string
-		Subject   uint
 		Objective uint
 	}
 
@@ -34,20 +33,27 @@ type (
 	}
 
 	PodcastTopic struct {
-		Id         uint               `sql:"primary_key;" json:"id"`
-		SubjectId  int                `json:"subject_id"`
-		Title      string             `json:"title"`
-		Details    string             `json:"details"`
+		Topic
 		Objectives []PodcastObjective `json:"objectives"`
 	}
 
+	UserPodcastTopicProgress struct {
+		Id         uint                           `sql:"primary_key;" json:"id"`
+		SubjectId  int                            `json:"subject_id"`
+		Title      string                         `json:"title"`
+		Details    string                         `json:"details"`
+		Objectives []UserPodcastObjectiveProgress `json:"objectives"`
+		Progress   uint                           `json:"-"`
+	}
+
 	PodcastObjective struct {
-		Id          uint      `sql:"primary_key;" json:"id"`
-		TopicId     int       `json:"topic_id"`
-		ObjectiveId int       `json:"objective_id"`
-		Title       string    `json:"title"`
-		Details     string    `json:"details"`
-		Podcasts    []Podcast `json:"podcasts"`
+		Objective
+		Podcasts []Podcast `json:"podcasts"`
+	}
+
+	UserPodcastObjectiveProgress struct {
+		PodcastObjective
+		Progress uint `json:"progress"`
 	}
 )
 
@@ -67,8 +73,11 @@ func (p *Podcast) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(p)
 }
 
-func (po PodcastObjective) GetPodcasts() (p []Podcast) {
-	p = make([]Podcast, 0)
-	database.UseDB("app").Find(&p, "objective_id = ?", po.ObjectiveId)
-	return
+func (po *PodcastObjective) FilterPodcast(podcasts []Podcast) *PodcastObjective {
+	for _, p := range podcasts {
+		if p.ObjectiveId == po.Id {
+			po.Podcasts = append(po.Podcasts, p)
+		}
+	}
+	return po
 }

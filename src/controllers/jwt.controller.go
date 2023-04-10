@@ -53,7 +53,7 @@ func Refresh(ctx iris.Context) {
 		for _, r := range user.Roles {
 			roles = append(roles, r.Name)
 		}
-		userGeneric = &AdminUser{*user, permissions, roles}
+		userGeneric = &models.AdminUser{User: *user, Permissions: permissions, Roles: roles}
 	} else {
 		userExams := []models.UserExam{}
 		repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
@@ -72,7 +72,7 @@ func Refresh(ctx iris.Context) {
 		return
 	}
 
-	response := LoginResponse{token, userGeneric}
+	response := ijwt.LoginResponse{JwtToken: token, User: userGeneric}
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   response,
