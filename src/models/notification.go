@@ -12,7 +12,7 @@ import (
 type (
 	Notification struct {
 		Id        uuid.UUID `sql:"primary_key;unique;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"id"`
-		UserId    uuid.UUID `sql:"type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"-"`
+		UserId    uuid.UUID `sql:"type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index" json:"-"`
 		Title     string    `json:"title" validate:"required"`
 		Body      string    `gorm:"type:mediumtext" json:"body" validate:"required"`
 		ImageUrl  string    `json:"image_url"`

@@ -320,7 +320,12 @@ func StudyPodcasts(ctx iris.Context) {
 			podcastObjectives := []models.PodcastObjective{}
 			for _, o := range t.Objectives {
 				pids = append(pids, int(o.Id))
-				podcastObjectives = append(podcastObjectives, models.PodcastObjective{Objective: o})
+				podcastObjectives = append(podcastObjectives, models.PodcastObjective{
+					Id:        o.Id,
+					SubjectId: o.SubjectId,
+					Title:     o.Title,
+					Details:   o.Details,
+				})
 			}
 			podcastsTopics = append(podcastsTopics, models.PodcastTopic{Topic: t, Objectives: podcastObjectives})
 		}
@@ -336,7 +341,7 @@ func StudyPodcasts(ctx iris.Context) {
 
 	useFilterEmptyObjective := func(arr *[]models.UserPodcastObjectiveProgress, o models.PodcastObjective) {
 		if data.FilterEmptyObjective {
-			if len(o.Podcasts) > 0 {
+			if o.Podcast != nil {
 				*arr = append(*arr, models.UserPodcastObjectiveProgress{
 					PodcastObjective: o,
 					Progress:         models.FindObjectiveProgressFromList(progress, o.Id),

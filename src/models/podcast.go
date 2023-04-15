@@ -13,7 +13,7 @@ type (
 	Podcast struct {
 		Id          uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		SubjectId   uint      `json:"subject_id"`
-		ObjectiveId uint      `json:"objective_id"`
+		ObjectiveId uint      `gorm:"unique" json:"objective_id"`
 		Title       string    `json:"title"`
 		Url         string    `json:"url"`
 		CreatedAt   time.Time `json:"created_at"`
@@ -47,8 +47,11 @@ type (
 	}
 
 	PodcastObjective struct {
-		Objective
-		Podcasts []Podcast `json:"podcasts"`
+		Id        uint     `sql:"primary_key;" json:"id"`
+		SubjectId int      `json:"subject_id"`
+		Title     string   `json:"title"`
+		Details   string   `json:"details"`
+		Podcast   *Podcast `json:"podcast"`
 	}
 
 	UserPodcastObjectiveProgress struct {
@@ -76,7 +79,8 @@ func (p *Podcast) Migrate() dbmodel.Migration {
 func (po *PodcastObjective) FilterPodcast(podcasts []Podcast) *PodcastObjective {
 	for _, p := range podcasts {
 		if p.ObjectiveId == po.Id {
-			po.Podcasts = append(po.Podcasts, p)
+			po.Podcast = &p
+			return po
 		}
 	}
 	return po

@@ -11,7 +11,7 @@ import (
 
 type Fcm struct {
 	Id        uuid.UUID `sql:"primary_key;unique;type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"id"`
-	UserId    uuid.UUID `sql:"type:varchar(36);index;type:uuid;default:uuid_generate_v4()" json:"user_id"`
+	UserId    uuid.UUID `sql:"type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index" json:"user_id"`
 	Token     string
 	Timestamp time.Time
 }

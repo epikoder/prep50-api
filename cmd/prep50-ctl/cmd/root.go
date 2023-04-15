@@ -32,6 +32,7 @@ func init() {
 	}
 	migrateCmd.Flags().BoolP("rollback", "r", false, "Rollback migrations")
 	migrateCmd.Flags().BoolP("reset", "f", false, "Reset migrations")
+	migrateCmd.Flags().BoolP("auto", "a", false, "Auto migrations")
 	migrateCmd.Flags().StringP("model", "m", "", "Run migration on a specific model")
 	migrateCmd.Example = "prep50_ctl migrate -m User,Exam -r"
 

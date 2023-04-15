@@ -19,7 +19,7 @@ type (
 
 func NewRepository(model dbmodel.DBModel) (r *repository) {
 	r = &repository{model, model.Database()}
-	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
+	if env := os.Getenv("APP_ENV"); env != "" && env != "production" && os.Getenv("DB_DEBUG") != "false" {
 		r.DB = r.DB.Debug()
 	}
 	v := reflect.ValueOf(model)

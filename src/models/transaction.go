@@ -12,7 +12,7 @@ import (
 type (
 	Transaction struct {
 		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
-		UserId    uuid.UUID `json:"user_id"`
+		UserId    uuid.UUID `gorm:"type:varchar(36);index" json:"user_id"`
 		Item      string    `json:"-"`
 		Amount    uint      `json:"amount"`
 		Reference string    `json:"reference"`

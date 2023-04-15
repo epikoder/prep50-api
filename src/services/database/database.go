@@ -53,7 +53,7 @@ func connectDB(db string) (g *gorm.DB, err error) {
 
 func UseDB(db string) *gorm.DB {
 	debug := func(env string) bool {
-		return env != "" && env != "production"
+		return env != "" && env != "production" && os.Getenv("DB_DEBUG") != "false"
 	}(os.Getenv("APP_ENV"))
 	if db == "app" {
 		if debug {

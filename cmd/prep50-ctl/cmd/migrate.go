@@ -89,6 +89,7 @@ func migrate(cmd *cobra.Command, args []string) {
 	}
 	rollback := cmd.Flag("rollback").Value.String() == "true"
 	reset := cmd.Flag("reset").Value.String() == "true"
+	auto := cmd.Flag("auto").Value.String() == "true"
 	models := make([]string, 0)
 	if cmd.Flag("model").Value.String() != "" {
 		models = strings.Split(cmd.Flag("model").Value.String(), ",")
@@ -105,6 +106,29 @@ func migrate(cmd *cobra.Command, args []string) {
 		_m = append(_m, mT...)
 	}
 	for _, m := range _m {
+		if auto {
+			if err := m.Database().AutoMigrate(m); err != nil {
+				if strings.Contains(err.Error(), "1062") {
+					choice := "y"
+					fmt.Printf("Error occured on %s :: ERROR ::%s%s%s\n", m.Tag(), color.Red, err.Error(), color.Reset)
+					fmt.Printf("The table %s has duplicate key for unique field: \nAuto resolve will delete current data on this table : [y/N]: ", m.Tag())
+					fmt.Scan(&choice)
+					if strings.ToLower(choice) == "y" {
+						if err := m.Database().Migrator().DropTable(m); err != nil {
+							panic(err)
+						}
+						err := m.Database().AutoMigrate(m)
+						if err != nil {
+							panic(err)
+						}
+					}
+
+				} else {
+					panic(err)
+				}
+			}
+			continue
+		}
 		if rollback || reset {
 			if err := m.Migrate().Down(); err != nil {
 				panic(err)
