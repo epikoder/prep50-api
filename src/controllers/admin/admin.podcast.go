@@ -59,23 +59,23 @@ func CreatePodcast(ctx iris.Context) {
 		return
 	}
 
-	objective := &models.Objective{}
+	topic := &models.Topic{}
 	{
-		fmt.Println(data.Objective)
-		if err := database.UseDB("core").First(objective, "id = ?", data.Objective).Error; err != nil {
+		fmt.Println(data.Topic)
+		if err := database.UseDB("core").First(topic, "id = ?", data.Topic).Error; err != nil {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(apiResponse{
 				"status":  "failed",
-				"message": "objective not found",
+				"message": "Topic not found",
 			})
 			return
 		}
 	}
 	podcast := &models.Podcast{
-		Id:          uuid.New(),
-		SubjectId:   uint(objective.SubjectId),
-		ObjectiveId: data.Objective,
-		Title:       data.Title,
+		Id:        uuid.New(),
+		SubjectId: uint(topic.SubjectId),
+		TopicId:   data.Topic,
+		Title:     data.Title,
 	}
 	out, err := os.Create(fmt.Sprintf("storage/podcast/%s%s", podcast.Id.String(), filepath.Ext(h.Filename)))
 	if !logger.HandleError(err) {

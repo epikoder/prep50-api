@@ -11,18 +11,18 @@ import (
 
 type (
 	Podcast struct {
-		Id          uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
-		SubjectId   uint      `json:"subject_id"`
-		ObjectiveId uint      `gorm:"unique" json:"objective_id"`
-		Title       string    `json:"title"`
-		Url         string    `json:"url"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"update_at"`
+		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
+		SubjectId uint      `json:"subject_id"`
+		TopicId   uint      `json:"topic_id"`
+		Title     string    `json:"title"`
+		Url       string    `json:"url"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"update_at"`
 	}
 
 	PodcastForm struct {
-		Title     string
-		Objective uint
+		Title string
+		Topic uint
 	}
 
 	PodcastUpdateForm struct {
@@ -30,33 +30,6 @@ type (
 		Title     string
 		Subject   uint
 		Objective uint
-	}
-
-	PodcastTopic struct {
-		Topic
-		Objectives []PodcastObjective `json:"objectives"`
-	}
-
-	UserPodcastTopicProgress struct {
-		Id         uint                           `sql:"primary_key;" json:"id"`
-		SubjectId  int                            `json:"subject_id"`
-		Title      string                         `json:"title"`
-		Details    string                         `json:"details"`
-		Objectives []UserPodcastObjectiveProgress `json:"objectives"`
-		Progress   uint                           `json:"-"`
-	}
-
-	PodcastObjective struct {
-		Id        uint     `sql:"primary_key;" json:"id"`
-		SubjectId int      `json:"subject_id"`
-		Title     string   `json:"title"`
-		Details   string   `json:"details"`
-		Podcast   *Podcast `json:"podcast"`
-	}
-
-	UserPodcastObjectiveProgress struct {
-		PodcastObjective
-		Progress uint `json:"progress"`
 	}
 )
 
@@ -74,14 +47,4 @@ func (p *Podcast) Database() *gorm.DB {
 
 func (p *Podcast) Migrate() dbmodel.Migration {
 	return dbmodel.NewMigration(p)
-}
-
-func (po *PodcastObjective) FilterPodcast(podcasts []Podcast) *PodcastObjective {
-	for _, p := range podcasts {
-		if p.ObjectiveId == po.Id {
-			po.Podcast = &p
-			return po
-		}
-	}
-	return po
 }

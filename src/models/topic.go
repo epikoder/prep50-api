@@ -15,13 +15,12 @@ type (
 		Objectives []Objective `gorm:"many2many:topic_objectives; foreignKey:Id; joinForeignKey:TopicId; joinReferences:Id" json:"objectives"`
 	}
 
-	UserTopicProgress struct {
-		Id         uint                    `sql:"primary_key;" json:"id"`
-		SubjectId  int                     `json:"subject_id"`
-		Title      string                  `json:"title"`
-		Details    string                  `json:"details"`
-		Objectives []UserObjectiveProgress `json:"objectives"`
-		Progress   uint                    `json:"-"`
+	PodcastTopic struct {
+		Id        uint      `sql:"primary_key;" json:"id"`
+		SubjectId int       `json:"subject_id"`
+		Title     string    `json:"title"`
+		Details   string    `json:"details"`
+		Podcast   []Podcast `gorm:"foreignKey:TopicId;references:Id" json:"podcasts"`
 	}
 )
 

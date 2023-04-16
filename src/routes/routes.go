@@ -72,7 +72,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	study := app.Party("/study", ijwt.JwtGuardMiddleware, middlewares.Protected, middlewares.MustRegisterSubject)
 	study.Post("/subjects", controllers.StudySubjects)
 	study.Post("/topics", middlewares.MustSubscribe, controllers.StudyLessons)
-	study.Post("/podcast", middlewares.MustSubscribe, controllers.StudyPodcasts)
+	study.Get("/podcast", middlewares.MustSubscribe, controllers.StudyPodcasts)
 	study.Get("/quiz", controllers.QuickQuiz)
 	study.Post("/quiz", controllers.QuickQuizScore)
 

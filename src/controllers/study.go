@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"math"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 //++++++++++++++++++++++++++++++++++++++++++++++++
@@ -19,73 +20,41 @@ func StudySubjects(ctx iris.Context) {
 	type (
 		subjectForm struct {
 			Exam []string
-			// WithObjective bool
 		}
 	)
 	var response map[string][]models.UserSubjectProgress = make(map[string][]models.UserSubjectProgress)
-
 	data := &subjectForm{}
 	ctx.ReadJSON(data)
 	user, _ := getUser(ctx)
 	session := settings.Get("exam.session", time.Now().Year())
-	examSubject := map[query][]models.UserSubject{}
-	{
-		q := []query{}
-		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
-			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("ue.session = ? AND e.status = 1 AND ue.user_id = ?", session, user.Id).
-			Scan(&q).Error; !logger.HandleError(err) {
-			ctx.StatusCode(http.StatusInternalServerError)
-			ctx.JSON(internalServerError)
-			return
-		}
-
-		for _, e := range q {
-			if len(data.Exam) > 0 && !list.Contains(data.Exam, e.Name) || !e.Status {
-				continue
-			}
-
-			userSubjects := []models.UserSubject{}
-			if err := repository.NewRepository(&models.UserSubject{}).FindMany(&userSubjects, "user_id = ? AND user_exam_id = ?", user.Id, e.Id); !logger.HandleError(err) {
-				ctx.StatusCode(http.StatusInternalServerError)
-				ctx.JSON(internalServerError)
-				return
-			}
-			examSubject[e] = append(examSubject[e], userSubjects...)
-		}
-	}
-	ids := map[string][]uint{}
-	for e, us := range examSubject {
-		for _, s := range us {
-			ids[e.Name] = append(ids[e.Name], s.SubjectId)
-		}
-	}
-	repo := repository.NewRepository(&models.Subject{})
-	// if data.WithObjective {
-	// 	repo.Preload("Objectives")
-	// }
 	progress := []models.UserProgress{}
 	database.UseDB("app").Find(&progress, "user_id = ?", user.Id)
+	subjects := []struct {
+		Id          uint   `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Exam        string
+	}{}
+	if err := database.UseDB("core").Table("subjects as s").
+		Select("s.*, e.name as exam").
+		Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON s.id = us.subject_id", config.Conf.Database.App.Name)).
+		Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
+		Joins(fmt.Sprintf("LEFT JOIN %s.exams as e ON ue.exam_id = e.id", config.Conf.Database.App.Name)).
+		Find(&subjects, "us.user_id = ? AND ue.session = ? order by subject_id asc",
+			user.Id,
+			session).Error; err != nil {
+		ctx.StatusCode(http.StatusInternalServerError)
+		ctx.JSON(internalServerError)
+		return
+	}
 
-	objectives := []models.Objective{}
-	database.UseDB("core").Find(&objectives, "id = ?", user.Id)
-
-	for e := range examSubject {
-		subjects := []models.Subject{}
-		if err := repo.FindMany(&subjects, "id IN ?", ids[e.Name]); !logger.HandleError(err) {
-			ctx.StatusCode(http.StatusInternalServerError)
-			ctx.JSON(internalServerError)
-			return
-		}
-		for _, sub := range subjects {
-			response[e.Name] = append(response[e.Name], models.UserSubjectProgress{
-				Id:          sub.Id,
-				Name:        sub.Name,
-				Description: sub.Description,
-				Progress:    models.FindSubjectProgressFromList(progress, sub.Id),
-			})
-		}
+	for _, sub := range subjects {
+		response[sub.Exam] = append(response[sub.Exam], models.UserSubjectProgress{
+			Id:          sub.Id,
+			Name:        sub.Name,
+			Description: sub.Description,
+			Progress:    models.FindSubjectProgressFromList(progress, sub.Id),
+		})
 	}
 	ctx.JSON(apiResponse{
 		"status": "success",
@@ -106,134 +75,105 @@ func StudyLessons(ctx iris.Context) {
 	ctx.ReadJSON(data)
 	if len(data.Subject) > 0 {
 		data.Subject = list.Unique(data.Subject).([]int)
+	} else {
+		data.FilterEmptyTopic = true
 	}
 	if len(data.Objective) > 0 {
 		data.Objective = list.Unique(data.Objective).([]int)
+		data.FilterEmptyObjective = true
 	}
 
 	user, _ := getUser(ctx)
 	session := settings.Get("exam.session", time.Now().Year())
-	type ID struct {
-		SubjectId     int
-		PaymentStatus models.PaymentStatus
-	}
-	ids := []ID{}
-	{
-		if err := database.UseDB("app").
-			Table("user_subjects as us").
-			Select("us.subject_id").
-			Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
-			// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
-			Where("us.user_id = ? AND ue.session = ?", user.Id, session).
-			Find(&ids).Error; !logger.HandleError(err) {
-			ctx.StatusCode(500)
-			ctx.JSON(internalServerError)
-			return
-		}
-	}
-
-	allowedIds := []int{}
-	{
-		for _, i := range ids {
-			allowedIds = append(allowedIds, i.SubjectId)
-		}
-		if len(data.Subject) > 0 {
-			tmp := allowedIds
-			allowedIds = []int{}
-			for _, id := range data.Subject {
-				if list.Contains(tmp, id) {
-					allowedIds = append(allowedIds, id)
-				}
-			}
-		}
-	}
-
 	topics := []models.Topic{}
 	{
-		repo := repository.NewRepository(&models.Topic{})
+		db := database.UseDB("core")
 		if data.WithObjective {
 			if len(data.Objective) > 0 {
-				repo.Preload("Objectives", "id IN ?", data.Objective)
+				db = db.Preload("Objectives",
+					func(__db *gorm.DB) *gorm.DB {
+						__db = __db.Table("objectives as o").
+							Select("o.*, up.score").
+							Joins("LEFT JOIN prep50core.user_progresses as up ON up.objective_id = o.id").
+							Where("o.id IN ?", data.Objective)
+						return __db
+					},
+				)
 			} else {
-				repo.Preload("Objectives")
+				db = db.Preload("Objectives", func(__db *gorm.DB) *gorm.DB {
+					__db = __db.Table("objectives as o").
+						Select("o.*, up.score").
+						Joins("LEFT JOIN prep50core.user_progresses as up ON up.objective_id = o.id")
+					return __db
+				})
 			}
 		}
 		if data.WithLesson {
-			repo.Preload("Objectives.Lessons")
+			db = db.Preload("Objectives.Lessons")
 		}
 
-		if err := repo.FindMany(&topics, "subject_id IN ? order by subject_id asc", allowedIds); !logger.HandleError(err) {
+		var err error
+		db = db.Table("topics as t").
+			Select("t.*").
+			Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON t.subject_id = us.subject_id", config.Conf.Database.App.Name)).
+			Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
+			Joins("LEFT JOIN subjects as s ON s.id = us.subject_id")
+
+		if len(data.Subject) > 0 {
+			err = db.
+				Find(&topics, "us.user_id = ? AND ue.session = ? AND t.subject_id IN ? GROUP BY t.id order by subject_id asc",
+					user.Id,
+					session,
+					data.Subject,
+				).Error
+		} else {
+			err = db.
+				Find(&topics, "us.user_id = ? AND ue.session = ? GROUP BY t.id order by subject_id asc",
+					user.Id,
+					session,
+				).Error
+
+		}
+		if !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return
 		}
 	}
 
-	progress := []models.UserProgress{}
-	database.UseDB("app").Find(&progress, "user_id = ?", user.Id)
-
-	useFilterEmptyObjective := func(arr *[]models.UserObjectiveProgress, o models.Objective) {
+	useFilterEmptyObjective := func(arr *[]models.Objective, o models.Objective) {
 		if data.FilterEmptyObjective {
 			if len(o.Lessons) > 0 {
-				*arr = append(*arr, models.UserObjectiveProgress{
-					Objective: o,
-					Progress:  models.FindObjectiveProgressFromList(progress, o.Id)},
-				)
+				*arr = append(*arr, o)
 			}
 		} else {
-			*arr = append(*arr, models.UserObjectiveProgress{
-				Objective: o,
-				Progress:  models.FindObjectiveProgressFromList(progress, o.Id)},
-			)
+			*arr = append(*arr, o)
 		}
 	}
 
-	useFilterEmptyTopic := func(arr *[]models.UserTopicProgress, t models.Topic, pr []models.UserObjectiveProgress) {
-		calc := func() (score uint) {
-			score = 0
-			for _, p := range pr {
-				score += p.Progress
-			}
-			if len(pr) > 0 {
-				score = uint(math.Round(float64(score) / float64(len(pr))))
-			}
-			return
-		}
+	useFilterEmptyTopic := func(arr *[]models.Topic, t models.Topic, objectives []models.Objective) {
 		if data.FilterEmptyObjective {
-			if len(pr) > 0 {
-				*arr = append(*arr, models.UserTopicProgress{
-					Id:         t.Id,
-					SubjectId:  t.SubjectId,
-					Title:      t.Title,
-					Details:    t.Details,
-					Objectives: pr,
-					Progress:   calc()},
-				)
+
+			if len(objectives) > 0 {
+				*arr = append(*arr, t)
 			}
 		} else {
-			*arr = append(*arr, models.UserTopicProgress{
-				Id:         t.Id,
-				SubjectId:  t.SubjectId,
-				Title:      t.Title,
-				Details:    t.Details,
-				Objectives: pr,
-				Progress:   calc()},
-			)
+			*arr = append(*arr, t)
 		}
 	}
 
-	topicsWithProgress := []models.UserTopicProgress{}
+	topicLessons := []models.Topic{}
 	for _, t := range topics {
-		objectivesWithProgress := []models.UserObjectiveProgress{}
+		objectives := []models.Objective{}
 		for _, o := range t.Objectives {
-			useFilterEmptyObjective(&objectivesWithProgress, o)
+			useFilterEmptyObjective(&objectives, o)
 		}
-		useFilterEmptyTopic(&topicsWithProgress, t, objectivesWithProgress)
+		useFilterEmptyTopic(&topicLessons, t, objectives)
 	}
 
 	ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   topicsWithProgress,
+		"data":   topicLessons,
 	})
 }
 
@@ -242,165 +182,17 @@ func StudyLessons(ctx iris.Context) {
 //++++++++++++++++++++++++++++++++++++++++++++++++
 func StudyPodcasts(ctx iris.Context) {
 	type topicForm struct {
-		Subject              []int
-		Objective            []int
-		WithObjective        bool
-		FilterEmptyTopic     bool
-		FilterEmptyObjective bool
+		Subject int
 	}
-
 	data := &topicForm{}
-	ctx.ReadJSON(data)
-	if len(data.Subject) > 0 {
-		data.Subject = list.Unique(data.Subject).([]int)
-	}
-	if len(data.Objective) > 0 {
-		data.Objective = list.Unique(data.Objective).([]int)
-	}
-
-	user, _ := getUser(ctx)
-	session := settings.Get("exam.session", time.Now().Year())
-	type ID struct {
-		SubjectId     int
-		PaymentStatus models.PaymentStatus
-	}
-	ids := []ID{}
-	if err := database.UseDB("app").
-		Table("user_subjects as us").
-		Select("us.subject_id").
-		Joins("LEFT JOIN user_exams as ue on ue.id = us.user_exam_id").
-		// Where("us.user_id = ? AND ue.session = ? AND ue.payment_status = ?", user.Id, session, models.Completed).
-		Where("us.user_id = ? AND ue.session = ?", user.Id, session).
-		Find(&ids).Error; !logger.HandleError(err) {
-		ctx.StatusCode(500)
-		ctx.JSON(internalServerError)
-		return
-	}
-
-	allowedIds := []int{}
-	{
-		for _, i := range ids {
-			allowedIds = append(allowedIds, i.SubjectId)
-		}
-
-		if len(data.Subject) > 0 {
-			tmp := allowedIds
-			allowedIds = []int{}
-			for _, id := range data.Subject {
-				if list.Contains(tmp, id) {
-					allowedIds = append(allowedIds, id)
-				}
-			}
-		}
-	}
-
-	topics := []models.Topic{}
-	repo := repository.NewRepository(&models.Topic{})
-	{
-		if data.WithObjective {
-			if len(data.Objective) > 0 {
-				repo.Preload("Objectives", "id IN ?", data.Objective)
-			} else {
-				repo.Preload("Objectives")
-			}
-		}
-
-		if err := repo.FindMany(&topics, "subject_id IN ? order by subject_id asc", allowedIds); !logger.HandleError(err) {
-			ctx.StatusCode(500)
-			ctx.JSON(internalServerError)
-			return
-		}
-	}
-
-	podcastsTopics := []models.PodcastTopic{}
-	podcasts := []models.Podcast{}
-	{
-		pids := []int{}
-		for _, t := range topics {
-			podcastObjectives := []models.PodcastObjective{}
-			for _, o := range t.Objectives {
-				pids = append(pids, int(o.Id))
-				podcastObjectives = append(podcastObjectives, models.PodcastObjective{
-					Id:        o.Id,
-					SubjectId: o.SubjectId,
-					Title:     o.Title,
-					Details:   o.Details,
-				})
-			}
-			podcastsTopics = append(podcastsTopics, models.PodcastTopic{Topic: t, Objectives: podcastObjectives})
-		}
-		if err := database.UseDB("app").Find(&podcasts, "objective_id IN ?", pids).Error; !logger.HandleError(err) {
-			ctx.StatusCode(500)
-			ctx.JSON(internalServerError)
-			return
-		}
-	}
-
-	progress := []models.UserProgress{}
-	database.UseDB("app").Find(&progress, "user_id = ?", user.Id)
-
-	useFilterEmptyObjective := func(arr *[]models.UserPodcastObjectiveProgress, o models.PodcastObjective) {
-		if data.FilterEmptyObjective {
-			if o.Podcast != nil {
-				*arr = append(*arr, models.UserPodcastObjectiveProgress{
-					PodcastObjective: o,
-					Progress:         models.FindObjectiveProgressFromList(progress, o.Id),
-				})
-			}
-		} else {
-			*arr = append(*arr, models.UserPodcastObjectiveProgress{
-				PodcastObjective: o,
-				Progress:         models.FindObjectiveProgressFromList(progress, o.Id),
-			})
-		}
-	}
-
-	useFilterEmptyTopic := func(arr *[]models.UserPodcastTopicProgress, t models.PodcastTopic, pr []models.UserPodcastObjectiveProgress) {
-		calc := func() (score uint) {
-			score = 0
-			for _, p := range pr {
-				score += p.Progress
-			}
-			if len(pr) > 0 {
-				score = uint(math.Round(float64(score) / float64(len(pr))))
-			}
-			return
-		}
-		if data.FilterEmptyObjective {
-			if len(pr) > 0 {
-				*arr = append(*arr, models.UserPodcastTopicProgress{
-					Id:         t.Id,
-					SubjectId:  t.SubjectId,
-					Title:      t.Title,
-					Details:    t.Details,
-					Progress:   calc(),
-					Objectives: pr,
-				})
-			}
-		} else {
-			*arr = append(*arr, models.UserPodcastTopicProgress{
-				Id:         t.Id,
-				SubjectId:  t.SubjectId,
-				Title:      t.Title,
-				Details:    t.Details,
-				Progress:   calc(),
-				Objectives: pr,
-			})
-		}
-	}
-
-	__pt__ := []models.UserPodcastTopicProgress{}
-	for _, t := range podcastsTopics {
-		__po__ := []models.UserPodcastObjectiveProgress{}
-		for _, o := range t.Objectives {
-			useFilterEmptyObjective(&__po__, *o.FilterPodcast(podcasts))
-		}
-		useFilterEmptyTopic(&__pt__, t, __po__)
-	}
-
+	ctx.ReadQuery(data)
+	topics := []models.PodcastTopic{}
+	database.UseDB("core").Table("topics").Preload("Podcast", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.podcasts", config.Conf.Database.App.Name))
+	}).Find(&topics, "subject_id = ?", data.Subject)
 	ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   __pt__,
+		"data":   topics,
 	})
 }
 

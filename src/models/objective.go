@@ -14,12 +14,13 @@ type (
 		Details   string     `json:"details"`
 		Questions []Question `gorm:"many2many:objective_questions; foreignKey:Id; joinForeignKey:ObjectiveId; joinReferences:Id" json:"questions,omitempty"`
 		Lessons   []Lesson   `gorm:"many2many:objective_lessons; foreignKey:Id; joinForeignKey:ObjectiveId; joinReferences:Id" json:"lessons"`
+		Progress  uint       `gorm:"-:migration" json:"progress"`
 	}
 
-	UserObjectiveProgress struct {
-		Objective
-		Progress uint `json:"progress"`
-	}
+	// UserObjectiveProgress struct {
+	// 	Objective
+	// 	Progress uint `json:"progress"`
+	// }
 )
 
 func (o *Objective) Database() *gorm.DB {
