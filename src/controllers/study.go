@@ -75,12 +75,9 @@ func StudyLessons(ctx iris.Context) {
 	ctx.ReadJSON(data)
 	if len(data.Subject) > 0 {
 		data.Subject = list.Unique(data.Subject).([]int)
-	} else {
-		data.FilterEmptyTopic = true
 	}
 	if len(data.Objective) > 0 {
 		data.Objective = list.Unique(data.Objective).([]int)
-		data.FilterEmptyObjective = true
 	}
 
 	user, _ := getUser(ctx)
@@ -94,7 +91,7 @@ func StudyLessons(ctx iris.Context) {
 					func(__db *gorm.DB) *gorm.DB {
 						__db = __db.Table("objectives as o").
 							Select("o.*, up.score").
-							Joins("LEFT JOIN prep50core.user_progresses as up ON up.objective_id = o.id").
+							Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.App.Name)).
 							Where("o.id IN ?", data.Objective)
 						return __db
 					},
@@ -103,7 +100,7 @@ func StudyLessons(ctx iris.Context) {
 				db = db.Preload("Objectives", func(__db *gorm.DB) *gorm.DB {
 					__db = __db.Table("objectives as o").
 						Select("o.*, up.score").
-						Joins("LEFT JOIN prep50core.user_progresses as up ON up.objective_id = o.id")
+						Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.App.Name))
 					return __db
 				})
 			}
