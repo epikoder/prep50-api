@@ -6,6 +6,9 @@ RUN addgroup --system --gid 1001 web
 RUN adduser --system --uid 1001 prep50
 
 RUN apt update && apt install libvips-dev libvips-tools -y  
+
+WORKDIR /app
+COPY . .
 RUN make && make ctl
 
 USER prep50
