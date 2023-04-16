@@ -150,8 +150,8 @@ func StudyLessons(ctx iris.Context) {
 
 	useFilterEmptyTopic := func(arr *[]models.Topic, t models.Topic, objectives []models.Objective) {
 		if data.FilterEmptyObjective {
-
 			if len(objectives) > 0 {
+				t.Objectives = objectives
 				*arr = append(*arr, t)
 			}
 		} else {
@@ -167,6 +167,7 @@ func StudyLessons(ctx iris.Context) {
 		}
 		useFilterEmptyTopic(&topicLessons, t, objectives)
 	}
+	fmt.Println(len(topicLessons))
 
 	ctx.JSON(apiResponse{
 		"status": "success",
