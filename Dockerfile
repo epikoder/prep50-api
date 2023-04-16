@@ -1,8 +1,6 @@
 ARG LOG_STACK=${LOG_STACK}
 
-FROM golang:1.20 AS base
-
-WORKDIR /app
+FROM golang:1.20
 
 RUN addgroup --system --gid 1001 web
 RUN adduser --system --uid 1001 prep50
