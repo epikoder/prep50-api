@@ -11,18 +11,19 @@ import (
 
 type (
 	WeeklyQuiz struct {
-		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
-		Prize     uint      `json:"prize"`
-		Message   string    `json:"message"`
-		Duration  uint      `json:"duration"`
-		StartTime time.Time `json:"start_time"`
-		Week      uint      `json:"week"`
-		Session   uint      `json:"session"`
-		Results   []User    `gorm:"many2many:weekly_quizz_results;foreignKey:Id;" json:"results"`
-		CreatedAt time.Time `json:"-"`
-		UpdatedAt time.Time `json:"-"`
-		CreatedBy string    `json:"-"`
-		UpdatedBy string    `json:"-"`
+		Id        uuid.UUID  `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
+		Prize     uint       `json:"prize"`
+		Message   string     `json:"message"`
+		Duration  uint       `json:"duration"`
+		StartTime time.Time  `json:"start_time"`
+		Week      uint       `json:"week"`
+		Session   uint       `json:"session"`
+		Results   []User     `gorm:"many2many:weekly_quizz_results;foreignKey:Id;" json:"results"`
+		CreatedAt time.Time  `json:"-"`
+		UpdatedAt time.Time  `json:"-"`
+		CreatedBy string     `json:"-"`
+		UpdatedBy string     `json:"-"`
+		Questions []Question `gorm:"many2many:weekly_questions; foreignKey:Id; joinForeignKey:QuizId;" json:"-"`
 	}
 
 	WeeklyQuestion struct {
@@ -74,19 +75,6 @@ func (w *WeeklyQuiz) WeeklyQuestions() (q []WeeklyQuestion, err error) {
 	if err = w.Database().Find(&q, "quiz_id = ?", w.Id).Error; err != nil {
 		return
 	}
-	return
-}
-
-func (w *WeeklyQuiz) Questions() (q []Question, err error) {
-	wq, err := w.WeeklyQuestions()
-	if err != nil {
-		return nil, err
-	}
-	ids := []uint{}
-	for _, q := range wq {
-		ids = append(ids, q.QuestionId)
-	}
-	err = database.UseDB("core").Find(&q, "id IN ?", ids).Error
 	return
 }
 

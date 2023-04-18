@@ -105,12 +105,12 @@ SKIP:
 	key := fmt.Sprintf("weekly.quiz.answer.%d.%d", session, week)
 	ans, ok := cache.Get(key)
 	if err := answers.UnmarshalBinary([]byte(ans)); !ok || !logger.HandleError(err) {
-		questions, err := quiz.Questions()
-		if !logger.HandleError(err) {
-			c.Ctx.StatusCode(500)
-			c.Ctx.JSON(internalServerError)
-			return
-		}
+		questions := quiz.Questions
+		// if !logger.HandleError(err) {
+		// 	c.Ctx.StatusCode(500)
+		// 	c.Ctx.JSON(internalServerError)
+		// 	return
+		// }
 
 		for _, question := range questions {
 			if question.QuestionTypeId == uint(models.OBJECTIVE) {

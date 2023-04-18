@@ -1,10 +1,12 @@
 package admin
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -13,23 +15,21 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 func GetCurrentWeekQuiz(ctx iris.Context) {
 	quiz := &models.WeeklyQuiz{}
 	year, week := time.Now().ISOWeek()
-	if ok := repository.NewRepository(quiz).
+	if ok := repository.NewRepository(quiz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+	}).
 		FindOne("week = ? AND session = ?", week, settings.Get("exam.session", year)); !ok {
 		ctx.StatusCode(404)
 		ctx.JSON(internalServerError)
 		return
 	}
-	questions, err := quiz.Questions()
-	if !logger.HandleError(err) {
-		ctx.StatusCode(500)
-		ctx.JSON(internalServerError)
-		return
-	}
+	questions := quiz.Questions
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data": apiResponse{
@@ -54,7 +54,9 @@ func IndexWeeklyQuiz(ctx iris.Context) {
 
 func ViewWeeklyQuizQuestions(ctx iris.Context) {
 	quizz := &models.WeeklyQuiz{}
-	if ok := repository.NewRepository(quizz).
+	if ok := repository.NewRepository(quizz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+	}).
 		FindOne("id = ?", ctx.URLParam("id")); !ok {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
@@ -62,17 +64,12 @@ func ViewWeeklyQuizQuestions(ctx iris.Context) {
 		})
 		return
 	}
-	ques, err := quizz.Questions()
-	if !logger.HandleError(err) {
-		ctx.StatusCode(500)
-		ctx.JSON(internalServerError)
-		return
-	}
+	questions := quizz.Questions
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data": apiResponse{
 			"quizz":     quizz,
-			"questions": ques,
+			"questions": questions,
 		},
 	})
 }
