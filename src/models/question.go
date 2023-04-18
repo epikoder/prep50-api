@@ -84,16 +84,6 @@ func RandomizeQuestions(arr []Question) (r []Question) {
 	return r
 }
 
-func RandomizeQuestionWithoutAnswer(arr []QuestionsWithoutAnswer) (r []QuestionsWithoutAnswer) {
-	rand.Seed(time.Now().Unix() * rand.Int63())
-	r = make([]QuestionsWithoutAnswer, 0)
-	for i := len(arr) - 1; i > 0; i-- {
-		rIndex := rand.Intn(i)
-		r = append(r, arr[rIndex])
-	}
-	return r
-}
-
 type SortedQuestion struct {
 	Subject
 	Questions []Question `json:"questions"`

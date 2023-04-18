@@ -2,6 +2,7 @@ package list
 
 import (
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strings"
 	"unicode"
@@ -166,4 +167,13 @@ func UniqueByField(model dbmodel.DBModel, value, field string) (s string, err er
 		}
 		i++
 	}
+}
+
+func Shuffle[V any](arr []V) (dst []V) {
+	perm := rand.Perm(len(arr))
+	dst = make([]V, len(arr))
+	for i, v := range perm {
+		dst[v] = arr[i]
+	}
+	return
 }

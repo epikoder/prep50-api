@@ -7,14 +7,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 type (
@@ -64,7 +67,7 @@ func (c *WeeklyQuizController) Get() {
 
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   WQ{*quiz, started, models.RandomizeQuestionWithoutAnswer(questions)},
+		"data":   WQ{*quiz, started, list.Shuffle(questions)},
 	})
 }
 
@@ -80,7 +83,9 @@ func (c *WeeklyQuizController) Post() {
 	year, week := time.Now().ISOWeek()
 	session := settings.Get("exam.session", year)
 	quiz := &models.WeeklyQuiz{}
-	if ok := repository.NewRepository(quiz).FindOne("week = ? AND session = ?", week, session); !ok {
+	if ok := repository.NewRepository(quiz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+	}).FindOne("week = ? AND session = ?", week, session); !ok {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "No quiz available for this week",
@@ -106,11 +111,6 @@ SKIP:
 	ans, ok := cache.Get(key)
 	if err := answers.UnmarshalBinary([]byte(ans)); !ok || !logger.HandleError(err) {
 		questions := quiz.Questions
-		// if !logger.HandleError(err) {
-		// 	c.Ctx.StatusCode(500)
-		// 	c.Ctx.JSON(internalServerError)
-		// 	return
-		// }
 
 		for _, question := range questions {
 			if question.QuestionTypeId == uint(models.OBJECTIVE) {
