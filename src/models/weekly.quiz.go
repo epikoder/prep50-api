@@ -78,7 +78,7 @@ func (w *WeeklyQuiz) WeeklyQuestions() (q []WeeklyQuestion, err error) {
 	return
 }
 
-func (w *WeeklyQuiz) QuestionsWithoutAnswer() (q []QuestionsWithoutAnswer, err error) {
+func (w *WeeklyQuiz) QuestionsWithAnswer() (q []Question, err error) {
 	wq, err := w.WeeklyQuestions()
 	if err != nil {
 		return nil, err

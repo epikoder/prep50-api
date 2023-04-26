@@ -38,8 +38,8 @@ func (a Answer) UnmarshalBinary(data []byte) error {
 func (c *WeeklyQuizController) Get() {
 	type WQ struct {
 		models.WeeklyQuiz
-		Started   bool                            `json:"started"`
-		Questions []models.QuestionsWithoutAnswer `json:"questions"`
+		Started   bool              `json:"started"`
+		Questions []models.Question `json:"questions"`
 	}
 	quiz := &models.WeeklyQuiz{}
 	_, w := time.Now().ISOWeek()
@@ -51,14 +51,14 @@ func (c *WeeklyQuizController) Get() {
 		return
 	}
 
-	var questions []models.QuestionsWithoutAnswer = []models.QuestionsWithoutAnswer{}
+	var questions []models.Question = []models.Question{}
 	started := quiz.StartTime.After(time.Now())
 	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
 		started = true
 	}
 	if started {
 		var err error
-		if questions, err = quiz.QuestionsWithoutAnswer(); !logger.HandleError(err) {
+		if questions, err = quiz.QuestionsWithAnswer(); !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
 			return
