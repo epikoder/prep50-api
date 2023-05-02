@@ -40,7 +40,7 @@ func (c *NotificationController) Post() {
 	user.Fcm.Token = data.Token
 	user.Fcm.Timestamp = time.Now()
 
-	if err := user.Database().Save(user.Fcm).Error; err != nil {
+	if err := user.Database().Save(&user.Fcm).Error; err != nil {
 		c.Ctx.StatusCode(500)
 		c.Ctx.JSON(internalServerError)
 		return
