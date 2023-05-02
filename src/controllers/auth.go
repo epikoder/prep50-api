@@ -514,7 +514,6 @@ func Logout(ctx iris.Context) {
 
 	device := &models.Device{}
 	if ok := repository.NewRepository(device).FindOne("user_id = ?", user.Id); ok {
-		fmt.Println(device)
 		device.Name = ""
 		device.Identifier = ""
 		database.UseDB("app").Save(device)
