@@ -24,6 +24,7 @@ func (c *AdminNotificationController) Post() {
 	}
 	database.UseDB("app").Create(&models.Notification{
 		Id:       uuid.New(),
+		UserId:   data.UserId,
 		Title:    data.Title,
 		Body:     data.Body,
 		ImageUrl: data.ImageUrl,

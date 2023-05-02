@@ -77,8 +77,10 @@ func (c *NotificationController) Put(data models.Notification) {
 		return
 	}
 
+	user, _ := getUser(c.Ctx)
 	database.UseDB("app").Create(&models.Notification{
 		Id:       uuid.New(),
+		UserId:   user.Id,
 		Title:    data.Title,
 		Body:     data.Body,
 		ImageUrl: data.ImageUrl,
