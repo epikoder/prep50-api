@@ -23,9 +23,13 @@ type AccountController struct {
 
 func (c *AccountController) Get() {
 	user, _ := getUser(c.Ctx)
+
+	userExams := []models.UserExam{}
+	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
-		"data":   user,
+		"data":   userWithExam,
 	})
 }
 
