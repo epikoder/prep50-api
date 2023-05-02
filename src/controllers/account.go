@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/helper"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
@@ -45,7 +47,7 @@ func (c *AccountController) Put() {
 		if err := helper.CopyTempFile(fileName, data.Photo); !logger.HandleError(err) {
 			c.Ctx.JSON(apiResponse{
 				"status":  "failed",
-				"message": "Could not find selected photo",
+				"message": "Could not save selected photo",
 			})
 			return
 		}
@@ -57,9 +59,25 @@ func (c *AccountController) Put() {
 		c.Ctx.JSON(internalServerError)
 		return
 	}
+
+	userExams := []models.UserExam{}
+	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+
+	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
+	token, err := ijwt.GenerateToken(userWithExam, user.UserName)
+	if !logger.HandleError(err) {
+		c.Ctx.StatusCode(http.StatusInternalServerError)
+		c.Ctx.JSON(internalServerError)
+		return
+	}
+	response := ijwt.LoginResponse{
+		JwtToken: token, User: userWithExam,
+	}
+
 	c.Ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "Profile updated successfully",
+		"data":    response,
 	})
 }
 
