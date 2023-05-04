@@ -10,9 +10,13 @@ import (
 )
 
 type GeneralSetting struct {
-	Id        uint `gorm:"primarykey"`
-	Terms     string
-	Privacy   string
+	Id        uint   `gorm:"primarykey"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Location  string `json:"location"`
+	Website   string `json:"website"`
+	Terms     string `gorm:"type:longText" json:"terms"`
+	Privacy   string `gorm:"type:longText" json:"privacy"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

@@ -56,6 +56,9 @@ func RegisterApiRoutes(app *iris.Application) {
 	support := app.Party("/support")
 	faqApi := support.Party("/faq")
 	mvc.New(faqApi).Handle(new(controllers.FaqController))
+	support.Get("/contacts", controllers.Contacts)
+	app.Get("/terms", controllers.Terms)
+	app.Get("/privacy", controllers.Privacy)
 
 	// User Protected Routes
 	user := app.Party("/user", ijwt.JwtGuardMiddleware, middlewares.Protected)
