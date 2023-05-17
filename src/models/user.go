@@ -43,7 +43,7 @@ type (
 		UserId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;index;" json:"-"`
 		ExamId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;" json:"-"`
 		TransactionId uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
-		Session       uint          `gorm:"notnull" json:"session"`
+		Session       uint          `json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`
 		ExpiresAt     time.Time     `json:"expires_at"`

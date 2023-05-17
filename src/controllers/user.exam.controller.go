@@ -9,7 +9,6 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
@@ -30,11 +29,10 @@ func (c *UserExamController) Get() {
 		ExpiresAt     *time.Time           `json:"expires_at"`
 	}
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	userExams := []UserExamWithName{}
 	if err := database.UseDB("app").Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
-		Where("user_id = ? AND session = ?", user.Id, session).
+		Where("user_id = ?", user.Id).
 		Scan(&userExams).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
@@ -51,7 +49,6 @@ func (c *UserExamController) Post() {
 	type RegisterExamForm struct {
 		Exams []string `validate:"required"`
 	}
-	session := settings.Get("exam.session", time.Now().Year())
 	data := &RegisterExamForm{}
 	if err := c.Ctx.ReadJSON(data); !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusBadRequest)
@@ -73,7 +70,7 @@ func (c *UserExamController) Post() {
 		}
 		uRECS := &models.UserExam{}
 		if err := repository.NewRepository(&models.Exam{}).
-			FindOneDst(uRECS, "exam_id = ? AND user_id = ? AND session = ?", e.Id, user.Id, session); !logger.HandleError(err) &&
+			FindOneDst(uRECS, "exam_id = ? AND user_id = ?", e.Id, user.Id); !logger.HandleError(err) &&
 			!strings.Contains(err.Error(), "not found") {
 			c.Ctx.StatusCode(http.StatusInternalServerError)
 			c.Ctx.JSON(internalServerError)
@@ -85,7 +82,7 @@ func (c *UserExamController) Post() {
 			c.Ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    400,
-				"message": fmt.Sprintf("cannot register %s again for current session", v),
+				"message": fmt.Sprintf("exam already registered, proceed to payment", v),
 			})
 			return
 		}
@@ -93,7 +90,6 @@ func (c *UserExamController) Post() {
 			Id:            uuid.New(),
 			UserId:        user.Id,
 			ExamId:        e.Id,
-			Session:       (uint)(session.(int)),
 			PaymentStatus: models.Pending,
 			CreatedAt:     time.Now(),
 		})

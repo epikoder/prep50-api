@@ -76,7 +76,6 @@ func VerifyPayment(ctx iris.Context) {
 			tx.Response = string(b)
 			tx.Provider = provider.Name()
 			tx.Status = string(models.Completed)
-			tx.Session = session
 			tx.Item = data.Type
 		}
 	}
@@ -151,7 +150,7 @@ func VerifyPayment(ctx iris.Context) {
 			if m.Amount != tx.Amount {
 				ctx.JSON(apiResponse{
 					"status":  "failed",
-					"message": "Paid amount is invalid",
+					"message": "Paid amount is incorrect",
 				})
 				return
 			}

@@ -11,7 +11,6 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
@@ -31,12 +30,11 @@ func (c *UserSubjectController) Get() {
 		}
 	)
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	q := []query{}
 	if err := database.UseDB("app").Table("user_exams as ue").
-		Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status").
+		Select("ue.id, ue.exam_id, ue.user_id, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-		Where("ue.user_id = ? AND ue.session = ? AND e.status = 1", user.Id, session).
+		Where("ue.user_id = ? AND e.status = 1", user.Id).
 		Scan(&q).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)
 		c.Ctx.JSON(internalServerError)
@@ -110,7 +108,6 @@ func (c *UserSubjectController) Post() {
 	}
 
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	userSubjects := []models.UserSubject{}
 	for e, v := range form {
 		if len(v) == 0 {
@@ -121,9 +118,9 @@ func (c *UserSubjectController) Post() {
 	QUERY_USER_EXAM:
 		q := UserExamQuery{}
 		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.subject_count, e.status").
+			Select("ue.id, ue.exam_id, ue.user_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
+			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
 			First(&q).Error; !logger.HandleError(err) {
 			exam := &models.Exam{}
 			if !repository.NewRepository(exam).FindOne("name = ?", e) {
@@ -138,7 +135,6 @@ func (c *UserSubjectController) Post() {
 				Id:            uuid.New(),
 				UserId:        user.Id,
 				ExamId:        exam.Id,
-				Session:       (uint)(session.(int)),
 				PaymentStatus: models.Pending,
 				CreatedAt:     time.Now(),
 			}
@@ -227,13 +223,12 @@ func (c *UserSubjectController) Put() {
 	}
 
 	user, _ := getUser(c.Ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	for e, v := range data {
 		q := UserExamQuery{}
 		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.session, e.name, e.subject_count, e.status").
+			Select("ue.id, ue.exam_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("e.name = ? AND ue.session = ? AND ue.user_id = ?", e, session, user.Id).
+			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
 			First(&q).Error; !logger.HandleError(err) {
 			c.Ctx.StatusCode(http.StatusNotFound)
 			c.Ctx.JSON(apiResponse{

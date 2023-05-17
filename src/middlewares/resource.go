@@ -3,12 +3,10 @@ package middlewares
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
@@ -33,14 +31,13 @@ func MustRegisterSubject(ctx iris.Context) {
 		return
 	}
 	user, _ := i.(*models.User)
-	session := settings.Get("exam.session", time.Now().Year())
 	examSubject := map[query][]models.UserSubject{}
 	{
 		q := []query{}
 		if err := database.UseDB("app").Table("user_exams as ue").
-			Select("ue.id, ue.exam_id, ue.user_id, ue.session, e.name, e.status, e.subject_count").
+			Select("ue.id, ue.exam_id, ue.user_id, e.name, e.status, e.subject_count").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("ue.session = ? AND e.status = ? AND e.status = 1 AND ue.user_id = ?", session, true, user.Id).
+			Where("e.status = ? AND e.status = 1 AND ue.user_id = ?", true, user.Id).
 			Scan(&q).Error; err != nil {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(internalServerError)

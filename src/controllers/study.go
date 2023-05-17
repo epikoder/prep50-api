@@ -3,13 +3,11 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
@@ -26,7 +24,6 @@ func StudySubjects(ctx iris.Context) {
 	data := &subjectForm{}
 	ctx.ReadJSON(data)
 	user, _ := getUser(ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	progress := []models.UserProgress{}
 	database.UseDB("app").Find(&progress, "user_id = ?", user.Id)
 	subjects := []struct {
@@ -40,9 +37,8 @@ func StudySubjects(ctx iris.Context) {
 		Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON s.id = us.subject_id", config.Conf.Database.App.Name)).
 		Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
 		Joins(fmt.Sprintf("LEFT JOIN %s.exams as e ON ue.exam_id = e.id", config.Conf.Database.App.Name)).
-		Find(&subjects, "us.user_id = ? AND ue.session = ? order by subject_id asc",
-			user.Id,
-			session).Error; err != nil {
+		Find(&subjects, "us.user_id = ? AND order by subject_id asc",
+			user.Id).Error; err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
@@ -81,7 +77,6 @@ func StudyLessons(ctx iris.Context) {
 	}
 
 	user, _ := getUser(ctx)
-	session := settings.Get("exam.session", time.Now().Year())
 	topics := []models.Topic{}
 	{
 		db := database.UseDB("core")
@@ -118,16 +113,14 @@ func StudyLessons(ctx iris.Context) {
 
 		if len(data.Subject) > 0 {
 			err = db.
-				Find(&topics, "us.user_id = ? AND ue.session = ? AND t.subject_id IN ? GROUP BY t.id order by subject_id asc",
+				Find(&topics, "us.user_id = ? AND t.subject_id IN ? GROUP BY t.id order by subject_id asc",
 					user.Id,
-					session,
 					data.Subject,
 				).Error
 		} else {
 			err = db.
-				Find(&topics, "us.user_id = ? AND ue.session = ? GROUP BY t.id order by subject_id asc",
+				Find(&topics, "us.user_id = ? GROUP BY t.id order by subject_id asc",
 					user.Id,
-					session,
 				).Error
 
 		}
