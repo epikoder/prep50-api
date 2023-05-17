@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
@@ -82,36 +81,37 @@ func VerifyPayment(ctx iris.Context) {
 		}
 	}
 
-	fmt.Println(data.Type)
 	switch item := data.Type; item {
-	case "jamb", "waec":
+	case "jamb", "waec", "both":
 		{
 			us := models.UserExam{}
 			exam := models.Exam{}
-			if err := database.UseDB("app").First(&exam, "name = ? AND status = 1", item).Error; err != nil {
+			if notFound := database.UseDB("app").First(&exam, "name = ? AND status = 1", item).Error != nil; notFound {
 				ctx.JSON(apiResponse{
 					"status":  "failed",
 					"message": "Selected exam not found",
 				})
 				return
 			}
+			expiresAt := time.Now().AddDate(0, 1, 0)
 			if err := database.UseDB("app").Table("user_exams as ue").
 				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 				First(&us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error; err != nil {
 				if exam.Amount != tx.Amount {
 					ctx.JSON(apiResponse{
 						"status":  "failed",
-						"message": "Paid amount is invalid",
+						"message": "Paid amount is incorrect",
 					})
 					return
 				}
+
 				us := &models.UserExam{
 					Id:            uuid.New(),
 					UserId:        user.Id,
 					ExamId:        exam.Id,
-					Session:       session,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
+					ExpiresAt:     expiresAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -122,12 +122,13 @@ func VerifyPayment(ctx iris.Context) {
 				if exam.Amount != tx.Amount {
 					ctx.JSON(apiResponse{
 						"status":  "failed",
-						"message": "Paid amount is invalid",
+						"message": "Paid amount is incorrect",
 					})
 					return
 				}
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
+				us.ExpiresAt = expiresAt
 				if err := database.UseDB("app").Save(us).Error; err != nil {
 					ctx.StatusCode(500)
 					ctx.JSON(internalServerError)

@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//++++++++++++++++++++++++++++++++++++++++++++++++
+// ++++++++++++++++++++++++++++++++++++++++++++++++
 func StudySubjects(ctx iris.Context) {
 	type (
 		subjectForm struct {
@@ -176,7 +176,7 @@ func StudyLessons(ctx iris.Context) {
 
 //++++++++++++++++++++++++++++++++++++++++++++++++
 
-//++++++++++++++++++++++++++++++++++++++++++++++++
+// ++++++++++++++++++++++++++++++++++++++++++++++++
 func StudyPodcasts(ctx iris.Context) {
 	type topicForm struct {
 		Subject int
@@ -193,7 +193,7 @@ func StudyPodcasts(ctx iris.Context) {
 	})
 }
 
-//++++++++++++++++++++++++++++++++++++++++++++++++
+// ++++++++++++++++++++++++++++++++++++++++++++++++
 func QuickQuiz(ctx iris.Context) {
 	type quizForm struct {
 		Id string

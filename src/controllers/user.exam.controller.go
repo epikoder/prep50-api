@@ -27,12 +27,13 @@ func (c *UserExamController) Get() {
 		Session       uint                 `gorm:"notnull" json:"session"`
 		PaymentStatus models.PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time            `json:"created_at"`
+		ExpiresAt     *time.Time           `json:"expires_at"`
 	}
 	user, _ := getUser(c.Ctx)
 	session := settings.Get("exam.session", time.Now().Year())
 	userExams := []UserExamWithName{}
 	if err := database.UseDB("app").Table("user_exams as ue").
-		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ? AND session = ?", user.Id, session).
 		Scan(&userExams).Error; !logger.HandleError(err) {
 		c.Ctx.StatusCode(http.StatusInternalServerError)

@@ -24,7 +24,7 @@ type (
 		IsProvider    bool           `gorm:"type:tinyint(1);" json:"-"`
 		Locked        bool           `gorm:"type:tinyint(1);" json:"-"`
 		IsAdmin       bool           `json:"-"`
-		CreatedAt     time.Time      `json:"-"`
+		CreatedAt     time.Time      `json:"created_at"`
 		UpdatedAt     time.Time      `json:"-"`
 		DeletedAt     gorm.DeletedAt `json:"-"`
 		Device        Device         `json:"-"`
@@ -46,6 +46,7 @@ type (
 		Session       uint          `gorm:"notnull" json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`
+		ExpiresAt     time.Time     `json:"expires_at"`
 	}
 
 	UserProvider struct {
