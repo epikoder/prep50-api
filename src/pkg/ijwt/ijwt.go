@@ -114,7 +114,7 @@ func GenerateToken(i interface{}, key string) (token *JwtToken, err error) {
 		}
 		claims.Aid = token.AccessUUID
 		token.RefreshUUID = claims.Id
-		token.ExpiresRt = time.Now().Add(time.Duration(accessExpires) * time.Minute)
+		token.ExpiresRt = time.Now().Add(time.Duration(refreshExpires) * time.Minute)
 		claims.Exp = token.ExpiresAt.Unix()
 
 		var buf = []byte{}
