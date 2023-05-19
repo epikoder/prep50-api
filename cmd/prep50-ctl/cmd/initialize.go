@@ -35,13 +35,6 @@ var (
 			SubjectCount: 4,
 			Status:       true,
 		},
-		{
-			Id:           uuid.New(),
-			Name:         "BOTH",
-			Amount:       2000,
-			SubjectCount: 15,
-			Status:       true,
-		},
 	}
 	authProviders = []models.Provider{
 		{
