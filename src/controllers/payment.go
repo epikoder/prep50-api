@@ -17,7 +17,7 @@ import (
 
 func VerifyPayment(ctx iris.Context) {
 	type paymentData struct {
-		Type      string `validate:"oneof=mock jamb waec"`
+		Type      string `validate:"oneof=mock jamb waec both"`
 		Provider  string
 		Reference string `validate:"required"`
 		Id        string `validate:"required_if=Type mock"`
