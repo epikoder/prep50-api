@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -13,6 +14,21 @@ func GetExamTypes(ctx iris.Context) {
 	exams := []models.Exam{}
 	repository.NewRepository(&models.Exam{}).
 		FindMany(&exams)
+
+	bothExam := models.Exam{
+		Name:         "BOTH",
+		Amount:       0,
+		SubjectCount: 0,
+		Description:  "Pay for Both Exam",
+		Status:       true,
+	}
+	for _, e := range exams {
+		if strings.EqualFold(e.Name, "waec") || strings.EqualFold(e.Name, "jamb") {
+			bothExam.Amount += e.Amount
+			bothExam.SubjectCount += e.SubjectCount
+		}
+	}
+	exams = append(exams, bothExam)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   exams,
