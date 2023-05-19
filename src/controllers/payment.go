@@ -110,7 +110,7 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     &expiresAt,
+					ExpiresAt:     expiresAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -126,10 +126,10 @@ func VerifyPayment(ctx iris.Context) {
 					return
 				}
 				if us.ExpiresAt.Before(time.Now()) {
-					us.ExpiresAt = &expiresAt
+					us.ExpiresAt = expiresAt
 				} else {
 					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
-					us.ExpiresAt = &expiresAt
+					us.ExpiresAt = expiresAt
 				}
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
@@ -170,7 +170,7 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     &expiresAt,
+					ExpiresAt:     expiresAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -179,10 +179,10 @@ func VerifyPayment(ctx iris.Context) {
 				}
 			} else {
 				if us.ExpiresAt.Before(time.Now()) {
-					us.ExpiresAt = &expiresAt
+					us.ExpiresAt = expiresAt
 				} else {
 					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
-					us.ExpiresAt = &expiresAt
+					us.ExpiresAt = expiresAt
 				}
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id

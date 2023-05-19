@@ -46,7 +46,7 @@ type (
 		Session       uint          `json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`
-		ExpiresAt     *time.Time    `json:"expires_at"`
+		ExpiresAt     time.Time     `json:"expires_at"`
 	}
 
 	UserProvider struct {
