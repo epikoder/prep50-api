@@ -32,7 +32,7 @@ const onPay = () => {
   const action = document.getElementById("action").value;
 
   const amount =
-    "waec" == type || type == "jamb" || type == "both" ? 1000 : 2000;
+    "waec" == type || type == "jamb" ? 1000 : type == "both" ? 2000 : 2000;
 
   const paystack = new PaystackPop();
   paystack.newTransaction({
@@ -43,6 +43,7 @@ const onPay = () => {
       type: type,
       action: action,
     },
+    currency: "NGN",
     callback: (response) => {
       document.getElementById("tx").innerText = response.reference;
       if (response.status !== "success") return alert("Transaction Failed");
