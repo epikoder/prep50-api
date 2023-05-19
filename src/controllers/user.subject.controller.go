@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
@@ -40,7 +39,6 @@ func (c *UserSubjectController) Get() {
 		c.Ctx.JSON(internalServerError)
 		return
 	}
-	fmt.Println(color.Red, q, color.Reset)
 
 	qid := []uuid.UUID{}
 	for _, i := range q {
