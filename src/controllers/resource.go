@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -24,7 +23,6 @@ func GetExamTypes(ctx iris.Context) {
 		Status:       true,
 	}
 	for _, e := range exams {
-		fmt.Println(e.Name)
 		if strings.EqualFold(e.Name, "waec") || strings.EqualFold(e.Name, "jamb") {
 			bothExam.Amount += e.Amount
 			bothExam.SubjectCount += e.SubjectCount
