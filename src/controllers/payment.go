@@ -110,7 +110,7 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     expiresAt,
+					ExpiresAt:     &expiresAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -125,9 +125,14 @@ func VerifyPayment(ctx iris.Context) {
 					})
 					return
 				}
+				if us.ExpiresAt.Before(time.Now()) {
+					us.ExpiresAt = &expiresAt
+				} else {
+					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
+					us.ExpiresAt = &expiresAt
+				}
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
-				us.ExpiresAt = expiresAt
 				if err := database.UseDB("app").Save(us).Error; err != nil {
 					ctx.StatusCode(500)
 					ctx.JSON(internalServerError)
@@ -151,12 +156,13 @@ func VerifyPayment(ctx iris.Context) {
 			})
 			return
 		}
+
+		expiresAt := time.Now().AddDate(0, 1, 0)
 		for _, exam := range exams {
 			us := models.UserExam{}
-			expiresAt := time.Now().AddDate(0, 1, 0)
 			if err := database.UseDB("app").Table("user_exams as ue").
 				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
-				First(&us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error; err != nil {
+				First(&us, "e.name = ? AND ue.user_id = ?", exam.Name, user.Id).Error; err != nil {
 
 				us := &models.UserExam{
 					Id:            uuid.New(),
@@ -164,7 +170,7 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     expiresAt,
+					ExpiresAt:     &expiresAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -172,9 +178,14 @@ func VerifyPayment(ctx iris.Context) {
 					return
 				}
 			} else {
+				if us.ExpiresAt.Before(time.Now()) {
+					us.ExpiresAt = &expiresAt
+				} else {
+					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
+					us.ExpiresAt = &expiresAt
+				}
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
-				us.ExpiresAt = expiresAt
 				if err := database.UseDB("app").Save(us).Error; err != nil {
 					ctx.StatusCode(500)
 					ctx.JSON(internalServerError)
