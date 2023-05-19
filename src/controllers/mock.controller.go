@@ -22,7 +22,7 @@ func (c *MockController) Get() {
 		Available  bool `json:"available"`
 		Registered bool `json:"registered"`
 	}{}
-	database.UseDB("app").Table("mocks as m").
+	if notFound := database.UseDB("app").Table("mocks as m").
 		Select(`m.*, 
 		CASE 
 			WHEN um.user_id = ? THEN 1 
@@ -34,7 +34,13 @@ func (c *MockController) Get() {
 		END as available`, user.Id, time.Now()).
 		Joins("LEFT JOIN user_mocks as um ON m.id = um.mock_id").
 		Order("start_time DESC").
-		First(&mock)
+		First(&mock).Error != nil; notFound {
+		c.Ctx.JSON(apiResponse{
+			"status": "success",
+			"data":   nil,
+		})
+		return
+	}
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   mock,

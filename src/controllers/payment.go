@@ -136,62 +136,53 @@ func VerifyPayment(ctx iris.Context) {
 			}
 		}
 	case "both":
-		{
-			exams := []string{"jamb", "waec"}
-			for _, item := range exams {
-				us := models.UserExam{}
-				exam := models.Exam{}
-				if notFound := database.UseDB("app").First(&exam, "name = ? AND status = 1", item).Error != nil; notFound {
-					ctx.JSON(apiResponse{
-						"status":  "failed",
-						"message": "Selected exam not found",
-					})
+		exams := []models.Exam{}
+		database.UseDB("app").Find(&exams, "name = ? OR name = ?", "waec", "jamb")
+		bothExam := models.Exam{
+			Amount: 0,
+		}
+		for _, exam := range exams {
+			bothExam.Amount += exam.Amount
+		}
+		if bothExam.Amount != tx.Amount {
+			ctx.JSON(apiResponse{
+				"status":  "failed",
+				"message": "Paid amount is incorrect",
+			})
+			return
+		}
+		for _, exam := range exams {
+			us := models.UserExam{}
+			expiresAt := time.Now().AddDate(0, 1, 0)
+			if err := database.UseDB("app").Table("user_exams as ue").
+				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+				First(&us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error; err != nil {
+
+				us := &models.UserExam{
+					Id:            uuid.New(),
+					UserId:        user.Id,
+					ExamId:        exam.Id,
+					PaymentStatus: models.Completed,
+					TransactionId: tx.Id,
+					ExpiresAt:     expiresAt,
+				}
+				if err := database.UseDB("app").Create(us).Error; err != nil {
+					ctx.StatusCode(500)
+					ctx.JSON(internalServerError)
 					return
 				}
-				expiresAt := time.Now().AddDate(0, 1, 0)
-				if err := database.UseDB("app").Table("user_exams as ue").
-					Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
-					First(&us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error; err != nil {
-					if exam.Amount != tx.Amount {
-						ctx.JSON(apiResponse{
-							"status":  "failed",
-							"message": "Paid amount is incorrect",
-						})
-						return
-					}
-
-					us := &models.UserExam{
-						Id:            uuid.New(),
-						UserId:        user.Id,
-						ExamId:        exam.Id,
-						PaymentStatus: models.Completed,
-						TransactionId: tx.Id,
-						ExpiresAt:     expiresAt,
-					}
-					if err := database.UseDB("app").Create(us).Error; err != nil {
-						ctx.StatusCode(500)
-						ctx.JSON(internalServerError)
-						return
-					}
-				} else {
-					if exam.Amount != tx.Amount {
-						ctx.JSON(apiResponse{
-							"status":  "failed",
-							"message": "Paid amount is incorrect",
-						})
-						return
-					}
-					us.PaymentStatus = models.Completed
-					us.TransactionId = tx.Id
-					us.ExpiresAt = expiresAt
-					if err := database.UseDB("app").Save(us).Error; err != nil {
-						ctx.StatusCode(500)
-						ctx.JSON(internalServerError)
-						return
-					}
+			} else {
+				us.PaymentStatus = models.Completed
+				us.TransactionId = tx.Id
+				us.ExpiresAt = expiresAt
+				if err := database.UseDB("app").Save(us).Error; err != nil {
+					ctx.StatusCode(500)
+					ctx.JSON(internalServerError)
+					return
 				}
 			}
 		}
+
 	case "mock":
 		{
 			m := models.Mock{}
