@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
@@ -73,17 +72,17 @@ func MustRegisterSubject(ctx iris.Context) {
 		}
 	}
 
-	for e, s := range examSubject {
-		if l := len(s); l < 1 {
-			ctx.StatusCode(http.StatusForbidden)
-			ctx.JSON(apiResponse{
-				"status":  "failed",
-				"code":    401,
-				"message": fmt.Sprintf("you need to register at least 1 subjects on %s, registered %d", e.Name, l),
-			})
-			return
-		}
-	}
+	// for e, s := range examSubject {
+	// 	if l := len(s); l < 1 {
+	// 		ctx.StatusCode(http.StatusForbidden)
+	// 		ctx.JSON(apiResponse{
+	// 			"status":  "failed",
+	// 			"code":    401,
+	// 			"message": fmt.Sprintf("you need to register at least 1 subjects on %s, registered %d", e.Name, l),
+	// 		})
+	// 		return
+	// 	}
+	// }
 
 	ctx.Next()
 }

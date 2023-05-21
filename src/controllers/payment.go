@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
@@ -92,7 +93,8 @@ func VerifyPayment(ctx iris.Context) {
 				})
 				return
 			}
-			expiresAt := time.Now().AddDate(0, 1, 0)
+			createdAt := time.Now()
+			expiresAt := createdAt.AddDate(0, 1, 0)
 			if err := database.UseDB("app").Table("user_exams as ue").
 				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 				First(&us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error; err != nil {
@@ -110,7 +112,10 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     expiresAt,
+					ExpiresAt: sql.NullTime{
+						Time: expiresAt,
+					},
+					CreatedAt: createdAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -125,12 +130,13 @@ func VerifyPayment(ctx iris.Context) {
 					})
 					return
 				}
-				if us.ExpiresAt.Before(time.Now()) {
-					us.ExpiresAt = expiresAt
+				if !us.ExpiresAt.Valid || us.ExpiresAt.Time.Before(time.Now()) {
+					us.ExpiresAt = sql.NullTime{Time: expiresAt}
 				} else {
-					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
-					us.ExpiresAt = expiresAt
+					expiresAt = us.ExpiresAt.Time.AddDate(0, 1, 0)
+					us.ExpiresAt = sql.NullTime{Time: expiresAt}
 				}
+				us.CreatedAt = createdAt
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
 				if err := database.UseDB("app").Save(us).Error; err != nil {
@@ -157,7 +163,8 @@ func VerifyPayment(ctx iris.Context) {
 			return
 		}
 
-		expiresAt := time.Now().AddDate(0, 1, 0)
+		createdAt := time.Now()
+		expiresAt := createdAt.AddDate(0, 1, 0)
 		for _, exam := range exams {
 			us := models.UserExam{}
 			if err := database.UseDB("app").Table("user_exams as ue").
@@ -170,7 +177,8 @@ func VerifyPayment(ctx iris.Context) {
 					ExamId:        exam.Id,
 					PaymentStatus: models.Completed,
 					TransactionId: tx.Id,
-					ExpiresAt:     expiresAt,
+					ExpiresAt:     sql.NullTime{Time: expiresAt},
+					CreatedAt:     createdAt,
 				}
 				if err := database.UseDB("app").Create(us).Error; err != nil {
 					ctx.StatusCode(500)
@@ -178,12 +186,13 @@ func VerifyPayment(ctx iris.Context) {
 					return
 				}
 			} else {
-				if us.ExpiresAt.Before(time.Now()) {
-					us.ExpiresAt = expiresAt
+				if !us.ExpiresAt.Valid || us.ExpiresAt.Time.Before(time.Now()) {
+					us.ExpiresAt = sql.NullTime{Time: expiresAt}
 				} else {
-					expiresAt = us.ExpiresAt.AddDate(0, 1, 0)
-					us.ExpiresAt = expiresAt
+					expiresAt = us.ExpiresAt.Time.AddDate(0, 1, 0)
+					us.ExpiresAt = sql.NullTime{Time: expiresAt}
 				}
+				us.CreatedAt = createdAt
 				us.PaymentStatus = models.Completed
 				us.TransactionId = tx.Id
 				if err := database.UseDB("app").Save(us).Error; err != nil {

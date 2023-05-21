@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
@@ -46,7 +48,7 @@ type (
 		Session       uint          `json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`
-		ExpiresAt     time.Time     `json:"expires_at"`
+		ExpiresAt     sql.NullTime  `json:"expires_at"`
 	}
 
 	UserProvider struct {
@@ -188,4 +190,23 @@ func (UserPermission) Join() string {
 
 func (*User) OverrideMigration() bool {
 	return true
+}
+
+func (u UserExam) MarshalJSON() ([]byte, error) {
+	type U struct {
+		Session       uint          `json:"session"`
+		PaymentStatus PaymentStatus `json:"payment_status"`
+		CreatedAt     time.Time     `json:"created_at"`
+		ExpiresAt     *time.Time    `json:"expires_at"`
+	}
+	_u := &U{
+		Session:       u.Session,
+		PaymentStatus: u.PaymentStatus,
+		CreatedAt:     u.CreatedAt,
+		ExpiresAt:     nil,
+	}
+	if u.ExpiresAt.Valid {
+		_u.ExpiresAt = &u.ExpiresAt.Time
+	}
+	return json.Marshal(_u)
 }

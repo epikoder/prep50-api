@@ -37,7 +37,7 @@ func StudySubjects(ctx iris.Context) {
 		Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON s.id = us.subject_id", config.Conf.Database.App.Name)).
 		Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
 		Joins(fmt.Sprintf("LEFT JOIN %s.exams as e ON ue.exam_id = e.id", config.Conf.Database.App.Name)).
-		Find(&subjects, "us.user_id = ? AND order by subject_id asc",
+		Find(&subjects, "us.user_id = ? order by subject_id asc",
 			user.Id).Error; err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)

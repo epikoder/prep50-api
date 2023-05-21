@@ -10,6 +10,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
+	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/jwt"
 )
@@ -55,8 +56,11 @@ func Refresh(ctx iris.Context) {
 		}
 		userGeneric = &models.AdminUser{User: *user, Permissions: permissions, Roles: roles}
 	} else {
-		userExams := []models.UserExam{}
-		repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+		userExams := []UserExamWithName{}
+		database.UseDB("app").Table("user_exams as ue").
+			Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+			Where("user_id = ?", user.Id).
+			Scan(&userExams)
 		userGeneric = &UserWithExam{*user, userExams, len(userExams) != 0}
 	}
 

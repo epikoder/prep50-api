@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
@@ -137,10 +138,18 @@ type (
 		models.UserLoginFormStruct
 		UserDeviceForm
 	}
+	UserExamWithName struct {
+		Id            uuid.UUID            `json:"-"`
+		Name          string               `json:"exam"`
+		Session       uint                 `json:"session"`
+		PaymentStatus models.PaymentStatus `json:"payment_status"`
+		CreatedAt     time.Time            `json:"created_at"`
+		ExpiresAt     *time.Time           `json:"expires_at"`
+	}
 	UserWithExam struct {
 		models.User
-		Exam              []models.UserExam `json:"exams"`
-		HasRegisteredExam bool              `json:"has_registered_exam"`
+		Exam              []UserExamWithName `json:"exams"`
+		HasRegisteredExam bool               `json:"has_registered_exam"`
 	}
 )
 
@@ -269,8 +278,11 @@ func LoginV1(ctx iris.Context) {
 		}
 	}
 
-	userExams := []models.UserExam{}
-	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	userExams := []UserExamWithName{}
+	database.UseDB("app").Table("user_exams as ue").
+		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Where("user_id = ?", user.Id).
+		Scan(&userExams)
 
 	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
 	token, err := ijwt.GenerateToken(userWithExam, user.UserName)
@@ -486,8 +498,11 @@ func SocialV1(ctx iris.Context) {
 		}
 	}
 
-	userExams := []models.UserExam{}
-	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	userExams := []UserExamWithName{}
+	database.UseDB("app").Table("user_exams as ue").
+		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Where("user_id = ?", user.Id).
+		Scan(&userExams)
 	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
 
 	token, err := ijwt.GenerateToken(userWithExam, user.UserName)

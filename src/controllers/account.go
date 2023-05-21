@@ -14,6 +14,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
+	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/kataras/iris/v12"
 )
 
@@ -24,8 +25,11 @@ type AccountController struct {
 func (c *AccountController) Get() {
 	user, _ := getUser(c.Ctx)
 
-	userExams := []models.UserExam{}
-	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	userExams := []UserExamWithName{}
+	database.UseDB("app").Table("user_exams as ue").
+		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Where("user_id = ?", user.Id).
+		Scan(&userExams)
 	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
@@ -64,8 +68,11 @@ func (c *AccountController) Put() {
 		return
 	}
 
-	userExams := []models.UserExam{}
-	repository.NewRepository(&models.Exam{}).FindMany(&userExams, "user_id = ?", user.Id)
+	userExams := []UserExamWithName{}
+	database.UseDB("app").Table("user_exams as ue").
+		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
+		Where("user_id = ?", user.Id).
+		Scan(&userExams)
 
 	userWithExam := &UserWithExam{*user, userExams, len(userExams) != 0}
 	token, err := ijwt.GenerateToken(userWithExam, user.UserName)
