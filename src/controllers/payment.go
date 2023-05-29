@@ -18,9 +18,9 @@ import (
 
 func Initialize(ctx iris.Context) {
 	type paymentInfo struct {
-		Email  string `validate:"required"`
-		Amount int    `validate:"required"`
-		Type   string `validate:"oneof=mock jamb waec both"`
+		Email        string `validate:"required"`
+		Amount       int    `validate:"required"`
+		Callback_Url string `valudate:"required"`
 	}
 	data := &paymentInfo{}
 	if err := ctx.ReadJSON(data); !logger.HandleError(err) {
@@ -29,16 +29,12 @@ func Initialize(ctx iris.Context) {
 		return
 	}
 	provider := payment.New(nil)
-	meta := map[string]interface{}{
-		"type": data.Type,
-	}
 
 	_res, err := provider.Initialize(payment.TransactionRequest{
-		Email:    data.Email,
-		Amount:   float32(data.Amount),
-		Metadata: (payment.Metadata)(meta),
-		Currency: "NGN",
-		// CallbackURL: ,
+		Email:       data.Email,
+		Amount:      float32(data.Amount),
+		Currency:    "NGN",
+		CallbackURL: data.Callback_Url,
 	})
 	if err != nil {
 		ctx.JSON(apiResponse{
