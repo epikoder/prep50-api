@@ -25,10 +25,27 @@ func (p *ipaystack) Name() string {
 	return "paystack"
 }
 
-func (p *ipaystack) ICharge() {
-	p.Client.Charge.Create(&paystack.ChargeRequest{})
+func (p *ipaystack) ICharge(req ChargeRequest) (interface{}, error) {
+	return p.Client.Charge.Create(&paystack.ChargeRequest{
+		Email:             req.Email,
+		Amount:            req.Amount * 100,
+		Birthday:          req.Birthday,
+		Metadata:          (*paystack.Metadata)(req.Metadata),
+		AuthorizationCode: req.AuthorizationCode,
+		Pin:               req.Pin,
+	})
 }
 
 func (p *ipaystack) IVerify(reference string) (interface{}, error) {
 	return p.Client.Transaction.Verify(reference)
+}
+
+func (p *ipaystack) Initialize(req TransactionRequest) (interface{}, error) {
+	return p.Client.Transaction.Initialize(&paystack.TransactionRequest{
+		CallbackURL: req.CallbackURL,
+		Currency:    req.Currency,
+		Amount:      req.Amount * 100,
+		Email:       req.Email,
+		Metadata:    paystack.Metadata(req.Metadata),
+	})
 }

@@ -19,6 +19,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
 	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
+	app.Post("/pay-init", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.Initialize)
 
 	newsfeedApi := app.Party("/newsfeed", ijwt.JwtGuardMiddleware, middlewares.Protected)
 	newsfeedApi.Any("/{action:string}", func(ctx iris.Context) {

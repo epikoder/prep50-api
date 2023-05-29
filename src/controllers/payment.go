@@ -16,6 +16,43 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
+func Initialize(ctx iris.Context) {
+	type paymentInfo struct {
+		Email  string `validate:"required"`
+		Amount int    `validate:"required"`
+		Type   string `validate:"oneof=mock jamb waec both"`
+	}
+	data := &paymentInfo{}
+	if err := ctx.ReadJSON(data); !logger.HandleError(err) {
+		ctx.JSON(validation.Errors(err))
+		ctx.StatusCode(400)
+		return
+	}
+	provider := payment.New(nil)
+	meta := map[string]interface{}{
+		"type": data.Type,
+	}
+
+	_res, err := provider.Initialize(payment.TransactionRequest{
+		Email:    data.Email,
+		Amount:   float32(data.Amount),
+		Metadata: (payment.Metadata)(meta),
+		Currency: "NGN",
+		// CallbackURL: ,
+	})
+	if err != nil {
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Unable to initialize transaction",
+		})
+		return
+	}
+	ctx.JSON(apiResponse{
+		"status": "success",
+		"data":   _res,
+	})
+}
+
 func VerifyPayment(ctx iris.Context) {
 	type paymentData struct {
 		Type      string `validate:"oneof=mock jamb waec both"`
@@ -30,7 +67,7 @@ func VerifyPayment(ctx iris.Context) {
 		return
 	}
 
-	provider := payment.New(data.Provider)
+	provider := payment.New(&data.Provider)
 	res, err := provider.IVerify(data.Reference)
 	if !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
@@ -256,12 +293,12 @@ func HandlePayment(ctx iris.Context) {
 		return
 	}
 
-	provider := payment.New(data.Provider)
+	provider := payment.New(&data.Provider)
 	switch data.Action {
 	case "verify":
 		provider.IVerify(data.Id)
 	default:
-		provider.ICharge()
+		provider.ICharge(payment.ChargeRequest{})
 	}
 }
 
