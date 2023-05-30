@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
@@ -35,6 +36,10 @@ func Initialize(ctx iris.Context) {
 		Amount:      float32(data.Amount),
 		Currency:    "NGN",
 		CallbackURL: data.Callback_Url,
+		Reference:   fmt.Sprintf("T%d", time.Now().Unix()),
+		Metadata: map[string]interface{}{
+			"action": "initialize",
+		},
 	})
 	if err != nil {
 		ctx.JSON(apiResponse{

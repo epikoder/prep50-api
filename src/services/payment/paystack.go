@@ -41,11 +41,13 @@ func (p *ipaystack) IVerify(reference string) (interface{}, error) {
 }
 
 func (p *ipaystack) Initialize(req TransactionRequest) (interface{}, error) {
-	return p.Client.Transaction.Initialize(&paystack.TransactionRequest{
+	tx := &paystack.TransactionRequest{
 		CallbackURL: req.CallbackURL,
 		Currency:    req.Currency,
 		Amount:      req.Amount * 100,
 		Email:       req.Email,
 		Metadata:    paystack.Metadata(req.Metadata),
-	})
+		Reference:   req.Reference,
+	}
+	return p.Client.Transaction.Initialize(tx)
 }
