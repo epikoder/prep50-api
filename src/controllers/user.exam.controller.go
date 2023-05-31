@@ -82,7 +82,7 @@ func (c *UserExamController) Post() {
 			c.Ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    400,
-				"message": fmt.Sprintf("exam already registered, proceed to payment", v),
+				"message": fmt.Sprintf("%s exam already registered, proceed to payment", v),
 			})
 			return
 		}

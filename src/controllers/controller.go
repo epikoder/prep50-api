@@ -19,15 +19,6 @@ type (
 		Session int
 		Status  bool
 	}
-
-	queryWithPayment struct {
-		Id            uuid.UUID
-		ExamId        uuid.UUID
-		Name          string
-		Session       int
-		Status        bool
-		PaymentStatus models.PaymentStatus
-	}
 )
 
 var (
