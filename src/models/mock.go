@@ -25,6 +25,7 @@ type (
 	}
 
 	MockQuestion struct {
+		Id         uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
 		MockId     uuid.UUID `gorm:"type:varchar(36);index;"`
 		QuestionId uint      `gorm:"index;"`
 		CreatedBy  string    `json:"-"`

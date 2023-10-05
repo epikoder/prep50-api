@@ -56,6 +56,7 @@ type (
 	}
 
 	NewsfeedReport struct {
+		Id         uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
 		NewsfeedId uuid.UUID `json:"newsfeed_id"`
 		UserId     uuid.UUID `json:"user_id"`
 		Type       string    `json:"type"`
@@ -65,6 +66,7 @@ type (
 	}
 
 	NewsfeedCommentReport struct {
+		Id                uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
 		NewsfeedCommentId uuid.UUID `gorm:"type:varchar(36)" json:"newsfeed_comment_id"`
 		UserId            uuid.UUID `gorm:"type:varchar(36)" json:"user_id"`
 		Type              string    `json:"type"`
@@ -136,7 +138,7 @@ func (NewsfeedCommentReport) Join() string {
 	return "Reports"
 }
 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++//
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++//
 func UniqueSlug(model dbmodel.DBModel, slug string) (s string, err error) {
 	s = slug
 	tries := 1

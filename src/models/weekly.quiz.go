@@ -23,7 +23,7 @@ type (
 		UpdatedAt time.Time  `json:"-"`
 		CreatedBy string     `json:"-"`
 		UpdatedBy string     `json:"-"`
-		Questions []Question `gorm:"many2many:weekly_questions; foreignKey:Id; joinForeignKey:QuizId;" json:"-"`
+		Questions []Question `gorm:"-:migration; many2many:weekly_questions; foreignKey:Id; joinForeignKey:QuizId;" json:"-"`
 	}
 
 	WeeklyQuestion struct {
@@ -33,8 +33,8 @@ type (
 	}
 
 	WeeklyQuizResult struct {
-		WeeklyQuizId uuid.UUID `gorm:"type:varchar(36);index;" json:"quiz_id"`
-		UserId       uuid.UUID `gorm:"type:varchar(36);index;" json:"user_id"`
+		WeeklyQuizId uuid.UUID `gorm:"notnull;type:varchar(36);index;" json:"quiz_id"`
+		UserId       uuid.UUID `gorm:"notnull;type:varchar(36);index;" json:"user_id"`
 		Score        uint      `json:"score"`
 		Duration     uint      `json:"duration"`
 	}
