@@ -56,6 +56,9 @@ var (
 )
 
 func initialize(cmd *cobra.Command, args []string) {
+	if cmd.Flag("auto").Value.String() == "true" {
+		autoSetup(cmd, args)
+	}
 	if cmd.Flag("exams").Value.String() == "true" {
 		initializeExams(cmd, args)
 	}
@@ -140,7 +143,6 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 		if err := database.UseDB("app").Create(&models.RolePermission{
 			RoleId:       role.Id,
 			PermissionId: permission.Id,
-			CreatedBy:    "system",
 		}).Error; err != nil {
 			fmt.Println(color.Red, err, color.Reset)
 			panic(1)
@@ -148,66 +150,75 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 	}
 
 	if err := repository.NewRepository(user).Preload("Roles").First(); err != nil && strings.Contains(err.Error(), "not found") || user.Id == uuid.Nil {
-		_createAdmin(role)
+		_createAdmin(cmd, role)
 	}
 	fmt.Println(color.Green, "You are all set!!!", color.Reset)
 }
 
-func _createAdmin(role *models.Role) (user *models.User, err error) {
+func _createAdmin(cmd *cobra.Command, role *models.Role) (user *models.User, err error) {
 	var (
 		email    string = "admin@prep50.com"
 		username string = "epikoder"
 		phone    string
 		password string
 	)
-	fmt.Println(color.Green)
-	fmt.Println("Hello there!, Welcome to Prep50 Setup Utility.")
-	fmt.Println("I'll guide you to setup an admin account to manage your application")
-	fmt.Println("Let's create your administrator account right away!!")
 
-	fmt.Print(color.Blue)
-	fmt.Printf("What should I call you [epikoder]?%s : ", color.Reset)
-	fmt.Scanln(&username)
+	if cmd.Flag("auto").Value.String() == "true" {
+		email = os.Getenv("SETUP_EMAIL")
+		username = os.Getenv("SETUP_USERNAME")
+		phone = os.Getenv("SETUP_PHONE")
+		password = os.Getenv("SETUP_PASSWORD")
+	} else {
+		fmt.Println(color.Green)
+		fmt.Println("Hello there!, Welcome to Prep50 Setup Utility.")
+		fmt.Println("I'll guide you to setup an admin account to manage your application")
+		fmt.Println("Let's create your administrator account right away!!")
 
-GET_EMAIL:
-	fmt.Print(color.Blue)
-	fmt.Printf("Please enter a valid email address [admin@prep50.com]?%s : ", color.Reset)
-	fmt.Scanln(&email)
-	if !validation.ValidateEmail(email) {
-		fmt.Println(color.Red)
-		fmt.Println("Email is invalid")
-		goto GET_EMAIL
-	}
+		fmt.Print(color.Blue)
+		fmt.Printf("What should I call you [epikoder]?%s : ", color.Reset)
+		fmt.Scanln(&username)
 
-	fmt.Print(color.Blue)
-	fmt.Printf("Please enter a valid Phone number%s : ", color.Reset)
-	fmt.Scan(&phone)
+	GET_EMAIL:
+		fmt.Print(color.Blue)
+		fmt.Printf("Please enter a valid email address [admin@prep50.com]?%s : ", color.Reset)
+		fmt.Scanln(&email)
+		if !validation.ValidateEmail(email) {
+			fmt.Println(color.Red)
+			fmt.Println("Email is invalid")
+			goto GET_EMAIL
+		}
 
-GET_PASSWORD:
-	fmt.Print(color.Blue)
-	fmt.Printf("Enter your desired password%s : ", color.Reset)
-	b, err := term.ReadPassword(1)
-	if err != nil {
-		return
+		fmt.Print(color.Blue)
+		fmt.Printf("Please enter a valid Phone number%s : ", color.Reset)
+		fmt.Scan(&phone)
+
+	GET_PASSWORD:
+		fmt.Print(color.Blue)
+		fmt.Printf("Enter your desired password%s : ", color.Reset)
+		var b []byte
+		b, err = term.ReadPassword(1)
+		if err != nil {
+			return
+		}
+		password = string(b)
+		if len(password) < 8 {
+			fmt.Println(color.Red)
+			fmt.Println("Password too short [minimum of 8 characters]")
+			goto GET_PASSWORD
+		}
+		fmt.Println(color.Blue)
+		fmt.Printf("Confirm your password%s : ", color.Reset)
+		b, err = term.ReadPassword(1)
+		if err != nil {
+			return
+		}
+		if string(b) != password {
+			fmt.Println(color.Red)
+			fmt.Println("password does not match")
+			goto GET_PASSWORD
+		}
+		fmt.Println()
 	}
-	password = string(b)
-	if len(password) < 8 {
-		fmt.Println(color.Red)
-		fmt.Println("Password too short [minimum of 8 characters]")
-		goto GET_PASSWORD
-	}
-	fmt.Println(color.Blue)
-	fmt.Printf("Confirm your password%s : ", color.Reset)
-	b, err = term.ReadPassword(1)
-	if err != nil {
-		return
-	}
-	if string(b) != password {
-		fmt.Println(color.Red)
-		fmt.Println("password does not match")
-		goto GET_PASSWORD
-	}
-	fmt.Println()
 
 	p, err := hash.MakeHash(password)
 	if err != nil {
@@ -229,9 +240,8 @@ GET_PASSWORD:
 		panic(1)
 	}
 	if err = database.UseDB("app").Create(models.UserRole{
-		UserId:    user.Id,
-		RoleId:    role.Id,
-		CreatedBy: "system",
+		UserId: user.Id,
+		RoleId: role.Id,
 	}).Error; err != nil {
 		fmt.Println(color.Red, err, color.Reset)
 		panic(1)
@@ -261,5 +271,12 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 			panic(1)
 		}
 	}
+}
 
+func autoSetup(cmd *cobra.Command, args []string) {
+	migrate(cmd, []string{"auto"})
+	initializeExams(cmd, args)
+	initializeAuthenticationProvider(cmd, args)
+	initializeJWT(cmd, args)
+	initializeAdmin(cmd, args)
 }

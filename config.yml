@@ -28,7 +28,8 @@ aes:
   iv: ""
 cors:
   origins:
-    - prep50.com
+    - core.prep50.ng
+    - api.prep50.ng
   headers: Accept,content-type,X-Requested-With,Content-Length,Accept-Encoding,accept-version,X-CSRF-Token,Authorization,token
   allowCredentials: "true"
 jwt:

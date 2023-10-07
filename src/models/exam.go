@@ -12,7 +12,7 @@ import (
 type (
 	Exam struct {
 		Id           uuid.UUID `sql:"type:uuid;" gorm:"unique" json:"-"`
-		Name         string    `gorm:"unique;index;notnull" json:"name"`
+		Name         string    `gorm:"unique;index;notnull;type:varchar(36)" json:"name"`
 		Description  string    `json:"description"`
 		Amount       uint      `json:"price"`
 		SubjectCount int       `json:"subject_count"`

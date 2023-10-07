@@ -62,7 +62,8 @@ func NewMigration(model DBModel) (m Migration) {
 
 func (migration Migration) Up() (err error) {
 	name := strings.Split(reflect.TypeOf(migration.model).String(), ".")[1]
-	if i, ok := migration.model.(ModelOverride); ok && i.OverrideMigration() && migration.model.Database().Migrator().HasTable(migration.model) {
+	if i, ok := migration.model.(ModelOverride); ok && i.OverrideMigration() {
+		fmt.Printf("%sCreating table for: %s %s\n", color.Cyan, name, color.Reset)
 		return migration.model.Database().AutoMigrate(migration.model)
 	}
 
@@ -72,9 +73,8 @@ func (migration Migration) Up() (err error) {
 				if !migration.model.Database().Migrator().HasColumn(migration.model, v) {
 					continue
 				}
-				if err := migration.model.Database().Migrator().DropColumn(migration.model, v); err != nil {
-					fmt.Println(err)
-					return err
+				if err = migration.model.Database().Migrator().DropColumn(migration.model, v); err != nil {
+					return
 				}
 			}
 		}
@@ -84,9 +84,8 @@ func (migration Migration) Up() (err error) {
 				if migration.model.Database().Migrator().HasColumn(migration.model, v) {
 					continue
 				}
-				if err := migration.model.Database().Migrator().AddColumn(migration.model, v); err != nil {
-					fmt.Println(err)
-					return err
+				if err = migration.model.Database().Migrator().AddColumn(migration.model, v); err != nil {
+					return
 				}
 			}
 		}
@@ -96,16 +95,17 @@ func (migration Migration) Up() (err error) {
 	fmt.Printf("%sCreating table:: %s ...%s\n", color.Yellow, name, color.Reset)
 	if i, ok := migration.model.(ModelExt); ok {
 		for _, v := range i.Relations() {
-			if err := migration.model.Database().SetupJoinTable(migration.model, v.Join(), v); err != nil {
-				fmt.Println(err)
-				return err
+			fmt.Printf("%sCreating relational table for: %s-%s %s\n", color.Yellow, name, v.Join(), color.Reset)
+			if err = migration.model.Database().Debug().SetupJoinTable(migration.model, v.Join(), v); err != nil {
+				return
 			}
+			fmt.Printf("%sCreated relational table for: %s-%s Successful ... %s\n", color.Blue, name, v.Join(), color.Reset)
 		}
 	}
 
-	if err = migration.model.Database().Migrator().AutoMigrate(migration.model); err != nil {
+	if err = migration.model.Database().Migrator().CreateTable(migration.model); err != nil {
 		fmt.Printf("%sError creating table:: %s \n%s", color.Red, name, color.Reset)
-		return err
+		return
 	}
 	fmt.Printf("%sCreated table:: %s successful%s\n", color.Blue, name, color.Reset)
 	return
@@ -114,13 +114,13 @@ func (migration Migration) Up() (err error) {
 func (migration Migration) Down() (err error) {
 	name := strings.Split(reflect.TypeOf(migration.model).String(), ".")[1]
 	if i, ok := migration.model.(ModelExt); ok {
-		fmt.Printf("%sDropping relational table for: %s %s\n", color.Yellow, name, color.Reset)
 		for _, v := range i.Relations() {
+			fmt.Printf("%sDropping relational table for: %s-%s %s\n", color.Yellow, name, v.Join(), color.Reset)
 			if err := migration.model.Database().Migrator().DropTable(v); err != nil {
 				return err
 			}
+			fmt.Printf("%sDropped relational table for: %s-%s Successful ... %s\n", color.Blue, name, v.Join(), color.Reset)
 		}
-		fmt.Printf("%sDropped relational table for: %s Successful ... %s\n", color.Blue, name, color.Reset)
 	}
 
 	if !migration.model.Database().Migrator().HasTable(migration.model) {

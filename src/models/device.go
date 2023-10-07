@@ -12,7 +12,7 @@ import (
 type (
 	Device struct {
 		Id         uuid.UUID `sql:"primary_key" gorm:"unique;index;notnull"`
-		UserID     uuid.UUID `gorm:"unique;index;notnull"`
+		UserID     uuid.UUID `gorm:"unique;index;notnull;type:varchar(36)"`
 		Identifier string    `gorm:"unique;index;notnull"`
 		Name       string
 		CreatedAt  time.Time

@@ -15,5 +15,5 @@ ARG LOG_STACK
 ARG DB_APP_PASSWORD
 ARG DB_CORE_PASSWORD
 
-RUN ./bin/prep50_ctl init -j
+RUN ./bin/prep50_ctl init -y
 CMD ["./bin/prep50"]

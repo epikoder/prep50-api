@@ -14,7 +14,7 @@ import (
 type (
 	Newsfeed struct {
 		Id           uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
-		UserId       uuid.UUID `gorm:"index" json:"-"`
+		UserId       uuid.UUID `gorm:"index;type:varchar(36)" json:"-"`
 		Slug         string    `gorm:"index;unique" json:"slug"`
 		Title        string    `json:"title"`
 		Photo        string    `json:"photo"`
@@ -40,8 +40,8 @@ type (
 
 	NewsfeedInteraction struct {
 		NewsfeedId   uuid.UUID `json:"newsfeed_id"`
-		UserId       uuid.UUID `json:"user_id"`
-		Liked        bool      `json:"is_liked"`
+		UserId       uuid.UUID `json:"user_id" gorm:"type:varchar(36)"`
+		Liked        bool      `json:"is_liked" gorm:"type:varchar(36)"`
 		IsBookmarked bool      `json:"is_bookmarked"`
 	}
 
@@ -58,7 +58,7 @@ type (
 	NewsfeedReport struct {
 		Id         uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
 		NewsfeedId uuid.UUID `json:"newsfeed_id"`
-		UserId     uuid.UUID `json:"user_id"`
+		UserId     uuid.UUID `json:"user_id" gorm:"type:varchar(36)"`
 		Type       string    `json:"type"`
 		Message    string    `gorm:"type:longtext" json:"message"`
 		CreatedAt  time.Time `json:"created_at"`

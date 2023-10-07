@@ -59,15 +59,13 @@ type (
 	}
 
 	UserRole struct {
-		UserId    uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
-		RoleId    uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
-		CreatedBy string    `json:"-"`
+		UserId uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
+		RoleId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 	}
 
 	UserPermission struct {
 		UserId       uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		PermissionId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
-		CreatedBy    string    `json:"-"`
 	}
 
 	UserRegisterFormStruct struct {

@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 Efedua Believe efedua.bell@gmail.com
-
 */
 package cmd
 
@@ -41,6 +40,7 @@ func init() {
 		Run:   initialize,
 		Short: "Initialize the application on first Run",
 	}
+	initializeCmd.Flags().BoolP("auto", "y", false, "Setup app automatically")
 	initializeCmd.Flags().BoolP("exams", "e", true, "Initialize exams table")
 	initializeCmd.Flags().BoolP("providers", "p", true, "Initialize auth-providers table")
 	initializeCmd.Flags().BoolP("admin", "a", true, "Setup admin")

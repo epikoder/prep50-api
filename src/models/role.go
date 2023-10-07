@@ -25,7 +25,6 @@ type (
 	RolePermission struct {
 		RoleId       uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"role_id"`
 		PermissionId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"permission_id"`
-		CreatedBy    string    `json:"-"`
 	}
 )
 

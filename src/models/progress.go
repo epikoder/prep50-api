@@ -10,7 +10,7 @@ import (
 )
 
 type UserProgress struct {
-	UserId      uuid.UUID `gorm:"primaryKey" sql:"type:varchar(36)" json:"-"`
+	UserId      uuid.UUID `gorm:"primaryKey;type:varchar(36)" json:"-"`
 	ObjectiveId uint      `gorm:"primaryKey;autoIncrement:false" json:"-"`
 	SubjectId   uint      `gorm:"primaryKey;autoIncrement:false" json:"-"`
 	Score       uint      `json:"score"`

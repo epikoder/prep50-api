@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -28,9 +27,9 @@ type (
 var (
 	_migration migration
 	migratable = map[string]dbmodel.DBModel{
+		"Permission":      &models.Permission{},
 		"User":            &models.User{},
 		"Role":            &models.Role{},
-		"Permission":      &models.Permission{},
 		"Provider":        &models.Provider{},
 		"PasswordReset":   &models.PasswordReset{},
 		"Exam":            &models.Exam{},
@@ -59,11 +58,8 @@ func init() {
 		panic(err)
 	}
 	path := __DIR__ + "/migration.yml"
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR, 0755)
-	if err != nil {
-		panic(err)
-	}
-	buf, err := ioutil.ReadAll(f)
+
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -87,12 +83,24 @@ func migrate(cmd *cobra.Command, args []string) {
 		fmt.Print(color.Reset)
 		return
 	}
-	rollback := cmd.Flag("rollback").Value.String() == "true"
-	reset := cmd.Flag("reset").Value.String() == "true"
-	auto := cmd.Flag("auto").Value.String() == "true"
-	models := make([]string, 0)
-	if cmd.Flag("model").Value.String() != "" {
-		models = strings.Split(cmd.Flag("model").Value.String(), ",")
+
+	var (
+		rollback bool
+		reset    bool
+		auto     bool
+		models   []string
+	)
+
+	if len(args) == 0 {
+		rollback = cmd.Flag("rollback").Value.String() == "true"
+		reset = cmd.Flag("reset").Value.String() == "true"
+		auto = cmd.Flag("auto").Value.String() == "true"
+		models = make([]string, 0)
+		if cmd.Flag("model").Value.String() != "" {
+			models = strings.Split(cmd.Flag("model").Value.String(), ",")
+		}
+	} else {
+		auto = true
 	}
 
 	_m := migrationModel{}
@@ -122,7 +130,6 @@ func migrate(cmd *cobra.Command, args []string) {
 							panic(err)
 						}
 					}
-
 				} else {
 					panic(err)
 				}
@@ -139,6 +146,7 @@ func migrate(cmd *cobra.Command, args []string) {
 			}
 		}
 		if err := m.Migrate().Up(); err != nil {
+			fmt.Println(strings.Contains(err.Error(), "1824"))
 			panic(err)
 		}
 		if err := m.Migrate().MigrateColumnUp(); err != nil {
@@ -148,6 +156,7 @@ func migrate(cmd *cobra.Command, args []string) {
 			panic(err)
 		}
 	}
+	database.UseDB("app").Migrator().DropTable("questions")
 }
 
 func _authenticateUser() (ok bool, err error) {
