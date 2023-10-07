@@ -134,6 +134,10 @@ func init() {
 			Conf.Database.Core.Password = os.Getenv("DB_CORE_PASSWORD")
 		}
 	}
+
+	if len(Conf.Redis.Password) == 0 {
+		Conf.Redis.Password = os.Getenv("REDIS_PASSWORD")
+	}
 }
 
 func Update() {

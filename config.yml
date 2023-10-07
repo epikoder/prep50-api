@@ -9,16 +9,16 @@ database:
   core:
     url:
     name: "prep50"
-    user: admin
-    host: localhost
-    port: 3306
+    user: root
+    host: srv-captain--database-db
+    port: 3308
     password:
   app:
     url:
-    name: "prep50app"
-    user: admin
-    host: localhost
-    port: 3306
+    name: "prep50_app"
+    user: root
+    host: srv-captain--database-db
+    port: 3308
     password:
 throttle:
   limit: 20
@@ -41,6 +41,6 @@ mail:
   smtpPort: 587
   password:
 redis:
-  host: 127.0.0.1
+  host: srv-captain--redis
   port: 6379
   database: 0
