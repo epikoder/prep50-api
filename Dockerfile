@@ -23,5 +23,9 @@ ARG SETUP_USERNAME
 ARG SETUP_PHONE
 ARG SETUP_PASSWORD
 
+EXPOSE 80
+
 RUN ./bin/prep50_ctl init -y
+
+ENV PORT 80
 CMD ["./bin/prep50"]
