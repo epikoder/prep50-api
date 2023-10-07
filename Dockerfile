@@ -8,13 +8,11 @@ ARG SETUP_PASSWORD=${SETUP_PASSWORD}
 
 FROM golang:1.20
 
-ENV APP_NAME prep50
-ENV APP_PATH /app
-
 RUN apt update && apt install libvips-dev libvips-tools -y  
 
-WORKDIR ${APP_PATH}/
-ADD . ${APP_PATH}
+WORKDIR /app
+COPY . .
+RUN make && make ctl
 
 ARG LOG_STACK
 ARG DB_APP_PASSWORD
@@ -24,12 +22,9 @@ ARG SETUP_USERNAME
 ARG SETUP_PHONE
 ARG SETUP_PASSWORD
 
-RUN go build -o bin/${APP_NAME} main.go
-RUN go build -o bin/${APP_NAME}_ctl cmd/prep50-ctl/prep50_ctl.go
-
-ENV PORT 8080
+ENV PORT 80
 EXPOSE ${PORT}
 
-RUN ./bin/${APP_NAME} init -y
+RUN ./bin/prep50_ctl init -y
 
-CMD ./bin/${APP_NAME}
+CMD ["./bin/prep50"]
