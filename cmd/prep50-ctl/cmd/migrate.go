@@ -75,13 +75,15 @@ func init() {
 }
 
 func migrate(cmd *cobra.Command, args []string) {
-	_, err := _authenticateUser()
-	if err != nil {
-		fmt.Print(color.Red)
-		fmt.Printf("UNAUTHORIZED ACCESS: %s", err)
-		fmt.Println()
-		fmt.Print(color.Reset)
-		return
+	if len(args) == 0 {
+		_, err := _authenticateUser()
+		if err != nil {
+			fmt.Print(color.Red)
+			fmt.Printf("UNAUTHORIZED ACCESS: %s", err)
+			fmt.Println()
+			fmt.Print(color.Reset)
+			return
+		}
 	}
 
 	var (

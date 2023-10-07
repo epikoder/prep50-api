@@ -252,7 +252,7 @@ func _createAdmin(cmd *cobra.Command, role *models.Role) (user *models.User, err
 }
 
 func initializeJWT(cmd *cobra.Command, args []string) {
-	if env := os.Getenv("APP_ENV"); env == "" || env == "production" {
+	if env := os.Getenv("APP_ENV"); env == "" || env == "production" && len(args) == 0 {
 		fmt.Println(color.Red)
 		fmt.Println("!!! WARNING !!!")
 		fmt.Println("This action will logout all current users!")
@@ -277,6 +277,6 @@ func autoSetup(cmd *cobra.Command, args []string) {
 	migrate(cmd, []string{"auto"})
 	initializeExams(cmd, args)
 	initializeAuthenticationProvider(cmd, args)
-	initializeJWT(cmd, args)
+	initializeJWT(cmd, []string{"auto"})
 	initializeAdmin(cmd, args)
 }
