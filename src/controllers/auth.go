@@ -30,9 +30,11 @@ type (
 )
 
 func QueryUsernameV1(ctx iris.Context) {
-	if ok := repository.NewRepository(&models.User{}).FindOne("username = ? OR email = ?", ctx.URLParam("query"), ctx.URLParam("query")); ok {
+	q := ctx.URLParam("query")
+	if ok := repository.NewRepository(&models.User{}).FindOne("username = ? OR email = ?", q, q); ok && len(q) > 3 {
 		ctx.JSON(apiResponse{
-			"status": "failed",
+			"status":  "failed",
+			"message": "username or email is invalid",
 		})
 		return
 	}
