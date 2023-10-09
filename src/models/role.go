@@ -23,8 +23,9 @@ type (
 	}
 
 	RolePermission struct {
-		RoleId       uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"role_id"`
-		PermissionId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"permission_id"`
+		RoleId       uuid.UUID `gorm:"primaryKey;" json:"role_id"`
+		PermissionId uuid.UUID `gorm:"primaryKey;" json:"permission_id"`
+		CreatedBy    string    `json:"-"`
 	}
 )
 
@@ -46,7 +47,7 @@ func (u *Role) Migrate() dbmodel.Migration {
 
 func (u *Role) Relations() []interface{ Join() string } {
 	return []interface{ Join() string }{
-		RolePermission{},
+		&RolePermission{},
 	}
 }
 

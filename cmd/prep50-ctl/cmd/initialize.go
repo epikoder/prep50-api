@@ -274,7 +274,7 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 }
 
 func autoSetup(cmd *cobra.Command, args []string) {
-	migrate(cmd, []string{"auto"})
+	// migrate(cmd, []string{"auto"})
 	initializeExams(cmd, args)
 	initializeAuthenticationProvider(cmd, args)
 	initializeJWT(cmd, []string{"auto"})

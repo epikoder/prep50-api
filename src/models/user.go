@@ -42,8 +42,8 @@ type (
 
 	UserExam struct {
 		Id            uuid.UUID     `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);notnull;index;" json:"-"`
-		UserId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;index;" json:"-"`
-		ExamId        uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);notnull;" json:"-"`
+		UserId        uuid.UUID     `sql:"primary_key;type:uuid;" gorm:"type:varchar(36);notnull;index;" json:"-"`
+		ExamId        uuid.UUID     `sql:"primary_key;type:uuid;" gorm:"type:varchar(36);notnull;" json:"-"`
 		TransactionId uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 		Session       uint          `json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
@@ -52,20 +52,22 @@ type (
 	}
 
 	UserProvider struct {
-		UserId     uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
+		UserId     uuid.UUID `sql:"type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;primaryKey;" json:"-"`
 		ProviderId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 		IsLoggedIn bool      `gorm:"type:tinyint(1);" json:"-"`
 		Token      string
 	}
 
 	UserRole struct {
-		UserId uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
-		RoleId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
+		UserId    uuid.UUID `gorm:"primaryKey;type:varchar(36);" json:"-"`
+		RoleId    uuid.UUID `gorm:"primaryKey;type:varchar(36);" json:"-"`
+		CreatedBy string    `json:"-"`
 	}
 
 	UserPermission struct {
 		UserId       uuid.UUID `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"-"`
 		PermissionId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
+		CreatedBy    string    `json:"-"`
 	}
 
 	UserRegisterFormStruct struct {

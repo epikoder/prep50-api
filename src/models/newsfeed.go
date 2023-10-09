@@ -39,8 +39,8 @@ type (
 	}
 
 	NewsfeedInteraction struct {
-		NewsfeedId   uuid.UUID `json:"newsfeed_id"`
-		UserId       uuid.UUID `json:"user_id" gorm:"type:varchar(36)"`
+		NewsfeedId   uuid.UUID `gorm:"primaryKey;" json:"newsfeed_id"`
+		UserId       uuid.UUID `json:"user_id" gorm:"type:varchar(36);primaryKey;"`
 		Liked        bool      `json:"is_liked" gorm:"type:varchar(36)"`
 		IsBookmarked bool      `json:"is_bookmarked"`
 	}
@@ -67,8 +67,8 @@ type (
 
 	NewsfeedCommentReport struct {
 		Id                uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
-		NewsfeedCommentId uuid.UUID `gorm:"type:varchar(36)" json:"newsfeed_comment_id"`
-		UserId            uuid.UUID `gorm:"type:varchar(36)" json:"user_id"`
+		NewsfeedCommentId uuid.UUID `gorm:"primaryKey;type:varchar(36)" json:"newsfeed_comment_id"`
+		UserId            uuid.UUID `gorm:"primaryKey;type:varchar(36)" json:"user_id"`
 		Type              string    `json:"type"`
 		Message           string    `gorm:"type:longtext" json:"message"`
 		CreatedAt         time.Time `json:"created_at"`

@@ -24,17 +24,6 @@ func Execute() {
 }
 
 func init() {
-	migrateCmd := &cobra.Command{
-		Use:   "migrate",
-		Run:   migrate,
-		Short: "Manage database migration",
-	}
-	migrateCmd.Flags().BoolP("rollback", "r", false, "Rollback migrations")
-	migrateCmd.Flags().BoolP("reset", "f", false, "Reset migrations")
-	migrateCmd.Flags().BoolP("auto", "a", false, "Auto migrations")
-	migrateCmd.Flags().StringP("model", "m", "", "Run migration on a specific model")
-	migrateCmd.Example = "prep50_ctl migrate -m User,Exam -r"
-
 	initializeCmd := &cobra.Command{
 		Use:   "init",
 		Run:   initialize,
@@ -47,6 +36,5 @@ func init() {
 	initializeCmd.Flags().BoolP("jwt", "j", true, "Setup JWT token")
 	initializeCmd.Flags().BoolP("jwtf", "f", false, "Force create JWT token")
 
-	rootCmd.AddCommand(migrateCmd)
 	rootCmd.AddCommand(initializeCmd)
 }
