@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.prep50.prep50",
+      "sha256_cert_fingerprints": [
+        "B5:F3:63:AC:1D:31:C0:9C:02:1F:06:BC:51:DF:FF:60:06:C4:7F:DE:22:9A:74:F0:F7:67:58:7C:61:B2:33:99"
+      ]
+    }
+  }
+]
