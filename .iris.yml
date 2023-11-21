@@ -4,6 +4,7 @@ Version: main
 Dest: ./
 Module: prep50-api
 DisableInlineCommands: false
+NodePackageManager: npm
 DisableNpmInstall: false
 NpmBuildScriptName: build
 Watcher:
@@ -41,5 +42,7 @@ LiveReload:
     Port: 35729
 Files:
     - ./
-BuildFiles: []
+BuildFiles:
+    - bin/prep50
+    - bin/prep50_ctl
 MD5PackageJSON: []
