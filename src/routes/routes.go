@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/controllers"
@@ -138,7 +140,19 @@ func RegisterWebRoutes(app *iris.Application) {
 	app.Get("/", func(ctx iris.Context) {
 		if err := ctx.ServeFile("./public/index.html"); err != nil {
 			ctx.StatusCode(404)
-			ctx.JSON(err.Error())
+			return
+		}
+	})
+	app.Get("/{path:path}", func(ctx iris.Context) {
+		path := ctx.Params().Get("path")
+		path = filepath.Clean(fmt.Sprintf("./public/%s", path))
+	SERVE_FILE:
+		if err := ctx.ServeFile(path); err != nil {
+			if !strings.Contains(path, ".html") {
+				path = path + ".html"
+				goto SERVE_FILE
+			}
+			ctx.StatusCode(404)
 			return
 		}
 	})

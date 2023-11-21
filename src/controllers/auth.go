@@ -346,6 +346,7 @@ func SocialV1(ctx iris.Context) {
 		Preload("Exams").
 		FindOne("email = ?", data.Email)
 	if userExist {
+		// User does not use third-party login
 		if !user.IsProvider {
 			ctx.StatusCode(http.StatusNotAcceptable)
 			ctx.JSON(apiResponse{
@@ -354,34 +355,20 @@ func SocialV1(ctx iris.Context) {
 			})
 			return
 		}
-
-		if err := database.UseDB("app").
-			First(&models.UserProvider{}, "user_id = ? AND provider_id = ?", user.Id, provider.Id).
-			Error; !logger.HandleError(err) {
+		{
 			_provider := &struct {
 				Name string
 			}{}
-			if notFound := database.UseDB("app").Table("providers as p").
+			if userHasProvider := database.UseDB("app").Table("providers as p").
 				Select("up.*, p.name").Joins("LEFT JOIN user_providers as up ON up.provider_id = p.id").
-				First(_provider, "up.user_id = ?", user.Id).Error != nil; notFound {
+				First(_provider, "up.user_id = ?", user.Id).Error == nil; userHasProvider && _provider.Name != provider.Name {
 				ctx.StatusCode(http.StatusNotAcceptable)
 				ctx.JSON(apiResponse{
 					"status":  "failed",
-					"message": "Please use different login method",
+					"message": fmt.Sprintf("Please use %s login", _provider.Name),
 				})
 				return
 			}
-
-			name := _provider.Name
-			if name == "" {
-				name = "different"
-			}
-			ctx.StatusCode(http.StatusNotAcceptable)
-			ctx.JSON(apiResponse{
-				"status":  "failed",
-				"message": fmt.Sprintf("Please use %s login", name),
-			})
-			return
 		}
 
 		{

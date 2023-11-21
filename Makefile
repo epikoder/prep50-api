@@ -9,17 +9,17 @@ all:
 	go build -o ./bin/prep50_ctl cmd/prep50-ctl/prep50_ctl.go
 
 build:
-	${all}
+	make all
 
 test: 
-	${ctl}
+	make ctl
 	./bin/prep50_ctl migrate -f
 	./bin/prep50_ctl init
 	clear
 	go test -v
 
 init:
-	${ctl}
+	make ctl
 	./bin/prep50_ctl init
 run:
 	go run main.go

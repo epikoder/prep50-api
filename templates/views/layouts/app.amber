@@ -6,12 +6,7 @@ html
             meta[http-equiv="X-UA-Compatible"][content="IE=edge"]
             meta[name="viewport"][content="width=device-width, initial-scale=1.0"]
             link[href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Filled"][rel="stylesheet"]
-            // link[rel="stylesheet"][href="/static/css/app.css?version="+assetVersion]
-            // link[rel="stylesheet"][href="/static/css/spinner.css?version="+assetVersion]
-            // link[rel="stylesheet"][href="/static/css/toastify.css"]
-            // link[rel="stylesheet"][href="/static/css/tailwind.min.css"]
         block script
-            // script[src="/static/js/app.js?version="+assetVersion][defer]
         title
             block title 
                 |#{appName}

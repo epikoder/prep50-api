@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 
@@ -116,7 +117,7 @@ func init() {
 		panic(err)
 	}
 	var buf []byte
-	if buf, err = ioutil.ReadAll(file); !logger.HandleError(err) {
+	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
 	}
 	if err = yaml.Unmarshal(buf, &Conf); !logger.HandleError(err) {
@@ -168,5 +169,5 @@ func Update() {
 	if buf, err = yaml.Marshal(&Conf); !logger.HandleError(err) {
 		panic(err)
 	}
-	ioutil.WriteFile(filePath, buf, os.ModePerm)
+	os.WriteFile(filePath, buf, os.ModePerm)
 }

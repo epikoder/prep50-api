@@ -35,10 +35,10 @@ jwt:
   access: 20160
   refresh: 40320
 mail:
-  username: efedua.bell@gmail.com
-  from: prep50
-  smtpHost: smtp.gmail.com
-  smtpPort: 587
+  username: hello@prep50.ng
+  from: Prep50
+  smtpHost: smtp.zoho.com
+  smtpPort: 465
   password:
 redis:
   host: 142.93.96.13

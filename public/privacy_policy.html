@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prep50</title>
+</head>
+
+<body>
+    Welcome to prep50
+
+    <div>
+        <center>
+            <form id="login-form" action="" onsubmit="(e) => e.preventDefault()">
+                <div class="bg-white">
+                    <h5 id="stat-auth">
+                        AUTHENTICATE
+                    </h5>
+                    <div>
+                        <input id="user" value="testuser" style="padding: 5px;" />
+                    </div>
+                    <div>
+                        <input id="password" type="password" value="password" style="padding: 5px;" />
+                    </div>
+                    <button onclick="authenticate()" style="padding: .4rem;">
+                        LOGIN
+                    </button>
+                </div>
+            </form>
+        </center>
+    </div>
+
+    <div>
+        <center>
+            <form id="pay-form" action="" onsubmit="(e) => e.preventDefault()">
+                <div class="bg-white">
+                    <h5>
+                        TEST PAYMENT FORM
+                    </h5>
+                    <div>
+                        <select name="type" id="type">
+                            <option value="jamb"> JAMB - 1000 </option>
+                            <option value="waec"> WAEC - 1000 </option>
+                            <option value="both"> BOTH - 2000 </option>
+                            <option value="mock"> MOCK - 2000</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select name="action" id="action">
+                            <option value="jamb"> PAY </option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="shouldVerify" id="shouldVerify">
+                        <span> Should Verify</span>
+                    </div>
+                    <button onclick="onPay()">
+                        TEST PAY
+                    </button>
+                    <div style="padding: 1rem;" id="tx">
+
+                    </div>
+                </div>
+            </form>
+        </center>
+    </div>
+    <script src="/static/index.js"></script>
+    <script src="/static/paystack.js"></script>
+    <style lang="scss">
+        form {
+            padding: 10px;
+            background-color: #00000067;
+        }
+
+        div {
+            padding: 10px;
+        }
+
+        .bg-white {
+            background-color: white;
+        }
+    </style>
+</body>
+
+</html>

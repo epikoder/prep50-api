@@ -55,7 +55,7 @@ type (
 		UserId     uuid.UUID `sql:"type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;primaryKey;" json:"-"`
 		ProviderId uuid.UUID `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 		IsLoggedIn bool      `gorm:"type:tinyint(1);" json:"-"`
-		Token      string
+		// Token      string
 	}
 
 	UserRole struct {

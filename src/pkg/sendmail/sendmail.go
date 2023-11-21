@@ -18,7 +18,7 @@ func newSmtpClient() (*mail.SMTPClient, error) {
 	server.Port = config.Conf.Mail.SmtpPort
 	server.Username = config.Conf.Mail.UserName
 	server.Password = config.Conf.Mail.Password
-	if env := os.Getenv("APP_ENV"); env != "" && env != "production" && server.Password == "" {
+	if server.Password == "" {
 		server.Password = os.Getenv("MAIL_PASSWORD")
 	}
 	switch config.Conf.Mail.SmtpPort {

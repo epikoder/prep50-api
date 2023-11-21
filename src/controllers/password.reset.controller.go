@@ -21,7 +21,7 @@ type PasswordResetController struct {
 
 func (c *PasswordResetController) Get() {
 	_token, err := crypto.Aes256Decode(c.Ctx.URLParam("token"))
-	if err == nil {
+	if err != nil {
 		c.Ctx.View("password_reset", iris.Map{
 			"message": "Invalid/Expired Link",
 		})
@@ -84,8 +84,7 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 		Func: func() error {
 			return sendmail.SendPasswordResetMail(user, helper.GetOrigin(c.Ctx))
 		},
-		Schedule: time.Now().Add(time.Second * 5),
-		Retries:  3,
+		Retries: 3,
 	})
 
 	c.Ctx.JSON(apiResponse{
