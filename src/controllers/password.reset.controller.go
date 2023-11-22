@@ -3,14 +3,15 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/helper"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
+	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
 	"github.com/kataras/iris/v12"
 )
@@ -69,11 +70,22 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 		}
 
 		if user.IsProvider {
+			message := "Please use the social login"
+			{
+				provider := &struct{ Name string }{}
+				if err := database.UseDB("app").
+					Table("providers as p").
+					Select("p.name").
+					Joins("LEFT JOIN user_providers as up ON up.provider_id = p.id").
+					First(provider, "user_id = ?", user.Id).Error; err == nil {
+					message = "Please use " + provider.Name + " login"
+				}
+			}
 			c.Ctx.StatusCode(http.StatusForbidden)
 			c.Ctx.JSON(apiResponse{
 				"status":  "failed",
 				"code":    400,
-				"message": "password reset not available for this account",
+				"message": message,
 			})
 			return
 		}
@@ -82,7 +94,7 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 	queue.Dispatch(queue.Job{
 		Type: queue.SendMail,
 		Func: func() error {
-			return sendmail.SendPasswordResetMail(user, helper.GetOrigin(c.Ctx))
+			return sendmail.SendPasswordResetMail(user, os.Getenv("HOST_NAME"))
 		},
 		Retries: 3,
 	})
