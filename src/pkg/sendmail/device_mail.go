@@ -25,7 +25,7 @@ func SendNewDeviceMail(user *models.User) (err error) {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName))
+	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName.ToUserName()))
 	email.AddTo(user.Email)
 	email.SetSubject("Login request from new device")
 	email.SetBody(mail.TextHTML, buf.String())
@@ -47,7 +47,7 @@ func SendNewLoginMail(user *models.User) (err error) {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName))
+	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName.ToUserName()))
 	email.AddTo(user.Email)
 	email.SetSubject("Login request from another account")
 	email.SetBody(mail.TextHTML, buf.String())

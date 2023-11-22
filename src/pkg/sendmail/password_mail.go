@@ -44,7 +44,7 @@ func SendPasswordResetMail(user *models.User, host string) (err error) {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName))
+	email.SetFrom(fmt.Sprintf("%s <%s>", config.Conf.Mail.From, config.Conf.Mail.UserName.ToUserName()))
 	email.AddTo(user.Email)
 	email.SetSubject("Password Reset")
 	email.SetBody(mail.TextHTML, buf.String())

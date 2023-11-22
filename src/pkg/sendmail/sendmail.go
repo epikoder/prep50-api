@@ -16,7 +16,7 @@ func newSmtpClient() (*mail.SMTPClient, error) {
 	server := mail.NewSMTPClient()
 	server.Host = config.Conf.Mail.SmtpHost
 	server.Port = config.Conf.Mail.SmtpPort
-	server.Username = config.Conf.Mail.UserName
+	server.Username = string(config.Conf.Mail.UserName)
 	server.Password = config.Conf.Mail.Password
 	if server.Password == "" {
 		server.Password = os.Getenv("MAIL_PASSWORD")

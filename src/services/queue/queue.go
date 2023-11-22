@@ -60,8 +60,9 @@ func Run() {
 						j.Retries--
 						j.Schedule = time.Now().Add(time.Second * 5)
 						Dispatch(j)
+					} else {
+						fmt.Println("Completed Job: ", j.Type, runtime.FuncForPC(reflect.ValueOf(j.Func).Pointer()).Name())
 					}
-					fmt.Println("Completed Job: ", j.Type, runtime.FuncForPC(reflect.ValueOf(j.Func).Pointer()).Name())
 				}
 				if time.Since(j.Schedule).Milliseconds() < 0 {
 					go func() {

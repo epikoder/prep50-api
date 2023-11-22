@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/joho/godotenv"
@@ -67,7 +67,7 @@ type (
 	}
 
 	mail struct {
-		UserName string `yaml:"username"`
+		UserName MailUserName `yaml:"username"`
 		From     string
 		SmtpHost string `yaml:"smtpHost"`
 		SmtpPort int    `yaml:"smtpPort"`
@@ -80,12 +80,21 @@ type (
 		Password string
 		Database int
 	}
+	MailUserName string
 )
 
 var (
 	path string
 	Conf *conf
 )
+
+func (m MailUserName) ToUserName() string {
+	v := string(m)
+	if !strings.Contains(v, "@") {
+		v += "@prep50.ng"
+	}
+	return v
+}
 
 func (db database) UseDB(s string) dbConnection {
 	if s == "core" {
@@ -161,10 +170,10 @@ func Update() {
 		panic(err)
 	}
 	var buf []byte
-	if buf, err = ioutil.ReadAll(file); !logger.HandleError(err) {
+	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
 	}
-	err = ioutil.WriteFile(fileBakPath, buf, os.ModePerm)
+	err = os.WriteFile(fileBakPath, buf, os.ModePerm)
 	logger.HandleError(err)
 	if buf, err = yaml.Marshal(&Conf); !logger.HandleError(err) {
 		panic(err)

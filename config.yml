@@ -35,10 +35,10 @@ jwt:
   access: 20160
   refresh: 40320
 mail:
-  username: hello@prep50.ng
+  username: prep50mock
   from: Prep50
-  smtpHost: smtp.zoho.com
-  smtpPort: 465
+  smtpHost: mail.smtp2go.com
+  smtpPort: 587
   password:
 redis:
   host: 142.93.96.13
