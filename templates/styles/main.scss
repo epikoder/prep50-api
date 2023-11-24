@@ -1,0 +1,196 @@
+@import './padding.scss';
+@import './font.scss';
+@import './loader.scss';
+
+[x-cloak] { display: none !important; }
+input {
+    font-size: 14px;
+}
+
+button {
+    font-size: 15px;
+    text-transform: uppercase;
+    padding: 5px 30px;
+    border-radius: 40px;
+    border: 1px black solid;
+    transition: all 500ms;
+    color: #000;
+    background-color: #fff;
+    font-weight: 600;
+
+    &:hover {
+        background-color: rgb(1, 1, 2);
+        color: white;
+    }
+
+    &:disabled {
+        $disabled-color: rgb(211, 211, 211);
+        background-color: $disabled-color;
+        cursor: not-allowed;
+        color: gray;
+        border: 1px $disabled-color solid;
+    }
+
+    &:active {
+        background-color: rgb(124, 124, 136);
+        color: white;
+    }
+}
+
+@mixin text-align($align) {
+    .text-#{$align} {
+        text-align: $align;
+    }
+}
+
+@include text-align($align: left);
+@include text-align($align: right);
+@include text-align($align: center);
+
+@mixin height($h) {
+    $multiplier: 2px;
+
+    .h-#{$h} {
+        height: $h * $multiplier;
+    }
+}
+
+.h-full {
+    height: 100%;
+}
+
+@include height($h: 2);
+@include height($h: 3);
+@include height($h: 4);
+@include height($h: 6);
+@include height($h: 8);
+@include height($h: 10);
+@include height($h: 12);
+
+@mixin display($d) {
+    .#{$d} {
+        display: $d;
+    }
+}
+
+@include display(flex);
+@include display(block);
+@include display(grid);
+
+@mixin position($p) {
+    .#{$p} {
+        position: $p;
+    }
+}
+
+@include position(absolute);
+@include position(relative);
+@include position(fixed);
+
+.top-0 {
+    top: 0px;
+}
+
+.bottom-0 {
+    bottom: 0px;
+}
+
+.left-0 {
+    left: 0px;
+}
+
+.right-0 {
+    right: 0px;
+}
+
+.z-1 {
+    z-index: 10;
+}
+
+.stack> :not(style)~ :not(style) {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+@mixin space-x($v) {
+    $multiplier: 4px;
+
+    .space-x-#{$v}> :not(style)~ :not(style) {
+        margin-left: $multiplier * $v;
+        margin-right: $multiplier * $v;
+    }
+}
+
+@include space-x(1);
+@include space-x(2);
+
+.border-danger {
+    border-color: rgb(241, 47, 47);
+}
+
+.outline-none {
+    outline: none;
+}
+
+.border {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.border-none {
+    border: none;
+}
+
+@mixin borderX($v) {
+    $multiplier: 1px;
+
+    .border-#{$v} {
+        border-width: $multiplier * $v;
+        border-style: solid;
+    }
+}
+
+@include borderX(1);
+@include borderX(2);
+@include borderX(3);
+@include borderX(4);
+
+.rounded {
+    border-radius: 10px;
+}
+
+.rounded-sm {
+    border-radius: 20px;
+}
+
+.rounded-md {
+    border-radius: 30px;
+}
+
+.rounded-lg {
+    border-radius: 40px;
+}
+
+.rounded-full {
+    border-radius: 100%;
+}
+
+
+.w-fit {
+    width: fit-content;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}

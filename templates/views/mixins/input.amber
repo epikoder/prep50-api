@@ -1,0 +1,27 @@
+mixin Input($name, $type)
+    input[name=$name][type=$type]
+
+mixin PasswordInput($model, $placeholder)
+    div
+    [x-data="{visible:false}"]
+    [:class="passwordValidator("+$model+") == null ? '':'border-danger'"]
+    .flex
+    .space-x-2
+    .px-2
+    .rounded-md
+    .border
+    .w-fit
+        input
+        [:type="visible ? 'text' : 'password'"]
+        [x-model=$model]
+        [placeholder=$placeholder]
+        .border-none
+        .outline-none
+        .ml-4
+        .py8
+
+        div[x-cloak][@click="visible = !visible"].my-auto
+            span[x-show="visible"].material-icons.text-icon visibility
+            span[x-show="!visible"].material-icons.text-icon visibility_off
+        
+        

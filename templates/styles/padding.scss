@@ -1,0 +1,92 @@
+@mixin spacing($v) {
+    $multiiplier: .25rem;
+
+    .p-#{$v} {
+        padding: $multiiplier * $v;
+    }
+
+    .pl-#{$v} {
+        padding-left: $multiiplier * $v;
+    }
+
+    .pr-#{$v} {
+        padding-right: $multiiplier * $v;
+    }
+
+    .pt-#{$v} {
+        padding-top: $multiiplier * $v;
+    }
+
+    .pb-#{$v} {
+        padding-bottom: $multiiplier * $v;
+    }
+
+    .px-#{$v} {
+        padding: 0px $multiiplier * $v;
+    }
+
+    .py-#{$v} {
+        padding: $multiiplier * $v 0px;
+    }
+
+    .m-#{$v} {
+        margin: $multiiplier * $v;
+    }
+
+    .ml-#{$v} {
+        margin-left: $multiiplier * $v;
+    }
+
+    .mr-#{$v} {
+        margin-right: $multiiplier * $v;
+    }
+
+    .mt-#{$v} {
+        margin-top: $multiiplier * $v;
+    }
+
+    .mb-#{$v} {
+        margin-bottom: $multiiplier * $v;
+    }
+
+    .mx-#{$v} {
+        margin: 0px $multiiplier * $v;
+    }
+
+    .my-#{$v} {
+        margin: $multiiplier * $v 0px;
+    }
+}
+
+.my-auto {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.m-auto {
+    margin: auto
+}
+
+.m-0 {
+    margin: 0px !important;
+}
+
+@include spacing(1);
+@include spacing(2);
+@include spacing(3);
+@include spacing(4);
+@include spacing(6);
+@include spacing(8);
+@include spacing(12);
+@include spacing(14);
+@include spacing(16);
+@include spacing(18);
+
+.py8 {
+    padding: 8px 0px;
+}

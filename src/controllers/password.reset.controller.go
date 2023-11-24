@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
@@ -16,9 +18,15 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
-type PasswordResetController struct {
-	Ctx iris.Context
-}
+type (
+	UserToken struct {
+		Time time.Time
+		V    string
+	}
+	PasswordResetController struct {
+		Ctx iris.Context
+	}
+)
 
 func (c *PasswordResetController) Get() {
 	_token, err := crypto.Aes256Decode(c.Ctx.URLParam("token"))
@@ -29,11 +37,13 @@ func (c *PasswordResetController) Get() {
 		return
 	}
 	token := sendmail.VerificationToken{}
-	if err := json.Unmarshal([]byte(_token), &token); !logger.HandleError(err) {
-		c.Ctx.View("password_reset", iris.Map{
-			"message": "Invalid/Expired Link",
-		})
-		return
+	{
+		if err := json.Unmarshal([]byte(_token), &token); !logger.HandleError(err) {
+			c.Ctx.View("password_reset", iris.Map{
+				"message": "Invalid/Expired Link",
+			})
+			return
+		}
 	}
 
 	if token.Expires.Before(time.Now()) {
@@ -44,12 +54,37 @@ func (c *PasswordResetController) Get() {
 	}
 
 	user := &models.User{}
-	if ok := repository.NewRepository(user).FindOne("email = ?", token.Email); !ok {
-		return
+	{
+		if ok := repository.NewRepository(user).FindOne("email = ?", token.Email); !ok {
+			c.Ctx.View("password_reset", iris.Map{
+				"message": "User not found",
+			})
+			return
+		}
+	}
+	var t string
+	{
+		v := UserToken{
+			Time: time.Now().Add(time.Minute * 20),
+			V:    user.Id.String(),
+		}
+		b, err := json.Marshal(v)
+		if err != nil {
+			c.Ctx.View("password_reset", iris.Map{
+				"message": "Something went wrong",
+			})
+		}
+		if t, err = crypto.Aes256Encode(string(b)); err != nil {
+			c.Ctx.View("password_reset", iris.Map{
+				"message": "User Error",
+			})
+			return
+		}
 	}
 	c.Ctx.View("password_reset", iris.Map{
 		"message": "Create new password",
 		"user":    user,
+		"token":   t,
 	})
 }
 
@@ -103,4 +138,69 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 		"status":  "success",
 		"message": "We just sent you an email so you can create a new password for your account and get back to your fun studies.",
 	})
+}
+
+type Password struct {
+	Password string `validate:"required"`
+	Token    string `validate:"required"`
+}
+
+func (c *PasswordResetController) Put(psr Password) {
+	user := &models.User{}
+	{
+		v, err := crypto.Aes256Decode(psr.Token)
+		if err != nil {
+			c.Ctx.JSON(apiResponse{
+				"message": "Invalid Token",
+				"status":  "failed",
+			})
+			return
+		}
+		token := &UserToken{}
+		if err = json.Unmarshal([]byte(v), token); err != nil || token.Time.Before(time.Now()) {
+			c.Ctx.JSON(apiResponse{
+				"message": "Invalid Token",
+				"status":  "failed",
+			})
+			return
+		}
+
+		if ok := repository.NewRepository(user).FindOne("id = ?", token.V); !ok {
+			c.Ctx.JSON(apiResponse{
+				"message": "User not found",
+				"status":  "failed",
+			})
+			return
+		}
+	}
+
+	reg := regexp.MustCompile("^[a-zA-Z0-9!@#$&'*+?^_-]+$")
+	if len(psr.Password) < 6 || !reg.Match([]byte(psr.Password)) {
+		c.Ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "User not found",
+			"user":    user,
+			"token":   psr.Token,
+		})
+		return
+	}
+
+	var err error
+	if user.Password, err = hash.MakeHash(psr.Password); err != nil {
+		c.Ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Something went wrong",
+		})
+		return
+	}
+	if err = database.UseDB("app").Save(user).Error; err != nil {
+		c.Ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Something went wrong",
+		})
+		return
+	}
+
+	c.Ctx.StatusCode(http.StatusAccepted)
+	c.Ctx.View("password_reset_success")
 }

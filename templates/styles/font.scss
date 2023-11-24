@@ -1,0 +1,26 @@
+$red-500: rgb(235, 11, 11);
+$green-500: #1cbe5a;
+
+.text-xxs {
+    font-size:  xx-small;
+}
+.text-xl {
+    font-size:  x-large;
+}
+.text-icon {
+    font-size: 20px;
+}
+.text-sm {
+    font-size: small;
+}
+.italic {
+    font-style: italic;
+}
+
+
+.text-red {
+    color: $red-500;
+}
+.text-green-500 {
+    color: $green-500;
+}
