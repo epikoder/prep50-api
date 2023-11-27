@@ -2,7 +2,7 @@ package settings
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -24,17 +24,16 @@ func SeedSettings() {
 
 	path = "settings.yml"
 	var file *os.File
-	defer func() {
-		if file != nil {
-			file.Close()
-		}
-	}()
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
+	defer func() {
+		file.Close()
+	}()
+
 	var buf []byte
-	if buf, err = ioutil.ReadAll(file); !logger.HandleError(err) {
+	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
 	}
 	if err = yaml.Unmarshal(buf, &generalSettings); !logger.HandleError(err) {
@@ -46,11 +45,6 @@ func Update() {
 	var file *os.File
 	var err error
 
-	defer func() {
-		if file != nil {
-			file.Close()
-		}
-	}()
 	__DIR__, err := os.Getwd()
 	if !logger.HandleError(err) {
 		panic(err)
@@ -61,16 +55,20 @@ func Update() {
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
+	defer func() {
+		file.Close()
+	}()
+
 	var buf []byte
-	if buf, err = ioutil.ReadAll(file); !logger.HandleError(err) {
+	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
 	}
-	err = ioutil.WriteFile(fileBakPath, buf, os.ModePerm)
+	err = os.WriteFile(fileBakPath, buf, os.ModePerm)
 	logger.HandleError(err)
 	if buf, err = yaml.Marshal(&generalSettings); !logger.HandleError(err) {
 		panic(err)
 	}
-	ioutil.WriteFile(filePath, buf, os.ModePerm)
+	os.WriteFile(filePath, buf, os.ModePerm)
 }
 
 func Get(k string, d interface{}) (v interface{}) {

@@ -2,6 +2,7 @@ package payment
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/epikoder/paystack-go"
@@ -17,7 +18,7 @@ func newIPaystack() *ipaystack {
 	mode := settings.GetString("paystack.mode", "live")
 
 	return &ipaystack{
-		Client: *paystack.NewClient(settings.GetString("paystack."+mode+".secretKey", ""), &http.Client{}),
+		Client: *paystack.NewClient(settings.GetString("paystack."+mode+".secretKey", os.Getenv("PAYSTACK_KEY")), &http.Client{}),
 	}
 }
 

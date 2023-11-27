@@ -1,6 +1,6 @@
 exam.session: 2023
 qquiz.questions: 60
-paystack.mode: "sandbox"
+paystack.mode: "live"
 paystack.live.secretKey: ""
 paystack.live.publicKey: ""
 paystack.sandbox.secretKey: "sk_test_26564ae24578cddeb710f465d89d125c9bdfe4f7"
