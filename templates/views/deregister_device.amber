@@ -2,7 +2,7 @@ extends layouts/app
 
 block content
     div[x-data="state"]#app
-        h2.text-center Manage Device
+        h2.text-center Deregister Device
         div
             .text-center
             .text-red
