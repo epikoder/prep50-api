@@ -42,7 +42,6 @@ func Set(key string, val interface{}, expires time.Duration) error {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Set(ctx, key, val, expires).Result()
-	logger.HandleError(err)
 	return err
 }
 
@@ -50,7 +49,6 @@ func Get(key string) (string, bool) {
 	ctx := context.Background()
 	defer ctx.Done()
 	s, err := _redis.Get(ctx, key).Result()
-	logger.HandleError(err)
 	return s, err == nil
 }
 
@@ -74,7 +72,9 @@ func Exist(key string) bool {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Get(ctx, key).Result()
-	logger.HandleError(err)
+	if err != nil {
+		logger.HandleError(err)
+	}
 	return err != redis.Nil
 }
 
@@ -82,7 +82,9 @@ func Forget(key string) error {
 	ctx := context.Background()
 	defer ctx.Done()
 	_, err := _redis.Del(ctx, key).Result()
-	logger.HandleError(err)
+	if err != nil {
+		logger.HandleError(err)
+	}
 	return err
 }
 

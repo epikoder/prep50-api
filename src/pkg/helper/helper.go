@@ -2,7 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"mime/multipart"
 	"os"
 	"strings"
@@ -15,7 +15,7 @@ import (
 
 func SaveTempImage(f multipart.File) (s string, err error) {
 	defer f.Close()
-	buf, err := ioutil.ReadAll(f)
+	buf, err := io.ReadAll(f)
 	if err != nil {
 		return
 	}
@@ -31,7 +31,7 @@ func SaveTempImage(f multipart.File) (s string, err error) {
 
 func SaveTempVideo(f multipart.File) (s string, err error) {
 	defer f.Close()
-	buf, err := ioutil.ReadAll(f)
+	buf, err := io.ReadAll(f)
 	if err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func SaveTempVideo(f multipart.File) (s string, err error) {
 	if err != nil {
 		return
 	}
-	err = ioutil.WriteFile(file.Name(), buf, os.ModeAppend)
+	err = os.WriteFile(file.Name(), buf, os.ModeAppend)
 	if err != nil {
 		return
 	}
@@ -59,11 +59,11 @@ func CopyTempFile(path, name string) error {
 		os.Remove(f.Name())
 	}()
 	var buf []byte
-	buf, err = ioutil.ReadAll(f)
+	buf, err = io.ReadAll(f)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, buf, os.ModePerm)
+	return os.WriteFile(path, buf, os.ModePerm)
 }
 
 func CopyTempFilePreserve(path, name string) (f *os.File, err error) {
@@ -72,11 +72,11 @@ func CopyTempFilePreserve(path, name string) (f *os.File, err error) {
 		return
 	}
 	var buf []byte
-	buf, err = ioutil.ReadAll(f)
+	buf, err = io.ReadAll(f)
 	if err != nil {
 		return
 	}
-	return f, ioutil.WriteFile(path, buf, os.ModePerm)
+	return f, os.WriteFile(path, buf, os.ModePerm)
 }
 
 func ConvertImage(buf []byte, prefix string) (file *os.File, err error) {
@@ -88,7 +88,7 @@ func ConvertImage(buf []byte, prefix string) (file *os.File, err error) {
 	if err != nil {
 		return
 	}
-	err = ioutil.WriteFile(file.Name(), buf, os.ModeAppend)
+	err = os.WriteFile(file.Name(), buf, os.ModeAppend)
 	if err != nil {
 		return
 	}

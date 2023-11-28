@@ -116,15 +116,11 @@ func init() {
 	}
 
 	var file *os.File
-	defer func() {
-		if file != nil {
-			file.Close()
-		}
-	}()
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
+	defer file.Close()
 	var buf []byte
 	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
@@ -154,11 +150,6 @@ func Update() {
 	var file *os.File
 	var err error
 
-	defer func() {
-		if file != nil {
-			file.Close()
-		}
-	}()
 	__DIR__, err := os.Getwd()
 	if !logger.HandleError(err) {
 		panic(err)
@@ -169,6 +160,7 @@ func Update() {
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
+	defer file.Close()
 	var buf []byte
 	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
 		panic(err)
