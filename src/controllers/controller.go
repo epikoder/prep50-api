@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
@@ -39,6 +42,54 @@ var (
 		return u, nil
 	}
 )
+
+func DeregisterDevice(ctx iris.Context) {
+	mp := struct {
+		Token string `validate:"required"`
+	}{}
+	if err := ctx.ReadQuery(&mp); !logger.HandleError(err) {
+		ctx.View("deregister_device", iris.Map{
+			"message": "Malformed token",
+			"status":  false,
+		})
+		return
+	}
+
+	if err := validateMailToken(mp.Token); !logger.HandleError(err) {
+		ctx.View("deregister_device", iris.Map{
+			"message": err.Error(),
+			"status":  false,
+		})
+		return
+	}
+	ctx.View("deregister_device", iris.Map{
+		"message": "Device deregistered successfully",
+		"status":  true,
+	})
+}
+
+func validateMailToken(k string) error {
+	token, ok := cache.Get(k)
+	if !ok {
+		return fmt.Errorf("malformed token")
+	}
+	m := &NewDeviceMail{}
+	if err := json.Unmarshal([]byte(token), m); err != nil {
+		return fmt.Errorf("malformed token")
+	}
+
+	if time.Now().After(m.Expires) {
+		return fmt.Errorf("token expired")
+	}
+	if err := database.UseDB("app").
+		Raw("DELETE from devices WHERE identifier = ? AND user_id = ?", m.DeviceId, m.UserId).
+		Error; !logger.HandleError(err) {
+		return fmt.Errorf("something went wrong")
+	}
+	cache.Forget(m.Username + ".access")
+	cache.Forget(m.Username + ".refresh")
+	return nil
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 

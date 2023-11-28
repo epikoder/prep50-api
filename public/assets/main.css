@@ -588,6 +588,10 @@
   font-size: x-large;
 }
 
+.text-lg {
+  font-size: large;
+}
+
 .text-icon {
   font-size: 20px;
 }
@@ -606,6 +610,10 @@
 
 .text-green-500 {
   color: #1cbe5a;
+}
+
+.capitalize {
+  text-transform: capitalize;
 }
 
 body {

@@ -7,6 +7,9 @@ $green-500: #1cbe5a;
 .text-xl {
     font-size:  x-large;
 }
+.text-lg {
+    font-size:  large;
+}
 .text-icon {
     font-size: 20px;
 }
@@ -23,4 +26,8 @@ $green-500: #1cbe5a;
 }
 .text-green-500 {
     color: $green-500;
+}
+
+.capitalize {
+    text-transform: capitalize;
 }

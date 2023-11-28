@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -155,6 +156,73 @@ type (
 	}
 )
 
+type NewDeviceMail struct {
+	DeviceId   string
+	DeviceName string
+	Username   string
+	UserId     string
+	Expires    time.Time
+}
+
+func creeteDeviceMail(userId, username, dId, dName string, expires time.Time) (id string, err error) {
+	b, err := json.Marshal(NewDeviceMail{
+		DeviceId:   dId,
+		DeviceName: dName,
+		Username:   username,
+		Expires:    expires,
+		UserId:     userId,
+	})
+	if err != nil {
+		return
+	}
+	id = uuid.New().String()
+	err = cache.Set(id, string(b), cache.Duration(expires.Unix()))
+	if err != nil {
+		return
+	}
+	return
+}
+
+var deviceExistError = apiResponse{
+	"status":  "failed",
+	"code":    401,
+	"message": "This device is currently registered to another user",
+}
+
+func deviceExist(ctx iris.Context, userId uuid.UUID, deviceId string) (err error) {
+	dev := &struct {
+		Identifier string
+		Name       string
+		models.User
+	}{}
+	if err = database.UseDB("app").
+		Table("users as u").
+		Select("u.*, d.name, d.identifier").
+		Joins("LEFT JOIN devices as d ON u.id = d.user_id").
+		First(&dev, "identifier = ?", deviceId).Error; err == nil && dev.Id != userId {
+
+		var i string
+		var err error
+		if i, err = creeteDeviceMail(dev.Id.String(),
+			dev.UserName,
+			dev.Identifier,
+			dev.Name,
+			time.Now().Add(time.Minute*10)); err != nil {
+			ctx.StatusCode(http.StatusInternalServerError)
+			ctx.JSON(internalServerError)
+			return err
+		}
+		queue.Dispatch(queue.Job{
+			Type: queue.SendMail,
+			Func: func() error {
+				return sendmail.SendNewDeviceMail(&dev.User, i)
+			},
+		})
+		return fmt.Errorf("device exist")
+	}
+	return nil
+}
+
 func LoginV1(ctx iris.Context) {
 	data := UserDeviceLoginForm{}
 	if err := ctx.ReadJSON(&data); !logger.HandleError(err) {
@@ -232,21 +300,9 @@ func LoginV1(ctx iris.Context) {
 
 	{
 		if user.Device.Id == uuid.Nil {
-			device := &models.Device{}
-			if ok := repository.NewRepository(device).FindOne("identifier = ?", data.DeviceId); ok && device.UserID != user.Id {
-				queue.Dispatch(queue.Job{
-					Type: queue.SendMail,
-					Func: func() error {
-						return sendmail.SendNewLoginMail(user)
-					},
-				})
-
+			if err := deviceExist(ctx, user.Id, data.DeviceId); err != nil {
 				ctx.StatusCode(http.StatusForbidden)
-				ctx.JSON(apiResponse{
-					"status":  "failed",
-					"code":    401,
-					"message": "This device is currently registered to another user",
-				})
+				ctx.JSON(deviceExistError)
 				return
 			}
 			user.Device = models.Device{
@@ -264,10 +320,21 @@ func LoginV1(ctx iris.Context) {
 		} else if len(strings.TrimSpace(user.Device.Identifier)) > 0 && (user.Device.Identifier != data.DeviceId ||
 			!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName)))) {
 
+			var i string
+			var err error
+			if i, err = creeteDeviceMail(user.Id.String(),
+				user.UserName,
+				user.Device.Identifier,
+				user.Device.Name,
+				time.Now().Add(time.Minute*10)); err != nil {
+				ctx.StatusCode(http.StatusInternalServerError)
+				ctx.JSON(internalServerError)
+				return
+			}
 			queue.Dispatch(queue.Job{
 				Type: queue.SendMail,
 				Func: func() error {
-					return sendmail.SendNewDeviceMail(user)
+					return sendmail.SendNewDeviceMail(user, i)
 				},
 			})
 			ctx.StatusCode(http.StatusForbidden)
@@ -373,21 +440,9 @@ func SocialV1(ctx iris.Context) {
 
 		{
 			if user.Device.Id == uuid.Nil {
-				device := &models.Device{}
-				if ok := repository.NewRepository(device).FindOne("identifier = ?", data.DeviceId); ok && device.UserID != user.Id {
-					queue.Dispatch(queue.Job{
-						Type: queue.SendMail,
-						Func: func() error {
-							return sendmail.SendNewLoginMail(user)
-						},
-					})
-
+				if err := deviceExist(ctx, user.Id, data.DeviceId); err != nil {
 					ctx.StatusCode(http.StatusForbidden)
-					ctx.JSON(apiResponse{
-						"status":  "failed",
-						"code":    401,
-						"message": "This device is currently registered to another user",
-					})
+					ctx.JSON(deviceExistError)
 					return
 				}
 				user.Device = models.Device{
@@ -404,11 +459,21 @@ func SocialV1(ctx iris.Context) {
 				}
 			} else if len(strings.TrimSpace(user.Device.Identifier)) > 0 && (user.Device.Identifier != data.DeviceId ||
 				!strings.EqualFold(strings.TrimSpace(strings.ToLower(user.Device.Name)), strings.TrimSpace(strings.ToLower(data.DeviceName)))) {
-
+				var i string
+				var err error
+				if i, err = creeteDeviceMail(user.Id.String(),
+					user.UserName,
+					user.Device.Identifier,
+					user.Device.Name,
+					time.Now().Add(time.Minute*10)); err != nil {
+					ctx.StatusCode(http.StatusInternalServerError)
+					ctx.JSON(internalServerError)
+					return
+				}
 				queue.Dispatch(queue.Job{
 					Type: queue.SendMail,
 					Func: func() error {
-						return sendmail.SendNewDeviceMail(user)
+						return sendmail.SendNewDeviceMail(user, i)
 					},
 				})
 				ctx.StatusCode(http.StatusForbidden)
@@ -421,24 +486,9 @@ func SocialV1(ctx iris.Context) {
 			}
 		}
 	} else {
-		device := &models.Device{}
-		if ok := repository.NewRepository(device).FindOne("identifier = ?", data.DeviceId); ok {
-			u := &models.User{}
-			if ok := repository.NewRepository(u).FindOne("id = ?", device.UserID); ok {
-				queue.Dispatch(queue.Job{
-					Type: queue.SendMail,
-					Func: func() error {
-						return sendmail.SendNewLoginMail(u)
-					},
-				})
-			}
-
+		if err := deviceExist(ctx, user.Id, data.DeviceId); err != nil {
 			ctx.StatusCode(http.StatusForbidden)
-			ctx.JSON(apiResponse{
-				"status":  "failed",
-				"code":    401,
-				"message": "This device is currently registered to another user",
-			})
+			ctx.JSON(deviceExistError)
 			return
 		}
 

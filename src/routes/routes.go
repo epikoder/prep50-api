@@ -20,6 +20,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	app.HandleDir("storage", iris.Dir("./storage"), iris.DirOptions{Compress: true})
 
 	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
+	app.Get("/deregister-device", controllers.DeregisterDevice)
 	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
 	app.Post("/pay-init", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.InitializePayment)
 

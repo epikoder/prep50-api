@@ -12,8 +12,8 @@ const authenticate = async () => {
     body: JSON.stringify({
       user,
       password,
-      device_id: "a6b17bae-85f5-4e67-8cc1-cf21b308b97e",
-      device_name: "NrYDrQMtc1l0",
+      device_id: "a6b17bae-85f5-4e67-8cc1-cf21b308b97a",
+      device_name: "Samsung",
     }),
   });
   if (res.status === 200) {

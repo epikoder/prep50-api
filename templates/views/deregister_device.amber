@@ -1,0 +1,22 @@
+extends layouts/app
+
+block content
+    div[x-data="state"]#app
+        h2.text-center Manage Device
+        div
+            .text-center
+            .text-red
+            .font-bold
+            .p-8
+            .hidden ? status
+            .capitalize
+            .text-lg
+            |#{message}
+        
+        if status
+            div
+            .stack
+            .column
+            .mt-16
+                div.text-lg.text-green-500 Success
+                div Return to app to login
