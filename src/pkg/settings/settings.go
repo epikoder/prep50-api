@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/joho/godotenv"
@@ -15,6 +16,10 @@ var (
 	generalSettings map[string]interface{} = map[string]interface{}{}
 )
 
+func init() {
+	SeedSettings()
+}
+
 func SeedSettings() {
 	godotenv.Load()
 	__DIR__, err := os.Getwd()
@@ -25,12 +30,10 @@ func SeedSettings() {
 	path = "settings.yml"
 	var file *os.File
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
-		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
+		os.O_RDWR|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
-	defer func() {
-		file.Close()
-	}()
+	defer file.Close()
 
 	var buf []byte
 	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
@@ -52,12 +55,10 @@ func Update() {
 	filePath := fmt.Sprintf("%s/%s", __DIR__, path)
 	fileBakPath := filePath + ".bak"
 	if file, err = os.OpenFile(filePath,
-		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
+		os.O_RDWR|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
-	defer func() {
-		file.Close()
-	}()
+	defer file.Close()
 
 	var buf []byte
 	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
@@ -72,21 +73,26 @@ func Update() {
 }
 
 func Get(k string, d interface{}) (v interface{}) {
-	SeedSettings()
 	v, ok := generalSettings[k]
 	if !ok {
+		return d
+	}
+	if reflect.ValueOf(v).IsZero() {
 		return d
 	}
 	return
 }
 
 func GetString(k string, d string) (s string) {
-	SeedSettings()
 	v, ok := generalSettings[k]
 	if !ok {
 		return d
 	}
-	return v.(string)
+	s, ok = v.(string)
+	if !ok || len(s) == 0 {
+		return d
+	}
+	return
 }
 
 func Set(k string, v interface{}) {

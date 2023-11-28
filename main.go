@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/Prep50mobileApp/prep50-api/cmd/prep50"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
-	"github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
+	_ "github.com/Prep50mobileApp/prep50-api/src/pkg/settings"
 	"github.com/Prep50mobileApp/prep50-api/src/services/queue"
 )
 
@@ -17,7 +17,6 @@ func main() {
 	prep50.RegisterViews()
 	prep50.StartLogging()
 	ijwt.InitializeSigners()
-	settings.SeedSettings()
 	go queue.Run()
 	prep50.StartServer()
 }
