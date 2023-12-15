@@ -108,7 +108,7 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 			message := "Please use the social login"
 			{
 				provider := &struct{ Name string }{}
-				if err := database.UseDB("app").
+				if err := database.DB().
 					Table("providers as p").
 					Select("p.name").
 					Joins("LEFT JOIN user_providers as up ON up.provider_id = p.id").
@@ -193,7 +193,7 @@ func (c *PasswordResetController) Put(psr Password) {
 		})
 		return
 	}
-	if err = database.UseDB("app").Save(user).Error; err != nil {
+	if err = database.DB().Save(user).Error; err != nil {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "Something went wrong",

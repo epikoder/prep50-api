@@ -120,7 +120,7 @@ func (u *User) Tag() string {
 }
 
 func (u *User) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *User) Migrate() dbmodel.Migration {

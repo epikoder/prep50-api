@@ -27,7 +27,7 @@ func SendNotifications(n *messaging.Notification, fcmTokens ...string) (err erro
 
 	if len(fcmTokens) == 0 {
 		fcms := []models.Fcm{}
-		database.UseDB("app").Find(&fcms)
+		database.DB().Find(&fcms)
 		for _, v := range fcms {
 			fcmTokens = append(fcmTokens, v.Token)
 		}

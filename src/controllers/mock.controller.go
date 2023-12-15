@@ -22,7 +22,7 @@ func (c *MockController) Get() {
 		Available  bool `json:"available"`
 		Registered bool `json:"registered"`
 	}{}
-	if notFound := database.UseDB("app").Table("mocks as m").
+	if notFound := database.DB().Table("mocks as m").
 		Select(`m.*, 
 		CASE 
 			WHEN um.user_id = ? THEN 1 
@@ -64,7 +64,7 @@ func (c *MockController) Post() {
 		models.Mock
 		Registered bool `json:"registered"`
 	}{}
-	tx := database.UseDB("app").Table("mocks as m").
+	tx := database.DB().Table("mocks as m").
 		Select(`m.*, 
 	CASE 
 		WHEN um.user_id = ? THEN 1 
@@ -111,7 +111,7 @@ func (c *MockController) Post() {
 		ids = append(ids, q.QuestionId)
 	}
 	ques := []models.Question{}
-	err = database.UseDB("core").Find(&ques, "id IN ? AND subject_id IN ? ORDER BY RAND()", ids, data.Subject).Error
+	err = database.DB().Find(&ques, "id IN ? AND subject_id IN ? ORDER BY RAND()", ids, data.Subject).Error
 	if err != nil {
 		c.Ctx.StatusCode(500)
 		c.Ctx.JSON(internalServerError)

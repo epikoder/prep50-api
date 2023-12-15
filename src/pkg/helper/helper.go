@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/h2non/bimg"
 	"github.com/kataras/iris/v12"

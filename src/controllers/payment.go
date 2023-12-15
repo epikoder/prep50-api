@@ -62,7 +62,7 @@ func _savePayment(exam models.Exam, us *models.UserExam) error {
 	} else {
 		us.ExpiresAt = sql.NullTime{Time: us.CreatedAt, Valid: true}
 	}
-	return database.UseDB("app").Save(us).Error
+	return database.DB().Save(us).Error
 }
 
 func VerifyPayment(ctx iris.Context) {
@@ -103,7 +103,7 @@ func VerifyPayment(ctx iris.Context) {
 				})
 				return
 			}
-			if err := database.UseDB("app").First(&tx, "reference = ?", data.Reference).Error; err == nil {
+			if err := database.DB().First(&tx, "reference = ?", data.Reference).Error; err == nil {
 				ctx.JSON(apiResponse{
 					"status":  "failed",
 					"message": "Duplicate transaction",
@@ -135,7 +135,7 @@ func VerifyPayment(ctx iris.Context) {
 		{
 			us := &models.UserExam{}
 			exam := models.Exam{}
-			if notFound := database.UseDB("app").First(&exam, "name = ? AND status = 1", item).Error != nil; notFound {
+			if notFound := database.DB().First(&exam, "name = ? AND status = 1", item).Error != nil; notFound {
 				ctx.JSON(apiResponse{
 					"status":  "failed",
 					"message": "Selected exam not found",
@@ -150,7 +150,7 @@ func VerifyPayment(ctx iris.Context) {
 				return
 			}
 
-			if notFound := database.UseDB("app").Table("user_exams as ue").
+			if notFound := database.DB().Table("user_exams as ue").
 				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 				First(us, "e.name = ? AND ue.user_id = ?", item, user.Id).Error != nil; notFound {
 
@@ -176,7 +176,7 @@ func VerifyPayment(ctx iris.Context) {
 		}
 	case "both":
 		exams := []models.Exam{}
-		database.UseDB("app").Find(&exams, "name = ? OR name = ?", "waec", "jamb")
+		database.DB().Find(&exams, "name = ? OR name = ?", "waec", "jamb")
 		bothExam := models.Exam{
 			Amount: 0,
 		}
@@ -193,7 +193,7 @@ func VerifyPayment(ctx iris.Context) {
 
 		for _, exam := range exams {
 			us := &models.UserExam{}
-			if err := database.UseDB("app").Table("user_exams as ue").
+			if err := database.DB().Table("user_exams as ue").
 				Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 				First(&us, "e.name = ? AND ue.user_id = ?", exam.Name, user.Id).Error; err != nil {
 
@@ -221,7 +221,7 @@ func VerifyPayment(ctx iris.Context) {
 	case "mock":
 		{
 			m := models.Mock{}
-			if err := database.UseDB("app").First(&m, `
+			if err := database.DB().First(&m, `
 			id = ? AND session = ? AND start_time > ?
 			`, data.Id, session, time.Now()).Error; err != nil {
 				ctx.JSON(apiResponse{
@@ -245,7 +245,7 @@ func VerifyPayment(ctx iris.Context) {
 			}
 		}
 	}
-	if err := database.UseDB("app").Create(&tx).Error; err != nil {
+	if err := database.DB().Create(&tx).Error; err != nil {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return

@@ -56,7 +56,7 @@ func (u *Mock) Tag() string {
 }
 
 func (p *Mock) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *Mock) Migrate() dbmodel.Migration {
@@ -72,7 +72,7 @@ func (m *MockQuestion) Tag() string {
 }
 
 func (m *MockQuestion) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *MockQuestion) Migrate() dbmodel.Migration {
@@ -95,6 +95,6 @@ func (m *Mock) Questions() (q []Question, err error) {
 	for _, q := range wq {
 		ids = append(ids, q.QuestionId)
 	}
-	err = database.UseDB("core").Find(&q, "id IN ?", ids).Error
+	err = database.DB().Find(&q, "id IN ?", ids).Error
 	return
 }

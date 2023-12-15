@@ -14,7 +14,7 @@ import (
 type (
 	conf struct {
 		App      app
-		Database database
+		Database dbConnection
 		Throttle throttle
 		Aes      aes
 		Cors     cors
@@ -38,10 +38,6 @@ type (
 		Origins          []string
 		Headers          string
 		AllowCredentials string `yaml:"allowCredentials"`
-	}
-	database struct {
-		Core dbConnection
-		App  dbConnection
 	}
 	dbConnection struct {
 		Url      string
@@ -96,13 +92,6 @@ func (m MailUserName) ToUserName() string {
 	return v
 }
 
-func (db database) UseDB(s string) dbConnection {
-	if s == "core" {
-		return db.Core
-	}
-	return db.App
-}
-
 func init() {
 	godotenv.Load()
 	__DIR__, err := os.Getwd()
@@ -129,15 +118,9 @@ func init() {
 		panic(err)
 	}
 
-	if len(Conf.Database.App.Url) == 0 {
-		if len(Conf.Database.App.Password) == 0 {
-			Conf.Database.App.Password = os.Getenv("DB_APP_PASSWORD")
-		}
-	}
-
-	if len(Conf.Database.Core.Url) == 0 {
-		if len(Conf.Database.Core.Password) == 0 {
-			Conf.Database.Core.Password = os.Getenv("DB_CORE_PASSWORD")
+	if len(Conf.Database.Url) == 0 {
+		if len(Conf.Database.Password) == 0 {
+			Conf.Database.Password = os.Getenv("DB_PASSWORD")
 		}
 	}
 

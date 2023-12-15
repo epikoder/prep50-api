@@ -33,10 +33,13 @@ func RegisterApiRoutes(app *iris.Application) {
 		switch ctx.Method() {
 		case "POST":
 			controllers.NewsFeedInteract(ctx)
+			return
 		case "GET":
 			controllers.NewsFeedView(ctx)
+			return
 		case "PUT":
 			controllers.NewsFeedInteractUpdateComment(ctx)
+			return
 		default:
 			ctx.StatusCode(405)
 		}

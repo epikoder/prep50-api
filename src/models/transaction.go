@@ -34,7 +34,7 @@ func (t *Transaction) Tag() string {
 }
 
 func (t *Transaction) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (t *Transaction) Migrate() dbmodel.Migration {

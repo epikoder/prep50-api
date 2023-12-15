@@ -40,7 +40,7 @@ func (s *Subject) Tag() string {
 }
 
 func (*Subject) Database() *gorm.DB {
-	return database.UseDB("core")
+	return database.DB()
 }
 
 func (s *Subject) Migrate() dbmodel.Migration {
@@ -56,7 +56,7 @@ func (u *UserSubject) Tag() string {
 }
 
 func (u *UserSubject) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *UserSubject) Migrate() dbmodel.Migration {

@@ -62,7 +62,7 @@ func CreatePodcast(ctx iris.Context) {
 	topic := &models.Topic{}
 	{
 		fmt.Println(data.Topic)
-		if err := database.UseDB("core").First(topic, "id = ?", data.Topic).Error; err != nil {
+		if err := database.DB().First(topic, "id = ?", data.Topic).Error; err != nil {
 			ctx.StatusCode(http.StatusInternalServerError)
 			ctx.JSON(apiResponse{
 				"status":  "failed",

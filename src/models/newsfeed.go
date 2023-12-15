@@ -85,7 +85,7 @@ func (m *Newsfeed) Tag() string {
 }
 
 func (m *Newsfeed) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *Newsfeed) Migrate() dbmodel.Migration {
@@ -101,7 +101,7 @@ func (m *NewsfeedComment) Tag() string {
 }
 
 func (m *NewsfeedComment) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *NewsfeedComment) Migrate() dbmodel.Migration {

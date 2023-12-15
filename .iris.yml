@@ -43,6 +43,7 @@ LiveReload:
 Files:
     - ./
 BuildFiles:
-    - bin/prep50
+    - public/assets/validator.js
     - bin/prep50_ctl
+    - bin/prep50
 MD5PackageJSON: []

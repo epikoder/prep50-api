@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
 	mail "github.com/xhit/go-simple-mail/v2"
 )

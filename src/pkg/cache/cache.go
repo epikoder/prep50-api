@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/go-redis/redis/v8"
 )

@@ -25,7 +25,7 @@ func (*Fcm) Tag() string {
 }
 
 func (*Fcm) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (n *Fcm) Migrate() dbmodel.Migration {

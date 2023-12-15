@@ -81,7 +81,7 @@ func validateMailToken(k string) error {
 	if time.Now().After(m.Expires) {
 		return fmt.Errorf("token expired")
 	}
-	if err := database.UseDB("app").
+	if err := database.DB().
 		Raw("DELETE from devices WHERE identifier = ? AND user_id = ?", m.DeviceId, m.UserId).
 		Error; !logger.HandleError(err) {
 		return fmt.Errorf("something went wrong")
@@ -95,7 +95,7 @@ func validateMailToken(k string) error {
 
 func Terms(ctx iris.Context) {
 	st := &models.GeneralSetting{}
-	database.UseDB("app").First(st)
+	database.DB().First(st)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   st.Terms,
@@ -103,7 +103,7 @@ func Terms(ctx iris.Context) {
 }
 func Privacy(ctx iris.Context) {
 	st := &models.GeneralSetting{}
-	database.UseDB("app").First(st)
+	database.DB().First(st)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   st.Privacy,

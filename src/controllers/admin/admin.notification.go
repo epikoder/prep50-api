@@ -22,7 +22,7 @@ func (c *AdminNotificationController) Post() {
 		c.Ctx.JSON(validation.Errors(err))
 		return
 	}
-	database.UseDB("app").Create(&models.Notification{
+	database.DB().Create(&models.Notification{
 		Id:       uuid.New(),
 		UserId:   data.UserId,
 		Title:    data.Title,

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
@@ -22,7 +22,7 @@ func GetCurrentWeekQuiz(ctx iris.Context) {
 	quiz := &models.WeeklyQuiz{}
 	year, week := time.Now().ISOWeek()
 	if ok := repository.NewRepository(quiz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
 	}).
 		FindOne("week = ? AND session = ?", week, settings.Get("exam.session", year)); !ok {
 		ctx.StatusCode(404)
@@ -55,7 +55,7 @@ func IndexWeeklyQuiz(ctx iris.Context) {
 func ViewWeeklyQuizQuestions(ctx iris.Context) {
 	quizz := &models.WeeklyQuiz{}
 	if ok := repository.NewRepository(quizz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
 	}).
 		FindOne("id = ?", ctx.URLParam("id")); !ok {
 		ctx.JSON(apiResponse{

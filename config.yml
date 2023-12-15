@@ -6,20 +6,12 @@ app:
   version: "1"
   defaultApiVersion: 1.0.0
 database:
-  core:
-    url:
-    name: "prep50"
-    user: root
-    host: 142.93.96.13
-    port: 3308
-    password:
-  app:
-    url:
-    name: "prep50_app"
-    user: root
-    host: 142.93.96.13
-    port: 3308
-    password:
+  url:
+  name: prep50
+  user: root
+  host:
+  port:
+  password:
 throttle:
   limit: 20
   burst: 5

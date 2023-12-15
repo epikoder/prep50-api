@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
@@ -84,7 +84,7 @@ func (c *WeeklyQuizController) Post() {
 	session := settings.Get("exam.session", year)
 	quiz := &models.WeeklyQuiz{}
 	if ok := repository.NewRepository(quiz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
 	}).FindOne("week = ? AND session = ?", week, session); !ok {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
@@ -123,7 +123,7 @@ SKIP:
 	}
 	{
 		result := &models.WeeklyQuizResult{}
-		if err := database.UseDB("app").First(result, "user_id = ? AND weekly_quiz_id = ?", user.Id, quiz.Id).Error; err == nil {
+		if err := database.DB().First(result, "user_id = ? AND weekly_quiz_id = ?", user.Id, quiz.Id).Error; err == nil {
 			c.Ctx.JSON(apiResponse{
 				"Status":  "success",
 				"message": "Congratulations on completing the weekly quiz",
@@ -148,7 +148,7 @@ SKIP:
 		}
 	}
 
-	if err := database.UseDB("app").Create(models.WeeklyQuizResult{
+	if err := database.DB().Create(models.WeeklyQuizResult{
 		WeeklyQuizId: quiz.Id,
 		UserId:       user.Id,
 		Score:        score,
@@ -205,7 +205,7 @@ func LeaderBoard(ctx iris.Context) {
 	}
 
 	results := []Result{}
-	if err := database.UseDB("app").
+	if err := database.DB().
 		Order("score DESC").
 		Table("weekly_quiz_results as wr").
 		Select("wr.score, u.username, u.email, u.photo").

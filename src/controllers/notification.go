@@ -31,7 +31,7 @@ func (c *NotificationController) Post() {
 		return
 	}
 	user, _ := getUser(c.Ctx)
-	database.UseDB("app").Preload("Fcm").First(user)
+	database.DB().Preload("Fcm").First(user)
 	if user.Fcm.Id == uuid.Nil {
 		user.Fcm.Id = uuid.New()
 		user.Fcm.UserId = user.Id
@@ -56,7 +56,7 @@ func (c *NotificationController) Get() {
 		User bool `json:"user"`
 	}{}
 	user, _ := getUser(c.Ctx)
-	database.UseDB("app").Table("notifications as n").Select(`n.*,
+	database.DB().Table("notifications as n").Select(`n.*,
 	CASE 
 		WHEN user_id = ? 
 		THEN 1
@@ -78,7 +78,7 @@ func (c *NotificationController) Put(data models.Notification) {
 	}
 
 	user, _ := getUser(c.Ctx)
-	database.UseDB("app").Create(&models.Notification{
+	database.DB().Create(&models.Notification{
 		Id:       uuid.New(),
 		UserId:   user.Id,
 		Title:    data.Title,

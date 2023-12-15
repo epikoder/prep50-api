@@ -23,7 +23,7 @@ func (u *Provider) Tag() string {
 }
 
 func (p *Provider) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *Provider) Migrate() dbmodel.Migration {

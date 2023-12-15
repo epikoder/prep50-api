@@ -38,7 +38,7 @@ func (u *Role) Tag() string {
 }
 
 func (u *Role) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *Role) Migrate() dbmodel.Migration {
@@ -70,7 +70,7 @@ func (u *Permission) Tag() string {
 }
 
 func (u *Permission) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *Permission) Migrate() dbmodel.Migration {

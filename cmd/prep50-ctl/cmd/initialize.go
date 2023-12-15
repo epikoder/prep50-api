@@ -85,7 +85,7 @@ func initializeExams(cmd *cobra.Command, args []string) {
 		if ok := repository.NewRepository(exam).FindOne("name = ?", v.Name); !ok {
 			if err := repository.NewRepository(&v).Create(); !logger.HandleError(err) {
 				fmt.Println(color.Red, err, color.Reset)
-				panic(1)
+				os.Exit(1)
 			}
 		}
 	}
@@ -104,7 +104,7 @@ func initializeAuthenticationProvider(cmd *cobra.Command, args []string) {
 		if ok := repository.NewRepository(provider).FindOne("name = ?", v.Name); !ok {
 			if err := repository.NewRepository(&v).Create(); !logger.HandleError(err) {
 				fmt.Println(color.Red, err, color.Reset)
-				panic(1)
+				os.Exit(1)
 			}
 		}
 	}
@@ -127,7 +127,7 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 		permission.Name = "*.*"
 		if err := repository.NewRepository(permission).Create(); err != nil {
 			fmt.Println(color.Red, err, color.Reset)
-			panic(1)
+			os.Exit(1)
 		}
 	}
 	if ok := repository.NewRepository(role).Preload("Permissions").FindOne("name = ?", "super-admin"); !ok {
@@ -135,17 +135,17 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 		role.Name = "super-admin"
 		if err := repository.NewRepository(role).Create(); err != nil {
 			fmt.Println(color.Red, err, color.Reset)
-			panic(1)
+			os.Exit(1)
 		}
 	}
 	if !list.Contains(role.Permissions, *permission) {
 		role.Permissions = append(role.Permissions, *permission)
-		if err := database.UseDB("app").Create(&models.RolePermission{
+		if err := database.DB().Create(&models.RolePermission{
 			RoleId:       role.Id,
 			PermissionId: permission.Id,
 		}).Error; err != nil {
 			fmt.Println(color.Red, err, color.Reset)
-			panic(1)
+			os.Exit(1)
 		}
 	}
 
@@ -168,6 +168,10 @@ func _createAdmin(cmd *cobra.Command, role *models.Role) (user *models.User, err
 		username = os.Getenv("SETUP_USERNAME")
 		phone = os.Getenv("SETUP_PHONE")
 		password = os.Getenv("SETUP_PASSWORD")
+		if len(email) == 0 || len(username) == 0 || len(password) == 0 {
+			fmt.Println("Ensure env values: SETUP_EMAIL, SETUP_USERNAME and SETUP_PASSWORD is not empty")
+			os.Exit(1)
+		}
 	} else {
 		fmt.Println(color.Green)
 		fmt.Println("Hello there!, Welcome to Prep50 Setup Utility.")
@@ -234,17 +238,18 @@ func _createAdmin(cmd *cobra.Command, role *models.Role) (user *models.User, err
 		Email:    email,
 		Phone:    phone,
 		Password: p,
+		IsAdmin:  true,
 	}
 	if err = repository.NewRepository(user).Create(); err != nil {
 		fmt.Println(color.Red, err, color.Reset)
-		panic(1)
+		os.Exit(1)
 	}
-	if err = database.UseDB("app").Create(models.UserRole{
+	if err = database.DB().Create(models.UserRole{
 		UserId: user.Id,
 		RoleId: role.Id,
 	}).Error; err != nil {
 		fmt.Println(color.Red, err, color.Reset)
-		panic(1)
+		os.Exit(1)
 	}
 	fmt.Println(color.Green)
 	fmt.Println("Account created successfully!")
@@ -268,7 +273,7 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 	if _, err := os.OpenFile("jwt.key", os.O_RDWR|os.O_APPEND, 0755); err != nil || cmd.Flag("jwtf").Value.String() == "true" {
 		if _, err := crypto.KeyGen(true); err != nil {
 			fmt.Println(color.Red, err, color.Reset)
-			panic(1)
+			os.Exit(1)
 		}
 	}
 }

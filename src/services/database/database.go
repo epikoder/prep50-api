@@ -4,41 +4,40 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 var (
-	dbConnection     *gorm.DB
-	dbConnectionCore *gorm.DB
+	dbConnection *gorm.DB
 )
 
 func init() {
 	var err error
-	if dbConnection, err = connectDB("app"); !logger.HandleError(err) {
+	if dbConnection, err = connectDB(); !logger.HandleError(err) {
 		panic(err)
 	}
-	if dbConnectionCore, err = connectDB("core"); !logger.HandleError(err) {
-		panic(err)
+	if os.Getenv("DB_DEBUG") == "true" {
+		dbConnection = dbConnection.Debug()
 	}
 }
 
-func connectDB(db string) (g *gorm.DB, err error) {
+func connectDB() (g *gorm.DB, err error) {
 	if config.Conf == nil {
 		return nil, fmt.Errorf("config not initialized")
 	}
 	dns := (func() string {
-		if config.Conf.Database.UseDB(db).Url != "" {
-			return config.Conf.Database.UseDB(db).Url
+		if config.Conf.Database.Url != "" {
+			return config.Conf.Database.Url
 		}
 		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-			config.Conf.Database.UseDB(db).User,
-			config.Conf.Database.UseDB(db).Password,
-			config.Conf.Database.UseDB(db).Host,
-			config.Conf.Database.UseDB(db).Port,
-			config.Conf.Database.UseDB(db).Name)
+			config.Conf.Database.User,
+			config.Conf.Database.Password,
+			config.Conf.Database.Host,
+			config.Conf.Database.Port,
+			config.Conf.Database.Name)
 	})()
 	g, err = gorm.Open(mysql.New(mysql.Config{
 		DSN:               dns,
@@ -51,18 +50,6 @@ func connectDB(db string) (g *gorm.DB, err error) {
 	return
 }
 
-func UseDB(db string) *gorm.DB {
-	debug := func(env string) bool {
-		return os.Getenv("DB_DEBUG") != "false"
-	}(os.Getenv("APP_ENV"))
-	if db == "app" {
-		if debug {
-			return dbConnection.Debug()
-		}
-		return dbConnection
-	}
-	if debug {
-		return dbConnectionCore.Debug()
-	}
-	return dbConnectionCore
+func DB() *gorm.DB {
+	return dbConnection
 }

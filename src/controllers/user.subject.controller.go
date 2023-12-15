@@ -30,7 +30,7 @@ func (c *UserSubjectController) Get() {
 	)
 	user, _ := getUser(c.Ctx)
 	q := []query{}
-	if err := database.UseDB("app").Table("user_exams as ue").
+	if err := database.DB().Table("user_exams as ue").
 		Select("ue.id, ue.exam_id, ue.user_id, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 		Where("ue.user_id = ? AND e.status = 1", user.Id).
@@ -115,7 +115,7 @@ func (c *UserSubjectController) Post() {
 
 	QUERY_USER_EXAM:
 		q := UserExamQuery{}
-		if err := database.UseDB("app").Table("user_exams as ue").
+		if err := database.DB().Table("user_exams as ue").
 			Select("ue.id, ue.exam_id, ue.user_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
@@ -136,7 +136,7 @@ func (c *UserSubjectController) Post() {
 				PaymentStatus: models.Pending,
 				CreatedAt:     time.Now(),
 			}
-			if err := database.UseDB("app").Create(userExams).Error; !logger.HandleError(err) {
+			if err := database.DB().Create(userExams).Error; !logger.HandleError(err) {
 				c.Ctx.StatusCode(http.StatusInternalServerError)
 				c.Ctx.JSON(internalServerError)
 				return
@@ -223,7 +223,7 @@ func (c *UserSubjectController) Put() {
 	user, _ := getUser(c.Ctx)
 	for e, v := range data {
 		q := UserExamQuery{}
-		if err := database.UseDB("app").Table("user_exams as ue").
+		if err := database.DB().Table("user_exams as ue").
 			Select("ue.id, ue.exam_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
@@ -283,7 +283,7 @@ func (c *UserSubjectController) Put() {
 							SubjectId:  id,
 						})
 					}
-					if err := database.UseDB("app").Create(subs).Error; !logger.HandleError(err) {
+					if err := database.DB().Create(subs).Error; !logger.HandleError(err) {
 						c.Ctx.StatusCode(500)
 						c.Ctx.JSON(internalServerError)
 						return

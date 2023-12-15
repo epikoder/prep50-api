@@ -9,7 +9,7 @@ ARG PAYSTACK_KEY=${PAYSTACK_KEY}
 
 FROM golang:1.20
 
-RUN apt update && apt install libvips-dev libvips-tools -y  
+RUN apt-get update && apt-get install libvips-dev libvips-tools -y  
 
 WORKDIR /app
 COPY . .

@@ -27,7 +27,7 @@ func (u *PasswordReset) Tag() string {
 }
 
 func (p *PasswordReset) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *PasswordReset) Migrate() dbmodel.Migration {

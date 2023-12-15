@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/iris-contrib/middleware/throttler"
 	"github.com/kataras/iris/v12"
