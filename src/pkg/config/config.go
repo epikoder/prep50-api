@@ -118,14 +118,35 @@ func init() {
 		panic(err)
 	}
 
-	if len(Conf.Database.Url) == 0 {
-		if len(Conf.Database.Password) == 0 {
-			Conf.Database.Password = os.Getenv("DB_PASSWORD")
+	{
+
+		if len(Conf.Database.Url) == 0 {
+			if uri := os.Getenv("DB_URL"); len(uri) > 0 {
+				Conf.Database.Url = uri
+			} else {
+				if len(Conf.Database.Host) == 0 {
+					Conf.Database.Host = os.Getenv("DB_HOST")
+				}
+				if len(Conf.Database.Port) == 0 {
+					Conf.Database.Port = os.Getenv("DB_PORT")
+				}
+				if len(Conf.Database.Name) == 0 {
+					Conf.Database.Name = os.Getenv("DB_NAME")
+				}
+				if len(Conf.Database.User) == 0 {
+					Conf.Database.User = os.Getenv("DB_USER")
+				}
+				if len(Conf.Database.Password) == 0 {
+					Conf.Database.Password = os.Getenv("DB_PASSWORD")
+				}
+			}
 		}
 	}
 
-	if len(Conf.Redis.Password) == 0 {
-		Conf.Redis.Password = os.Getenv("REDIS_PASSWORD")
+	{
+		if len(Conf.Redis.Password) == 0 {
+			Conf.Redis.Password = os.Getenv("REDIS_PASSWORD")
+		}
 	}
 }
 
