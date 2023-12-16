@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
@@ -27,6 +28,7 @@ var (
 			Amount:       1000,
 			SubjectCount: 9,
 			Status:       true,
+			CreatedAt:    time.Now(),
 		},
 		{
 			Id:           uuid.New(),
@@ -34,6 +36,7 @@ var (
 			Amount:       1000,
 			SubjectCount: 4,
 			Status:       true,
+			CreatedAt:    time.Now(),
 		},
 	}
 	authProviders = []models.Provider{
@@ -112,8 +115,12 @@ func initializeAuthenticationProvider(cmd *cobra.Command, args []string) {
 }
 
 func initializeAdmin(cmd *cobra.Command, args []string) {
-	gs := &models.GeneralSetting{}
-	repository.NewRepository(gs).Create()
+	gs := &models.GeneralSetting{
+		Id: 1,
+	}
+	if err := repository.NewRepository(gs).Save(); !logger.HandleError(err) {
+		os.Exit(1)
+	}
 	var user = &models.User{}
 	var role = &models.Role{}
 	var permission = &models.Permission{}

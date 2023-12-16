@@ -37,7 +37,17 @@ var (
 
 func generateValues() {
 	username, password = strings.ToLower(crypto.Random(12)), "password"
-	email, phone = fmt.Sprintf("%s@gmail.com", strings.ToLower(crypto.Random(12))), fmt.Sprintf("09052257%d%d%d", crypto.RandomNumber(0, 9), crypto.RandomNumber(0, 7), crypto.RandomNumber(4, 9))
+	email, phone = fmt.Sprintf("%s@gmail.com", strings.ToLower(crypto.Random(12))),
+		fmt.Sprintf("090%d%d%d%d%d%d%d%d",
+			crypto.RandomNumber(0, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+			crypto.RandomNumber(0, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+		)
 }
 
 func TestRegisterFailed(t *testing.T) {

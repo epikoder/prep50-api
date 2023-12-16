@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"gorm.io/gorm"
 )
 
@@ -45,8 +46,11 @@ func (r *repository) First() error {
 	return r.DB.First(r.Model).Error
 }
 func (r *repository) FindOne(i ...interface{}) (ok bool) {
-	return r.DB.First(r.Model, i...).Error == nil
-
+	err := r.DB.First(r.Model, i...).Error
+	if err != gorm.ErrRecordNotFound {
+		logger.HandleError(err)
+	}
+	return err == nil
 }
 
 func (r *repository) FindOneDst(dst interface{}, i ...interface{}) error {
