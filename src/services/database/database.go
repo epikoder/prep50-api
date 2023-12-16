@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"gorm.io/driver/mysql"
@@ -39,6 +40,7 @@ func connectDB() (g *gorm.DB, err error) {
 			config.Conf.Database.Port,
 			config.Conf.Database.Name)
 	})()
+	fmt.Printf("%sConnecting to %s%s\n", color.Blue, dns, color.Reset)
 	g, err = gorm.Open(mysql.New(mysql.Config{
 		DSN:               dns,
 		DefaultStringSize: 256,
@@ -46,6 +48,7 @@ func connectDB() (g *gorm.DB, err error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("%sConnected. %s\n", color.Blue, color.Reset)
 	g.Set("gorm:table_options", "ENGINE=InnoDB")
 	return
 }

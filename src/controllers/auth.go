@@ -120,7 +120,7 @@ func RegisterV1(ctx iris.Context) {
 		return
 	}
 	token, err := ijwt.GenerateToken(user, user.UserName)
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
@@ -326,7 +326,7 @@ func LoginV1(ctx iris.Context) {
 				user.UserName,
 				user.Device.Identifier,
 				user.Device.Name,
-				time.Now().Add(time.Minute*10)); err != nil {
+				time.Now().Add(time.Minute*10)); !logger.HandleError(err) {
 				ctx.StatusCode(http.StatusInternalServerError)
 				ctx.JSON(internalServerError)
 				return
