@@ -157,7 +157,14 @@ func initializeAdmin(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if err := repository.NewRepository(user).Preload("Roles").First(); err != nil && strings.Contains(err.Error(), "not found") || user.Id == uuid.Nil {
+	if ok := repository.NewRepository(user).Preload("Roles").FindOne("is_admin", 1); !ok || !(func() bool {
+		for _, r := range user.Roles {
+			if r.Name == "super-admin" {
+				return true
+			}
+		}
+		return false
+	})() {
 		_createAdmin(cmd, role)
 	}
 	fmt.Println(color.Green, "You are all set!!!", color.Reset)
