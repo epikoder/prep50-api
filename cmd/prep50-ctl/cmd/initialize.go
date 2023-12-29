@@ -61,6 +61,7 @@ var (
 func initialize(cmd *cobra.Command, args []string) {
 	if cmd.Flag("auto").Value.String() == "true" {
 		autoSetup(cmd, args)
+		return
 	}
 	if cmd.Flag("exams").Value.String() == "true" {
 		initializeExams(cmd, args)
@@ -286,7 +287,6 @@ func initializeJWT(cmd *cobra.Command, args []string) {
 }
 
 func autoSetup(cmd *cobra.Command, args []string) {
-	// migrate(cmd, []string{"auto"})
 	initializeExams(cmd, args)
 	initializeAuthenticationProvider(cmd, args)
 	initializeJWT(cmd, []string{"auto"})
