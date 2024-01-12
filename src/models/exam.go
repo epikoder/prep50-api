@@ -33,7 +33,7 @@ func (e *Exam) Tag() string {
 }
 
 func (e *Exam) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (e *Exam) Migrate() dbmodel.Migration {

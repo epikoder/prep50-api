@@ -28,7 +28,7 @@ func (c *NewsFeedController) Get() {
 		Liked      bool `json:"is_liked"`
 		Bookmarked bool `json:"is_bookmarked"`
 	}{}
-	database.UseDB("app").Table("newsfeeds as n").
+	database.DB().Table("newsfeeds as n").
 		Select(`n.*, ni.likes, ni.liked, ni.bookmarked, nc.comments`).
 		Joins(`LEFT JOIN 
 		(SELECT 
@@ -74,7 +74,7 @@ func (c *NewsFeedController) Post() {
 	user, _ := getUser(c.Ctx)
 	{
 		report := &models.NewsfeedReport{}
-		if err := database.UseDB("app").First(report, "user_id = ? AND newsfeed_id = ?", user.Id, feed.Id).Error; err == nil {
+		if err := database.DB().First(report, "user_id = ? AND newsfeed_id = ?", user.Id, feed.Id).Error; err == nil {
 			c.Ctx.StatusCode(http.StatusAccepted)
 			c.Ctx.JSON(apiResponse{
 				"status":  "success",
@@ -83,7 +83,7 @@ func (c *NewsFeedController) Post() {
 			return
 		}
 	}
-	if err := database.UseDB("app").Create(&models.NewsfeedReport{
+	if err := database.DB().Create(&models.NewsfeedReport{
 		NewsfeedId: feed.Id,
 		UserId:     user.Id,
 		Type:       data.Type,
@@ -112,7 +112,7 @@ func NewsFeedView(ctx iris.Context) {
 		Username string `json:"username"`
 	}{}
 	user, _ := getUser(ctx)
-	if err := database.UseDB("app").Table("newsfeeds as n").
+	if err := database.DB().Table("newsfeeds as n").
 		Select(`n.*, ni.likes, ni.liked, ni.bookmarked`).
 		Joins(`LEFT JOIN
 		(SELECT
@@ -134,7 +134,7 @@ func NewsFeedView(ctx iris.Context) {
 		return
 	}
 
-	database.UseDB("app").Table("newsfeed_comments as nc").
+	database.DB().Table("newsfeed_comments as nc").
 		Select("nc.*, u.username").
 		Joins("LEFT JOIN users as u ON u.id = nc.user_id").
 		Find(&comments, "nc.newsfeed_id = ?", feed.Id)
@@ -184,7 +184,7 @@ func NewsFeedInteract(ctx iris.Context) {
 					UserId:     user.Id,
 					Comment:    data.Comment,
 				}
-				database.UseDB("app").Create(feedComment)
+				database.DB().Create(feedComment)
 			}
 		}
 	case "like":
@@ -204,10 +204,10 @@ func NewsFeedInteract(ctx iris.Context) {
 					UserId:     user.Id,
 				}
 				feedInteraction.Liked = data.Like
-				database.UseDB("app").Create(feedInteraction)
+				database.DB().Create(feedInteraction)
 			} else {
 				feedInteraction.Liked = data.Like
-				database.UseDB("app").Where("newsfeed_id = ? AND user_id = ?", feed.Id, user.Id).
+				database.DB().Where("newsfeed_id = ? AND user_id = ?", feed.Id, user.Id).
 					Save(feedInteraction)
 			}
 		}
@@ -228,10 +228,10 @@ func NewsFeedInteract(ctx iris.Context) {
 					UserId:     user.Id,
 				}
 				feedInteraction.IsBookmarked = data.Bookmark
-				database.UseDB("app").Create(feedInteraction)
+				database.DB().Create(feedInteraction)
 			} else {
 				feedInteraction.IsBookmarked = data.Bookmark
-				database.UseDB("app").Where("newsfeed_id = ? AND user_id = ?", feed.Id, user.Id).
+				database.DB().Where("newsfeed_id = ? AND user_id = ?", feed.Id, user.Id).
 					Save(feedInteraction)
 			}
 		}
@@ -268,7 +268,7 @@ func NewsFeedInteractUpdateComment(ctx iris.Context) {
 
 	feedComment.Comment = data.Comment
 	feedComment.UpdatedAt = time.Now()
-	database.UseDB("app").Save(feedComment)
+	database.DB().Save(feedComment)
 
 	ctx.JSON(apiResponse{
 		"status":  "success",
@@ -289,7 +289,7 @@ func NewsFeedReportComment(ctx iris.Context) {
 	}
 
 	comment := &models.NewsfeedComment{}
-	if err := database.UseDB("app").First(comment, "id = ?", data.Id).Error; !logger.HandleError(err) {
+	if err := database.DB().First(comment, "id = ?", data.Id).Error; !logger.HandleError(err) {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "Comment not found",
@@ -299,7 +299,7 @@ func NewsFeedReportComment(ctx iris.Context) {
 	user, _ := getUser(ctx)
 	{
 		report := &models.NewsfeedCommentReport{}
-		if err := database.UseDB("app").First(report, "user_id = ? AND newsfeed_comment_id = ?", user.Id, comment.Id).Error; err == nil {
+		if err := database.DB().First(report, "user_id = ? AND newsfeed_comment_id = ?", user.Id, comment.Id).Error; err == nil {
 			ctx.StatusCode(http.StatusAccepted)
 			ctx.JSON(apiResponse{
 				"status":  "success",
@@ -308,7 +308,7 @@ func NewsFeedReportComment(ctx iris.Context) {
 			return
 		}
 	}
-	if err := database.UseDB("app").Create(&models.NewsfeedCommentReport{
+	if err := database.DB().Create(&models.NewsfeedCommentReport{
 		NewsfeedCommentId: comment.Id,
 		UserId:            user.Id,
 		Type:              data.Type,

@@ -71,7 +71,7 @@ func SetSettings(ctx iris.Context) {
 			ctx.JSON(internalServerError)
 			return
 		}
-		if err := database.UseDB("app").Model(gs).Update(setting, v).Error; !logger.HandleError(err) {
+		if err := database.DB().Model(gs).Update(setting, v).Error; !logger.HandleError(err) {
 			ctx.StatusCode(500)
 			ctx.JSON(internalServerError)
 			return

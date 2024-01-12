@@ -25,7 +25,7 @@ func (u *UserProgress) Tag() string {
 }
 
 func (u *UserProgress) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *UserProgress) Migrate() dbmodel.Migration {
@@ -52,7 +52,7 @@ func FindSubjectProgressFromList(ups []UserProgress, subjectId uint) (s uint) {
 	}
 	if n != 0 {
 		var count int64 = 1
-		database.UseDB("core").Model(&Objective{}).Where("subject_id = ?", subjectId).Count(&count)
+		database.DB().Model(&Objective{}).Where("subject_id = ?", subjectId).Count(&count)
 		return uint(math.Round(float64(s) / float64(count)))
 	}
 	return

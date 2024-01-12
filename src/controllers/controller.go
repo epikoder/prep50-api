@@ -8,6 +8,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
@@ -48,7 +49,7 @@ func DeregisterDevice(ctx iris.Context) {
 		Token string `validate:"required"`
 	}{}
 	if err := ctx.ReadQuery(&mp); !logger.HandleError(err) {
-		ctx.View("deregister_device", iris.Map{
+		page.Render(ctx, "deregister_device", iris.Map{
 			"message": "Malformed token",
 			"status":  false,
 		})
@@ -56,13 +57,13 @@ func DeregisterDevice(ctx iris.Context) {
 	}
 
 	if err := validateMailToken(mp.Token); !logger.HandleError(err) {
-		ctx.View("deregister_device", iris.Map{
+		page.Render(ctx, "deregister_device", iris.Map{
 			"message": err.Error(),
 			"status":  false,
 		})
 		return
 	}
-	ctx.View("deregister_device", iris.Map{
+	page.Render(ctx, "deregister_device", iris.Map{
 		"message": "Device deregistered successfully",
 		"status":  true,
 	})
@@ -81,7 +82,7 @@ func validateMailToken(k string) error {
 	if time.Now().After(m.Expires) {
 		return fmt.Errorf("token expired")
 	}
-	if err := database.UseDB("app").
+	if err := database.DB().
 		Raw("DELETE from devices WHERE identifier = ? AND user_id = ?", m.DeviceId, m.UserId).
 		Error; !logger.HandleError(err) {
 		return fmt.Errorf("something went wrong")
@@ -95,7 +96,7 @@ func validateMailToken(k string) error {
 
 func Terms(ctx iris.Context) {
 	st := &models.GeneralSetting{}
-	database.UseDB("app").First(st)
+	database.DB().First(st)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   st.Terms,
@@ -103,7 +104,7 @@ func Terms(ctx iris.Context) {
 }
 func Privacy(ctx iris.Context) {
 	st := &models.GeneralSetting{}
-	database.UseDB("app").First(st)
+	database.DB().First(st)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   st.Privacy,

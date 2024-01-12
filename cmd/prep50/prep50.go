@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/middlewares"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/ijwt"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
@@ -81,7 +81,6 @@ func (prep50 *Prep50) UseEncryption() {
 }
 
 func (prep50 *Prep50) RegisterViews() {
-	prep50.App.RegisterView(iris.Amber("templates/views", ".amber"))
 	prep50.App.HandleDir("/static", "public/assets", iris.DirOptions{Compress: true})
 }
 

@@ -42,7 +42,7 @@ func (u *Podcast) Tag() string {
 }
 
 func (p *Podcast) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *Podcast) Migrate() dbmodel.Migration {

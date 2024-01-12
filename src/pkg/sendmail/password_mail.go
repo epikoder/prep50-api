@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
 	mail "github.com/xhit/go-simple-mail/v2"
@@ -30,6 +30,7 @@ func SendPasswordResetMail(user *models.User, host string) (err error) {
 	if err != nil {
 		return err
 	}
+	fmt.Println(token)
 	var buf bytes.Buffer
 	if err = page.Compile(&buf, "auth/password_reset", map[string]interface{}{
 		"user": user,

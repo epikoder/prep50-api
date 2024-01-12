@@ -31,7 +31,7 @@ func (l *Lesson) Tag() string {
 }
 
 func (*Lesson) Database() *gorm.DB {
-	return database.UseDB("core")
+	return database.DB()
 }
 
 func (l *Lesson) Migrate() dbmodel.Migration {

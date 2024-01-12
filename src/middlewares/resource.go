@@ -33,7 +33,7 @@ func MustRegisterSubject(ctx iris.Context) {
 	examSubject := map[query][]models.UserSubject{}
 	{
 		q := []query{}
-		if err := database.UseDB("app").Table("user_exams as ue").
+		if err := database.DB().Table("user_exams as ue").
 			Select("ue.id, ue.exam_id, ue.user_id, e.name, e.status, e.subject_count").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.status = ? AND e.status = 1 AND ue.user_id = ?", true, user.Id).
@@ -97,7 +97,7 @@ func MustSubscribe(ctx iris.Context) {
 	// 	user, _ := getUser(ctx)
 	// 	session := settings.Get("exam.session", time.Now().Year())
 	// 	userExam := &models.UserExam{}
-	// 	if err := database.UseDB("app").
+	// 	if err := database.DB().
 	// 		Find(userExam, "user_id = ? AND session = ? AND payment_status = ?",
 	// 			user.Id, session, models.Completed).Error; err != nil {
 	// 		ctx.StatusCode(500)

@@ -18,7 +18,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 )
 

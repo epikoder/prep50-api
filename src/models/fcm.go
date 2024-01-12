@@ -21,11 +21,11 @@ func (n *Fcm) ID() interface{} {
 }
 
 func (*Fcm) Tag() string {
-	return "notifications"
+	return "fcms"
 }
 
 func (*Fcm) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (n *Fcm) Migrate() dbmodel.Migration {

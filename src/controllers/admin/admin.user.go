@@ -17,7 +17,7 @@ func (c *UserController) Get() {
 		IsSubscribed bool `json:"is_subscribed"`
 		models.User
 	}{}
-	if err := database.UseDB("app").Table("users as u").Select(`*,
+	if err := database.DB().Table("users as u").Select(`*,
 	CASE WHEN ue.payment_status = 'completed' 
 	THEN 1 
 	ELSE 0 

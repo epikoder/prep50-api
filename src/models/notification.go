@@ -29,7 +29,7 @@ func (*Notification) Tag() string {
 }
 
 func (*Notification) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (n *Notification) Migrate() dbmodel.Migration {

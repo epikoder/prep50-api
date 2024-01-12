@@ -15,7 +15,7 @@ type AdminFaqController struct {
 
 func (c *AdminFaqController) Get() {
 	faqs := []models.Faq{}
-	database.UseDB("app").Find(&faqs)
+	database.DB().Find(&faqs)
 	c.Ctx.JSON(apiResponse{
 		"status": "success",
 		"data":   faqs,
@@ -38,7 +38,7 @@ func (c *AdminFaqController) Post() {
 		})
 		return
 	}
-	database.UseDB("app").Create(&models.Faq{
+	database.DB().Create(&models.Faq{
 		Id:      uuid.New(),
 		Title:   data.Title,
 		Slug:    slug,

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
 	"github.com/google/uuid"
 )
@@ -129,24 +130,8 @@ func Slug(s string) string {
 	return strings.ToLower(strings.TrimSuffix(_s, "-"))
 }
 
-func UniqueSlug(model dbmodel.DBModel, slug string) (s string, err error) {
-	var i = 1
-	for {
-		s = fmt.Sprintf("%s%d", slug, i)
-		m := reflect.New(reflect.TypeOf(model).Elem()).Interface().(dbmodel.DBModel)
-		if err = model.Database().Find(m, "slug = ?", s).Error; err != nil {
-			return
-		}
-		uid, ok := m.ID().(uuid.UUID)
-		if !ok {
-			if id := m.ID().(int); id == 0 {
-				return
-			}
-		} else if uid == uuid.Nil {
-			return
-		}
-		i++
-	}
+func UniqueSlug(_ dbmodel.DBModel, slug string) (s string, err error) {
+	return slug + "-" + crypto.RandomString(12), nil
 }
 
 func UniqueByField(model dbmodel.DBModel, value, field string) (s string, err error) {
@@ -157,13 +142,16 @@ func UniqueByField(model dbmodel.DBModel, value, field string) (s string, err er
 		if err = model.Database().Find(m, "? = ?", field, s).Error; err != nil {
 			return
 		}
-		uid, ok := m.ID().(uuid.UUID)
-		if !ok {
-			if id := m.ID().(int); id == 0 {
+		uid := m.ID()
+		switch m.ID().(type) {
+		case uuid.UUID:
+			if uid == uuid.Nil {
 				return
 			}
-		} else if uid == uuid.Nil {
-			return
+		case int, uint:
+			if uid == 0 {
+				return
+			}
 		}
 		i++
 	}

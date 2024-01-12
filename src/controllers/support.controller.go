@@ -8,7 +8,7 @@ import (
 
 func Contacts(ctx iris.Context) {
 	st := &models.GeneralSetting{}
-	database.UseDB("app").First(st)
+	database.DB().First(st)
 	ctx.JSON(apiResponse{
 		"status": "success",
 		"data": apiResponse{

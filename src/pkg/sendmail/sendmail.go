@@ -3,7 +3,7 @@ package sendmail
 import (
 	"os"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 

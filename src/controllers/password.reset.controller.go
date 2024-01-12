@@ -11,6 +11,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/hash"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/page"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/sendmail"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
@@ -31,7 +32,7 @@ type (
 func (c *PasswordResetController) Get() {
 	_token, err := crypto.Aes256Decode(c.Ctx.URLParam("token"))
 	if err != nil {
-		c.Ctx.View("password_reset", iris.Map{
+		page.Render(c.Ctx, "password_reset", iris.Map{
 			"message": "Invalid/Expired Link",
 		})
 		return
@@ -39,7 +40,7 @@ func (c *PasswordResetController) Get() {
 	token := sendmail.VerificationToken{}
 	{
 		if err := json.Unmarshal([]byte(_token), &token); !logger.HandleError(err) {
-			c.Ctx.View("password_reset", iris.Map{
+			page.Render(c.Ctx, "password_reset", iris.Map{
 				"message": "Invalid/Expired Link",
 			})
 			return
@@ -47,7 +48,7 @@ func (c *PasswordResetController) Get() {
 	}
 
 	if token.Expires.Before(time.Now()) {
-		c.Ctx.View("password_reset", iris.Map{
+		page.Render(c.Ctx, "password_reset", iris.Map{
 			"message": "Link has Expired",
 		})
 		return
@@ -56,7 +57,7 @@ func (c *PasswordResetController) Get() {
 	user := &models.User{}
 	{
 		if ok := repository.NewRepository(user).FindOne("email = ?", token.Email); !ok {
-			c.Ctx.View("password_reset", iris.Map{
+			page.Render(c.Ctx, "password_reset", iris.Map{
 				"message": "User not found",
 			})
 			return
@@ -70,18 +71,18 @@ func (c *PasswordResetController) Get() {
 		}
 		b, err := json.Marshal(v)
 		if err != nil {
-			c.Ctx.View("password_reset", iris.Map{
+			page.Render(c.Ctx, "password_reset", iris.Map{
 				"message": "Something went wrong",
 			})
 		}
 		if t, err = crypto.Aes256Encode(string(b)); err != nil {
-			c.Ctx.View("password_reset", iris.Map{
+			page.Render(c.Ctx, "password_reset", iris.Map{
 				"message": "User Error",
 			})
 			return
 		}
 	}
-	c.Ctx.View("password_reset", iris.Map{
+	page.Render(c.Ctx, "password_reset", iris.Map{
 		"message": "Create new password",
 		"user":    user,
 		"token":   t,
@@ -108,7 +109,7 @@ func (c *PasswordResetController) Post(prs PasswordResetForm) {
 			message := "Please use the social login"
 			{
 				provider := &struct{ Name string }{}
-				if err := database.UseDB("app").
+				if err := database.DB().
 					Table("providers as p").
 					Select("p.name").
 					Joins("LEFT JOIN user_providers as up ON up.provider_id = p.id").
@@ -193,7 +194,7 @@ func (c *PasswordResetController) Put(psr Password) {
 		})
 		return
 	}
-	if err = database.UseDB("app").Save(user).Error; err != nil {
+	if err = database.DB().Save(user).Error; err != nil {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "Something went wrong",
@@ -202,5 +203,5 @@ func (c *PasswordResetController) Put(psr Password) {
 	}
 
 	c.Ctx.StatusCode(http.StatusAccepted)
-	c.Ctx.View("password_reset_success")
+	page.Render(c.Ctx, "password_reset_success", iris.Map{})
 }

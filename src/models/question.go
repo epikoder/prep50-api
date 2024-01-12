@@ -16,17 +16,18 @@ type (
 		SubjectId          uint      `json:"subject_id"`
 		SourceId           uint      `json:"source_id"`
 		QuestionTypeId     uint      `json:"question_type_id"`
-		Question           string    `json:"question"`
-		QuestionDetails    string    `json:"question_details"`
+		Question           string    `gorm:"type:longtext" json:"question"`
+		QuestionDetails    string    `gorm:"type:longtext" json:"question_details"`
 		QuestionImage      string    `json:"question_image"`
+		Passage            string    `gorm:"type:longtext" json:"passage"`
 		Option_1           string    `json:"option_1"`
 		Option_2           string    `json:"option_2"`
 		Option_3           string    `json:"option_3"`
 		Option_4           string    `json:"option_4"`
 		ShortAnswer        string    `json:"short_answer"`
-		FullAnswer         string    `json:"full_answer"`
+		FullAnswer         string    `gorm:"type:longtext" json:"full_answer"`
 		AnswerImage        string    `json:"answer_image"`
-		AnswerDetails      string    `json:"answer_details"`
+		AnswerDetails      string    `gorm:"type:longtext" json:"answer_details"`
 		QuestionYear       uint      `json:"question_year"`
 		QuestionYearNumber uint      `json:"question_year_number"`
 		CreatedAt          time.Time `json:"-"`
@@ -41,6 +42,7 @@ type (
 		Question           string    `json:"question"`
 		QuestionDetails    string    `json:"question_details"`
 		QuestionImage      string    `json:"question_image"`
+		Passage            string    `gorm:"type:longtext" json:"passage"`
 		Option_1           string    `json:"option_1"`
 		Option_2           string    `json:"option_2"`
 		Option_3           string    `json:"option_3"`
@@ -67,7 +69,7 @@ func (u *Question) Tag() string {
 }
 
 func (u *Question) Database() *gorm.DB {
-	return database.UseDB("core")
+	return database.DB()
 }
 
 func (u *Question) Migrate() dbmodel.Migration {
@@ -95,7 +97,7 @@ func SortBySubject(arr []Question) (r []SortedQuestion) {
 	for _, q := range arr {
 		s, ok := _r[q.SubjectId]
 		if !ok {
-			if err := database.UseDB("core").Find(&s.Subject, "id = ?", q.SubjectId).Error; err != nil {
+			if err := database.DB().Find(&s.Subject, "id = ?", q.SubjectId).Error; err != nil {
 				fmt.Println("skip")
 				continue
 			}

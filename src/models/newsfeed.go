@@ -1,10 +1,9 @@
 package models
 
 import (
-	"fmt"
-	"reflect"
 	"time"
 
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/crypto"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
@@ -85,7 +84,7 @@ func (m *Newsfeed) Tag() string {
 }
 
 func (m *Newsfeed) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *Newsfeed) Migrate() dbmodel.Migration {
@@ -101,7 +100,7 @@ func (m *NewsfeedComment) Tag() string {
 }
 
 func (m *NewsfeedComment) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *NewsfeedComment) Migrate() dbmodel.Migration {
@@ -139,25 +138,6 @@ func (NewsfeedCommentReport) Join() string {
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++//
-func UniqueSlug(model dbmodel.DBModel, slug string) (s string, err error) {
-	s = slug
-	tries := 1
-	for {
-		m := reflect.New(reflect.TypeOf(model).Elem()).Interface().(dbmodel.DBModel)
-		if err = model.Database().Find(m, "slug = ?", s).Error; err != nil {
-			return
-		}
-		uid, ok := m.ID().(uuid.UUID)
-		fmt.Println(uid, ok)
-		if !ok {
-			if id := m.ID().(int); id == 0 {
-				fmt.Println(id)
-				return
-			}
-		} else if uid == uuid.Nil {
-			return
-		}
-		s = fmt.Sprintf("%s-%d", slug, tries)
-		tries++
-	}
+func UniqueSlug(_ dbmodel.DBModel, slug string) (string, error) {
+	return slug + "-" + crypto.RandomString(12), nil
 }

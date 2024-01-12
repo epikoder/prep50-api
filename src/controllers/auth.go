@@ -120,7 +120,7 @@ func RegisterV1(ctx iris.Context) {
 		return
 	}
 	token, err := ijwt.GenerateToken(user, user.UserName)
-	if err != nil {
+	if !logger.HandleError(err) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		ctx.JSON(internalServerError)
 		return
@@ -195,7 +195,7 @@ func deviceExist(ctx iris.Context, userId uuid.UUID, deviceId string) (err error
 		Name       string
 		models.User
 	}{}
-	if err = database.UseDB("app").
+	if err = database.DB().
 		Table("users as u").
 		Select("u.*, d.name, d.identifier").
 		Joins("LEFT JOIN devices as d ON u.id = d.user_id").
@@ -270,7 +270,7 @@ func LoginV1(ctx iris.Context) {
 			provider := &struct {
 				Name string
 			}{}
-			if ok := database.UseDB("app").Table("user_providers as up").
+			if ok := database.DB().Table("user_providers as up").
 				Select("up.*, p.name").Joins("LEFT JOIN providers as p ON up.provider_id = p.id").
 				First(provider, "up.user_id = ?", user.Id).Error != nil; !ok {
 				ctx.StatusCode(http.StatusNotAcceptable)
@@ -326,7 +326,7 @@ func LoginV1(ctx iris.Context) {
 				user.UserName,
 				user.Device.Identifier,
 				user.Device.Name,
-				time.Now().Add(time.Minute*10)); err != nil {
+				time.Now().Add(time.Minute*10)); !logger.HandleError(err) {
 				ctx.StatusCode(http.StatusInternalServerError)
 				ctx.JSON(internalServerError)
 				return
@@ -348,7 +348,7 @@ func LoginV1(ctx iris.Context) {
 	}
 
 	userExams := []UserExamWithName{}
-	database.UseDB("app").Table("user_exams as ue").
+	database.DB().Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ?", user.Id).
 		Scan(&userExams)
@@ -426,7 +426,7 @@ func SocialV1(ctx iris.Context) {
 			_provider := &struct {
 				Name string
 			}{}
-			if userHasProvider := database.UseDB("app").Table("providers as p").
+			if userHasProvider := database.DB().Table("providers as p").
 				Select("up.*, p.name").Joins("LEFT JOIN user_providers as up ON up.provider_id = p.id").
 				First(_provider, "up.user_id = ?", user.Id).Error == nil; userHasProvider && _provider.Name != provider.Name {
 				ctx.StatusCode(http.StatusNotAcceptable)
@@ -526,7 +526,7 @@ func SocialV1(ctx iris.Context) {
 			return
 		}
 
-		if err := database.UseDB("app").Create(&models.UserProvider{
+		if err := database.DB().Create(&models.UserProvider{
 			UserId:     user.Id,
 			ProviderId: provider.Id,
 			IsLoggedIn: true,
@@ -538,7 +538,7 @@ func SocialV1(ctx iris.Context) {
 	}
 
 	userExams := []UserExamWithName{}
-	database.UseDB("app").Table("user_exams as ue").
+	database.DB().Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ?", user.Id).
 		Scan(&userExams)
@@ -570,7 +570,7 @@ func Logout(ctx iris.Context) {
 	if ok := repository.NewRepository(device).FindOne("user_id = ?", user.Id); ok {
 		device.Name = ""
 		device.Identifier = ""
-		database.UseDB("app").Save(device)
+		database.DB().Save(device)
 	}
 	ctx.JSON(apiResponse{
 		"status":  "success",

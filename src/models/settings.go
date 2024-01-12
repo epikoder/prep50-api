@@ -1,7 +1,6 @@
 package models
 
 import (
-	"time"
 	"unicode"
 
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/dbmodel"
@@ -10,15 +9,13 @@ import (
 )
 
 type GeneralSetting struct {
-	Id        uint   `gorm:"primarykey"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Location  string `json:"location"`
-	Website   string `json:"website"`
-	Terms     string `gorm:"type:longText" json:"terms"`
-	Privacy   string `gorm:"type:longText" json:"privacy"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id       uint   `gorm:"primarykey"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	Location string `json:"location"`
+	Website  string `json:"website"`
+	Terms    string `gorm:"type:longText" json:"terms"`
+	Privacy  string `gorm:"type:longText" json:"privacy"`
 }
 
 func (p *GeneralSetting) ID() interface{} {
@@ -30,7 +27,7 @@ func (u *GeneralSetting) Tag() string {
 }
 
 func (p *GeneralSetting) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *GeneralSetting) Migrate() dbmodel.Migration {

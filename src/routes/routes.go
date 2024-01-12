@@ -21,6 +21,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
 	app.Get("/deregister-device", controllers.DeregisterDevice)
+	app.Post("/pay-hook", controllers.PaymentHook)
 	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
 	app.Post("/pay-init", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.InitializePayment)
 
@@ -33,10 +34,13 @@ func RegisterApiRoutes(app *iris.Application) {
 		switch ctx.Method() {
 		case "POST":
 			controllers.NewsFeedInteract(ctx)
+			return
 		case "GET":
 			controllers.NewsFeedView(ctx)
+			return
 		case "PUT":
 			controllers.NewsFeedInteractUpdateComment(ctx)
+			return
 		default:
 			ctx.StatusCode(405)
 		}
@@ -135,6 +139,7 @@ func RegisterApiRoutes(app *iris.Application) {
 	mvc.New(admin.Party("/notifications")).Handle(new(admin_controllers.AdminNotificationController))
 
 	mvc.New(admin.Party("/users")).Handle(new(admin_controllers.UserController))
+	mvc.New(admin.Party("/members")).Handle(new(admin_controllers.MemberController))
 }
 
 func RegisterWebRoutes(app *iris.Application) {

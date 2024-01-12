@@ -14,6 +14,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 type UserSubjectController struct {
@@ -30,7 +31,7 @@ func (c *UserSubjectController) Get() {
 	)
 	user, _ := getUser(c.Ctx)
 	q := []query{}
-	if err := database.UseDB("app").Table("user_exams as ue").
+	if err := database.DB().Table("user_exams as ue").
 		Select("ue.id, ue.exam_id, ue.user_id, e.name, e.status").
 		Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 		Where("ue.user_id = ? AND e.status = 1", user.Id).
@@ -107,7 +108,7 @@ func (c *UserSubjectController) Post() {
 
 	user, _ := getUser(c.Ctx)
 	userSubjects := []models.UserSubject{}
-	for e, v := range form {
+	for examName, v := range form {
 		if len(v) == 0 {
 			continue
 		}
@@ -115,32 +116,40 @@ func (c *UserSubjectController) Post() {
 
 	QUERY_USER_EXAM:
 		q := UserExamQuery{}
-		if err := database.UseDB("app").Table("user_exams as ue").
+		if err := database.DB().Table("user_exams as ue").
 			Select("ue.id, ue.exam_id, ue.user_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
-			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
-			First(&q).Error; !logger.HandleError(err) {
-			exam := &models.Exam{}
-			if !repository.NewRepository(exam).FindOne("name = ?", e) {
-				c.Ctx.StatusCode(http.StatusNotFound)
-				c.Ctx.JSON(apiResponse{
-					"status":  "failed",
-					"message": fmt.Sprintf("Exam :%s not found", e),
-				})
-				return
-			}
-			userExams := &models.UserExam{
-				Id:            uuid.New(),
-				UserId:        user.Id,
-				ExamId:        exam.Id,
-				PaymentStatus: models.Pending,
-				CreatedAt:     time.Now(),
-			}
-			if err := database.UseDB("app").Create(userExams).Error; !logger.HandleError(err) {
-				c.Ctx.StatusCode(http.StatusInternalServerError)
+			Where("e.name = ? AND ue.user_id = ?", examName, user.Id).
+			First(&q).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				exam := &models.Exam{}
+				if !repository.NewRepository(exam).FindOne("name = ?", examName) {
+					c.Ctx.StatusCode(http.StatusNotFound)
+					c.Ctx.JSON(apiResponse{
+						"status":  "failed",
+						"message": fmt.Sprintf("Exam :%s not found", examName),
+					})
+					return
+				}
+				userExams := &models.UserExam{
+					Id:            uuid.New(),
+					UserId:        user.Id,
+					ExamId:        exam.Id,
+					PaymentStatus: models.Pending,
+					CreatedAt:     time.Now(),
+				}
+				if err := database.DB().Create(userExams).Error; !logger.HandleError(err) {
+					c.Ctx.StatusCode(http.StatusInternalServerError)
+					c.Ctx.JSON(internalServerError)
+					return
+				}
+			} else {
+				logger.HandleError(err)
+				c.Ctx.StatusCode(http.StatusBadRequest)
 				c.Ctx.JSON(internalServerError)
 				return
 			}
+
 			goto QUERY_USER_EXAM
 		}
 
@@ -223,7 +232,7 @@ func (c *UserSubjectController) Put() {
 	user, _ := getUser(c.Ctx)
 	for e, v := range data {
 		q := UserExamQuery{}
-		if err := database.UseDB("app").Table("user_exams as ue").
+		if err := database.DB().Table("user_exams as ue").
 			Select("ue.id, ue.exam_id, e.name, e.subject_count, e.status").
 			Joins("LEFT JOIN exams as e on ue.exam_id = e.id").
 			Where("e.name = ? AND ue.user_id = ?", e, user.Id).
@@ -283,7 +292,7 @@ func (c *UserSubjectController) Put() {
 							SubjectId:  id,
 						})
 					}
-					if err := database.UseDB("app").Create(subs).Error; !logger.HandleError(err) {
+					if err := database.DB().Create(subs).Error; !logger.HandleError(err) {
 						c.Ctx.StatusCode(500)
 						c.Ctx.JSON(internalServerError)
 						return

@@ -37,7 +37,17 @@ var (
 
 func generateValues() {
 	username, password = strings.ToLower(crypto.Random(12)), "password"
-	email, phone = fmt.Sprintf("%s@gmail.com", strings.ToLower(crypto.Random(12))), fmt.Sprintf("09052257%d%d%d", crypto.RandomNumber(0, 9), crypto.RandomNumber(0, 7), crypto.RandomNumber(4, 9))
+	email, phone = fmt.Sprintf("%s@gmail.com", strings.ToLower(crypto.Random(12))),
+		fmt.Sprintf("090%d%d%d%d%d%d%d%d",
+			crypto.RandomNumber(0, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+			crypto.RandomNumber(0, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+			crypto.RandomNumber(0, 7),
+			crypto.RandomNumber(4, 9),
+		)
 }
 
 func TestRegisterFailed(t *testing.T) {
@@ -61,8 +71,6 @@ func TestRegisterSuccess(t *testing.T) {
 	resp.Contains("success")
 }
 
-var deviceName, deviceID = crypto.Random(12), uuid.New()
-
 func TestLoginFailed(t *testing.T) {
 	e := httptest.New(t, app.App)
 	e.POST("/auth/login").WithJSON(map[string]interface{}{
@@ -78,6 +86,8 @@ func TestLoginMissingDeviceInfo(t *testing.T) {
 	}).Expect().Status(http.StatusForbidden).Body().Contains("400")
 }
 
+var deviceName, deviceID = crypto.Random(12), uuid.New()
+
 func TestLoginSuccess(t *testing.T) {
 	generateValues()
 
@@ -92,6 +102,12 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginFailedOnNewDevice(t *testing.T) {
+	generateValues()
+	TestRegisterSuccess(t)
+	deviceName, deviceID = crypto.Random(12), uuid.New()
+	TestLoginSuccess(t)
+
+	deviceName, deviceID = crypto.Random(12), uuid.New()
 	e := httptest.New(t, app.App)
 	e.POST("/auth/login").WithJSON(map[string]interface{}{
 		"username":    username,

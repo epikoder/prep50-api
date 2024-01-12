@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
@@ -22,7 +22,7 @@ func GetCurrentWeekQuiz(ctx iris.Context) {
 	quiz := &models.WeeklyQuiz{}
 	year, week := time.Now().ISOWeek()
 	if ok := repository.NewRepository(quiz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
 	}).
 		FindOne("week = ? AND session = ?", week, settings.Get("exam.session", year)); !ok {
 		ctx.StatusCode(404)
@@ -55,7 +55,7 @@ func IndexWeeklyQuiz(ctx iris.Context) {
 func ViewWeeklyQuizQuestions(ctx iris.Context) {
 	quizz := &models.WeeklyQuiz{}
 	if ok := repository.NewRepository(quizz).Preload("Questions", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Core.Name))
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
 	}).
 		FindOne("id = ?", ctx.URLParam("id")); !ok {
 		ctx.JSON(apiResponse{
@@ -91,6 +91,14 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 		ctx.JSON(res)
 		return
 	}
+	if time.Now().After(data.Start_Time) {
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Quizz start time can not be in past",
+		})
+		return
+	}
+
 	user, _ := getUser(ctx)
 	_, week := data.Start_Time.ISOWeek()
 	session := settings.Get("exam.session", time.Now().Year()).(int)
@@ -120,6 +128,7 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "weekly quizz created successfully",
+		"data":    w,
 	})
 }
 
@@ -175,14 +184,12 @@ func UpdateWeeklyQuizQuestion(ctx iris.Context) {
 			}
 		}
 	}
-
-	user, _ := getUser(ctx)
 	quizQues = []models.WeeklyQuestion{}
 	for _, id := range data.Add {
 		quizQues = append(quizQues, models.WeeklyQuestion{
 			QuizId:     quiz.Id,
 			QuestionId: id,
-			CreatedBy:  user.Id.String(),
+			CreatedAt:  time.Now(),
 		})
 	}
 

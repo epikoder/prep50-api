@@ -23,7 +23,7 @@ func (*Faq) Tag() string {
 }
 
 func (*Faq) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (f *Faq) Migrate() dbmodel.Migration {

@@ -26,7 +26,7 @@ func (c *AccountController) Get() {
 	user, _ := getUser(c.Ctx)
 
 	userExams := []UserExamWithName{}
-	database.UseDB("app").Table("user_exams as ue").
+	database.DB().Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ?", user.Id).
 		Scan(&userExams)
@@ -69,7 +69,7 @@ func (c *AccountController) Put() {
 	}
 
 	userExams := []UserExamWithName{}
-	database.UseDB("app").Table("user_exams as ue").
+	database.DB().Table("user_exams as ue").
 		Select("ue.session, ue.payment_status, ue.created_at, ue.id, e.name, ue.expires_at").Joins("LEFT JOIN exams as e ON e.id = ue.exam_id").
 		Where("user_id = ?", user.Id).
 		Scan(&userExams)

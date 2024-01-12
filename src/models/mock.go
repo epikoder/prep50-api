@@ -11,17 +11,18 @@ import (
 
 type (
 	Mock struct {
-		Id        uuid.UUID `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
-		Amount    uint      `json:"amount"`
-		Duration  uint      `json:"duration"`
-		StartTime time.Time `json:"start_time"`
-		EndTime   time.Time `json:"end_time"`
-		Session   uint      `json:"session"`
-		Video     string    `json:"video"`
-		CreatedAt time.Time `json:"-"`
-		UpdatedAt time.Time `json:"-"`
-		CreatedBy string    `json:"-"`
-		UpdatedBy string    `json:"-"`
+		Id        uuid.UUID  `sql:"primary_key;unique;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);index;" json:"id"`
+		Amount    uint       `json:"amount"`
+		Duration  uint       `json:"duration"`
+		StartTime time.Time  `json:"start_time"`
+		EndTime   time.Time  `json:"end_time"`
+		Session   uint       `json:"session"`
+		Video     string     `json:"video"`
+		CreatedAt time.Time  `json:"-"`
+		UpdatedAt time.Time  `json:"-"`
+		CreatedBy string     `json:"-"`
+		UpdatedBy string     `json:"-"`
+		Questions []Question `gorm:"many2many:mock_questions;"`
 	}
 
 	MockQuestion struct {
@@ -45,6 +46,12 @@ type (
 		End_Time   time.Time
 		Duration   uint
 	}
+	MockResult struct {
+		MockId   uuid.UUID `gorm:"notnull;type:varchar(36);index;" json:"mock_id"`
+		UserId   uuid.UUID `gorm:"notnull;type:varchar(36);index;" json:"user_id"`
+		Score    uint      `json:"score"`
+		Duration uint      `json:"duration"`
+	}
 )
 
 func (p *Mock) ID() interface{} {
@@ -52,11 +59,11 @@ func (p *Mock) ID() interface{} {
 }
 
 func (u *Mock) Tag() string {
-	return "providers"
+	return "mocks"
 }
 
 func (p *Mock) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (p *Mock) Migrate() dbmodel.Migration {
@@ -64,15 +71,15 @@ func (p *Mock) Migrate() dbmodel.Migration {
 }
 
 func (m *MockQuestion) ID() interface{} {
-	return m.MockId
+	return m.Id
 }
 
 func (m *MockQuestion) Tag() string {
-	return "weekly_quiz_questions"
+	return "mock_questions"
 }
 
 func (m *MockQuestion) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (m *MockQuestion) Migrate() dbmodel.Migration {
@@ -83,18 +90,5 @@ func (m *Mock) MockQuestions() (q []MockQuestion, err error) {
 	if err = m.Database().Find(&q, "mock_id = ?", m.Id).Error; err != nil {
 		return
 	}
-	return
-}
-
-func (m *Mock) Questions() (q []Question, err error) {
-	wq, err := m.MockQuestions()
-	if err != nil {
-		return nil, err
-	}
-	ids := []uint{}
-	for _, q := range wq {
-		ids = append(ids, q.QuestionId)
-	}
-	err = database.UseDB("core").Find(&q, "id IN ?", ids).Error
 	return
 }

@@ -24,7 +24,7 @@ type (
 )
 
 func (o *Objective) Database() *gorm.DB {
-	return database.UseDB("core")
+	return database.DB()
 }
 
 func (u *Objective) ID() interface{} {
@@ -41,6 +41,6 @@ func (u *Objective) Migrate() dbmodel.Migration {
 
 func (o Objective) GetPodcasts() (p []Podcast) {
 	p = make([]Podcast, 0)
-	database.UseDB("app").Find(&p, "objective_id = ?", o.Id)
+	database.DB().Find(&p, "objective_id = ?", o.Id)
 	return
 }

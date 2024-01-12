@@ -29,7 +29,7 @@ type (
 	WeeklyQuestion struct {
 		QuizId     uuid.UUID `gorm:"type:varchar(36);index;"`
 		QuestionId uint      `gorm:"index;"`
-		CreatedBy  string
+		CreatedAt  time.Time
 	}
 
 	WeeklyQuizResult struct {
@@ -64,7 +64,7 @@ func (u *WeeklyQuiz) Tag() string {
 }
 
 func (u *WeeklyQuiz) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *WeeklyQuiz) Migrate() dbmodel.Migration {
@@ -87,7 +87,7 @@ func (w *WeeklyQuiz) QuestionsWithAnswer() (q []Question, err error) {
 	for _, q := range wq {
 		ids = append(ids, q.QuestionId)
 	}
-	err = database.UseDB("core").Table((&Question{}).Tag()).Find(&q, "id IN ?", ids).Error
+	err = database.DB().Table((&Question{}).Tag()).Find(&q, "id IN ?", ids).Error
 	return
 }
 
@@ -100,7 +100,7 @@ func (u *WeeklyQuestion) Tag() string {
 }
 
 func (u *WeeklyQuestion) Database() *gorm.DB {
-	return database.UseDB("app")
+	return database.DB()
 }
 
 func (u *WeeklyQuestion) Migrate() dbmodel.Migration {

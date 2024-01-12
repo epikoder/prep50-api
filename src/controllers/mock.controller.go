@@ -3,12 +3,18 @@ package controllers
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/cache"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
+	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 type MockController struct {
@@ -22,7 +28,7 @@ func (c *MockController) Get() {
 		Available  bool `json:"available"`
 		Registered bool `json:"registered"`
 	}{}
-	if notFound := database.UseDB("app").Table("mocks as m").
+	if notFound := database.DB().Table("mocks as m").
 		Select(`m.*, 
 		CASE 
 			WHEN um.user_id = ? THEN 1 
@@ -64,7 +70,7 @@ func (c *MockController) Post() {
 		models.Mock
 		Registered bool `json:"registered"`
 	}{}
-	tx := database.UseDB("app").Table("mocks as m").
+	tx := database.DB().Table("mocks as m").
 		Select(`m.*, 
 	CASE 
 		WHEN um.user_id = ? THEN 1 
@@ -111,7 +117,7 @@ func (c *MockController) Post() {
 		ids = append(ids, q.QuestionId)
 	}
 	ques := []models.Question{}
-	err = database.UseDB("core").Find(&ques, "id IN ? AND subject_id IN ? ORDER BY RAND()", ids, data.Subject).Error
+	err = database.DB().Find(&ques, "id IN ? AND subject_id IN ? ORDER BY RAND()", ids, data.Subject).Error
 	if err != nil {
 		c.Ctx.StatusCode(500)
 		c.Ctx.JSON(internalServerError)
@@ -123,6 +129,121 @@ func (c *MockController) Post() {
 		"data": apiResponse{
 			"mock":      mock,
 			"questions": ques,
+		},
+	})
+}
+
+func (c *MockController) Put() {
+	var userAnswer = struct {
+		Id     uuid.UUID
+		Answer Answer
+	}{}
+	if err := c.Ctx.ReadJSON(&userAnswer); !logger.HandleError(err) {
+		c.Ctx.StatusCode(400)
+		c.Ctx.JSON(validation.Errors(err))
+		return
+	}
+
+	answers := Answer{}
+	mock := &models.Mock{}
+
+	if err := database.DB().Table(mock.Tag()).Preload("Questions", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
+	}).First(&mock, "id = ?", userAnswer.Id).Error; err != nil {
+		c.Ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Mock not found",
+		})
+		return
+	}
+
+	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
+		goto SKIP
+	}
+	if mock.StartTime.Before(time.Now()) || mock.EndTime.After(time.Now()) {
+		c.Ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Mock is not active",
+		})
+		return
+	}
+
+SKIP:
+	user, _ := getUser(c.Ctx)
+	_time := time.Now()
+	key := fmt.Sprintf("mock.%s.answer", mock.Id)
+	ans, ok := cache.Get(key)
+	if err := answers.UnmarshalBinary([]byte(ans)); !ok || !logger.HandleError(err) {
+
+		for _, question := range mock.Questions {
+			if question.QuestionTypeId == uint(models.OBJECTIVE) {
+				answers[question.Id] = question.ShortAnswer
+			} else {
+				answers[question.Id] = question.FullAnswer
+			}
+		}
+		logger.HandleError(cache.Set(key, answers, cache.Duration(mock.EndTime.Unix())))
+	}
+
+	v := reflect.ValueOf(*mock)
+	{
+		t := v.Type()
+		sf := []reflect.StructField{}
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			if f.Name == "Questions" {
+				f.Tag = `json:"-"`
+			}
+			sf = append(sf, f)
+		}
+		s := reflect.StructOf(sf)
+		if t.ConvertibleTo(s) {
+			v = v.Convert(s)
+		}
+	}
+	{
+		result := &models.MockResult{}
+		if err := database.DB().First(result, "user_id = ? AND mock_id = ?", user.Id, mock.Id).Error; err == nil {
+			c.Ctx.JSON(apiResponse{
+				"Status": "success",
+				"data": apiResponse{
+					"score":  result.Score,
+					"mock":   v.Interface(),
+					"answer": answers,
+				},
+			})
+			return
+		}
+	}
+
+	var score uint = 0
+	for id, ans := range answers {
+		ua, ok := userAnswer.Answer[id]
+		if !ok {
+			continue
+		}
+		if ua == ans {
+			score++
+		}
+	}
+
+	if err := database.DB().Create(models.MockResult{
+		MockId:   mock.Id,
+		UserId:   user.Id,
+		Score:    score,
+		Duration: uint(mock.StartTime.Sub(_time).Minutes()),
+	}).Error; !logger.HandleError(err) {
+		c.Ctx.StatusCode(500)
+		c.Ctx.JSON(internalServerError)
+		return
+	}
+
+	c.Ctx.JSON(apiResponse{
+		"Status": "success",
+		"data": apiResponse{
+			"score":   score,
+			"mock":    v.Interface(),
+			"answers": answers,
 		},
 	})
 }

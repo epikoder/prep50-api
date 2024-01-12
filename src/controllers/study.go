@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Prep50mobileApp/prep50-api/config"
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/services/database"
@@ -25,18 +25,18 @@ func StudySubjects(ctx iris.Context) {
 	ctx.ReadJSON(data)
 	user, _ := getUser(ctx)
 	progress := []models.UserProgress{}
-	database.UseDB("app").Find(&progress, "user_id = ?", user.Id)
+	database.DB().Find(&progress, "user_id = ?", user.Id)
 	subjects := []struct {
 		Id          uint   `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Exam        string
 	}{}
-	if err := database.UseDB("core").Table("subjects as s").
+	if err := database.DB().Table("subjects as s").
 		Select("s.*, e.name as exam").
-		Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON s.id = us.subject_id", config.Conf.Database.App.Name)).
-		Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
-		Joins(fmt.Sprintf("LEFT JOIN %s.exams as e ON ue.exam_id = e.id", config.Conf.Database.App.Name)).
+		Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON s.id = us.subject_id", config.Conf.Database.Name)).
+		Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.Name)).
+		Joins(fmt.Sprintf("LEFT JOIN %s.exams as e ON ue.exam_id = e.id", config.Conf.Database.Name)).
 		Find(&subjects, "us.user_id = ? order by subject_id asc",
 			user.Id).Error; err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
@@ -79,14 +79,14 @@ func StudyLessons(ctx iris.Context) {
 	user, _ := getUser(ctx)
 	topics := []models.Topic{}
 	{
-		db := database.UseDB("core")
+		db := database.DB()
 		if data.WithObjective {
 			if len(data.Objective) > 0 {
 				db = db.Preload("Objectives",
 					func(__db *gorm.DB) *gorm.DB {
 						__db = __db.Table("objectives as o").
 							Select("o.*, up.score as progress").
-							Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.App.Name)).
+							Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.Name)).
 							Where("o.id IN ?", data.Objective)
 						return __db
 					},
@@ -95,7 +95,7 @@ func StudyLessons(ctx iris.Context) {
 				db = db.Preload("Objectives", func(__db *gorm.DB) *gorm.DB {
 					__db = __db.Table("objectives as o").
 						Select("o.*, up.score as progress").
-						Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.App.Name))
+						Joins(fmt.Sprintf("LEFT JOIN %s.user_progresses as up ON up.objective_id = o.id", config.Conf.Database.Name))
 					return __db
 				})
 			}
@@ -107,8 +107,8 @@ func StudyLessons(ctx iris.Context) {
 		var err error
 		db = db.Table("topics as t").
 			Select("t.*").
-			Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON t.subject_id = us.subject_id", config.Conf.Database.App.Name)).
-			Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.App.Name)).
+			Joins(fmt.Sprintf("LEFT JOIN %s.user_subjects as us ON t.subject_id = us.subject_id", config.Conf.Database.Name)).
+			Joins(fmt.Sprintf("LEFT JOIN %s.user_exams as ue ON us.user_exam_id = ue.id", config.Conf.Database.Name)).
 			Joins("LEFT JOIN subjects as s ON s.id = us.subject_id")
 
 		if len(data.Subject) > 0 {
@@ -177,8 +177,8 @@ func StudyPodcasts(ctx iris.Context) {
 	data := &topicForm{}
 	ctx.ReadQuery(data)
 	topics := []models.PodcastTopic{}
-	database.UseDB("core").Table("topics").Preload("Podcast", func(db *gorm.DB) *gorm.DB {
-		return db.Table(fmt.Sprintf("%s.podcasts", config.Conf.Database.App.Name))
+	database.DB().Table("topics").Preload("Podcast", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.podcasts", config.Conf.Database.Name))
 	}).Find(&topics, "subject_id = ?", data.Subject)
 	ctx.JSON(apiResponse{
 		"status": "success",
@@ -195,7 +195,7 @@ func QuickQuiz(ctx iris.Context) {
 	form := &quizForm{}
 	ctx.ReadQuery(form)
 	questions := []models.Question{}
-	database.UseDB("core").Table("objective_questions as oq").
+	database.DB().Table("objective_questions as oq").
 		Select("q.*").Joins("LEFT JOIN questions as q ON oq.id = q.id").
 		Find(&questions, "objective_id = ?", form.Id)
 	ctx.JSON(apiResponse{
@@ -215,7 +215,7 @@ func QuickQuizScore(ctx iris.Context) {
 	user, _ := getUser(ctx)
 
 	objective := &models.Objective{}
-	if err := database.UseDB("core").First(objective, "id = ?", form.Id).Error; err != nil {
+	if err := database.DB().First(objective, "id = ?", form.Id).Error; err != nil {
 		ctx.JSON(apiResponse{
 			"status":  "failed",
 			"message": "objective not found",
@@ -228,7 +228,7 @@ func QuickQuizScore(ctx iris.Context) {
 		SubjectId:   uint(objective.SubjectId),
 		Score:       form.Score,
 	}
-	if err := database.UseDB("app").Save(progress).Error; err != nil {
+	if err := database.DB().Save(progress).Error; err != nil {
 		ctx.StatusCode(500)
 		ctx.JSON(internalServerError)
 		return

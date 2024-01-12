@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/color"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
@@ -14,7 +15,7 @@ import (
 type (
 	conf struct {
 		App      app
-		Database database
+		Database dbConnection
 		Throttle throttle
 		Aes      aes
 		Cors     cors
@@ -38,10 +39,6 @@ type (
 		Origins          []string
 		Headers          string
 		AllowCredentials string `yaml:"allowCredentials"`
-	}
-	database struct {
-		Core dbConnection
-		App  dbConnection
 	}
 	dbConnection struct {
 		Url      string
@@ -96,13 +93,6 @@ func (m MailUserName) ToUserName() string {
 	return v
 }
 
-func (db database) UseDB(s string) dbConnection {
-	if s == "core" {
-		return db.Core
-	}
-	return db.App
-}
-
 func init() {
 	godotenv.Load()
 	__DIR__, err := os.Getwd()
@@ -111,15 +101,17 @@ func init() {
 	}
 
 	path = "config.yml"
-	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
+	if env := env(os.Getenv("APP_ENV"), "production"); env != "" && env != "production" {
 		path = "config." + env + ".yml"
 	}
+	fmt.Printf("%sLoading config: %s%s\n", color.Blue, path, color.Reset)
 
 	var file *os.File
 	if file, err = os.OpenFile(fmt.Sprintf("%s/%s", __DIR__, path),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644); !logger.HandleError(err) {
 		panic(err)
 	}
+	fmt.Printf("%sLoaded config%s\n", color.Blue, color.Reset)
 	defer file.Close()
 	var buf []byte
 	if buf, err = io.ReadAll(file); !logger.HandleError(err) {
@@ -129,21 +121,43 @@ func init() {
 		panic(err)
 	}
 
-	if len(Conf.Database.App.Url) == 0 {
-		if len(Conf.Database.App.Password) == 0 {
-			Conf.Database.App.Password = os.Getenv("DB_APP_PASSWORD")
+	{
+
+		if len(Conf.Database.Url) == 0 {
+			if uri := os.Getenv("DB_URL"); len(uri) > 0 {
+				Conf.Database.Url = uri
+			} else {
+				if len(Conf.Database.Host) == 0 {
+					Conf.Database.Host = env(os.Getenv("DB_HOST"), "localhost")
+				}
+				if len(Conf.Database.Port) == 0 {
+					Conf.Database.Port = env(os.Getenv("DB_PORT"), "3306")
+				}
+				if len(Conf.Database.Name) == 0 {
+					Conf.Database.Name = env(os.Getenv("DB_NAME"), "prep50")
+				}
+				if len(Conf.Database.User) == 0 {
+					Conf.Database.User = env(os.Getenv("DB_USER"), "root")
+				}
+				if len(Conf.Database.Password) == 0 {
+					Conf.Database.Password = env(os.Getenv("DB_PASSWORD"), "")
+				}
+			}
 		}
 	}
 
-	if len(Conf.Database.Core.Url) == 0 {
-		if len(Conf.Database.Core.Password) == 0 {
-			Conf.Database.Core.Password = os.Getenv("DB_CORE_PASSWORD")
+	{
+		if len(Conf.Redis.Password) == 0 {
+			Conf.Redis.Password = os.Getenv("REDIS_PASSWORD")
 		}
 	}
+}
 
-	if len(Conf.Redis.Password) == 0 {
-		Conf.Redis.Password = os.Getenv("REDIS_PASSWORD")
+func env(value, defaultValue string) string {
+	if len(value) > 0 {
+		return value
 	}
+	return defaultValue
 }
 
 func Update() {
