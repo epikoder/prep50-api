@@ -21,6 +21,7 @@ func RegisterApiRoutes(app *iris.Application) {
 
 	mvc.New(app.Party("password-reset")).Handle(new(controllers.PasswordResetController))
 	app.Get("/deregister-device", controllers.DeregisterDevice)
+	app.Post("/pay-hook", controllers.PaymentHook)
 	app.Post("/pay-verify", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.VerifyPayment)
 	app.Post("/pay-init", ijwt.JwtGuardMiddleware, middlewares.Protected, controllers.InitializePayment)
 

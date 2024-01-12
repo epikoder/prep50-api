@@ -21,7 +21,7 @@ func (n *Fcm) ID() interface{} {
 }
 
 func (*Fcm) Tag() string {
-	return "notifications"
+	return "fcms"
 }
 
 func (*Fcm) Database() *gorm.DB {

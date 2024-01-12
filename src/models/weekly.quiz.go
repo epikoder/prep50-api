@@ -29,7 +29,7 @@ type (
 	WeeklyQuestion struct {
 		QuizId     uuid.UUID `gorm:"type:varchar(36);index;"`
 		QuestionId uint      `gorm:"index;"`
-		CreatedBy  string
+		CreatedAt  time.Time
 	}
 
 	WeeklyQuizResult struct {

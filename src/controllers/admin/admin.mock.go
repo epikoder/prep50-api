@@ -1,12 +1,14 @@
 package admin
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
+	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/list"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/logger"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/repository"
@@ -14,6 +16,7 @@ import (
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/validation"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 func IndexMock(ctx iris.Context) {
@@ -31,26 +34,13 @@ func IndexMock(ctx iris.Context) {
 
 func ViewMockQuestions(ctx iris.Context) {
 	mock := &models.Mock{}
-	if ok := repository.NewRepository(mock).
-		FindOne("id = ?", ctx.URLParam("id")); !ok {
-		ctx.JSON(apiResponse{
-			"status":  "failed",
-			"message": "Mock not found",
-		})
-		return
-	}
-	ques, err := mock.Questions()
-	if !logger.HandleError(err) {
-		ctx.StatusCode(500)
-		ctx.JSON(internalServerError)
-		return
-	}
+	session := settings.Get("exam.session", time.Now().Year())
+	repository.NewRepository(mock).Preload("Questions", func(db *gorm.DB) *gorm.DB {
+		return db.Table(fmt.Sprintf("%s.questions", config.Conf.Database.Name))
+	}).FindOne("session = ? AND end_time > ?", session, time.Now())
 	ctx.JSON(apiResponse{
 		"status": "success",
-		"data": apiResponse{
-			"mock":      mock,
-			"questions": ques,
-		},
+		"data":   mock,
 	})
 }
 
@@ -71,6 +61,15 @@ func CreateMock(ctx iris.Context) {
 		ctx.JSON(res)
 		return
 	}
+
+	if time.Now().After(data.Start_Time) || time.Now().After(data.End_Time) {
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Mock start/end time can not be in past",
+		})
+		return
+	}
+
 	user, _ := getUser(ctx)
 	mock := &models.Mock{
 		Id:        uuid.New(),
@@ -150,6 +149,7 @@ func UpdateMockQuestion(ctx iris.Context) {
 	mockQues = []models.MockQuestion{}
 	for _, id := range data.Add {
 		mockQues = append(mockQues, models.MockQuestion{
+			Id:         uuid.New(),
 			MockId:     mock.Id,
 			QuestionId: id,
 			CreatedBy:  user.Id.String(),

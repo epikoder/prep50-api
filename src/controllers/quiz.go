@@ -42,11 +42,12 @@ func (c *WeeklyQuizController) Get() {
 		Questions []models.Question `json:"questions"`
 	}
 	quiz := &models.WeeklyQuiz{}
-	_, w := time.Now().ISOWeek()
-	if ok := repository.NewRepository(quiz).FindOne("week", w); !ok {
+	year, week := time.Now().ISOWeek()
+	session := settings.Get("exam.session", year)
+	if ok := repository.NewRepository(quiz).FindOne("week = ? AND session = ?", week, session); !ok {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
-			"message": "no quizz avaliable for current week",
+			"message": "No quizz avaliable for current week",
 		})
 		return
 	}
@@ -96,10 +97,10 @@ func (c *WeeklyQuizController) Post() {
 	if env := os.Getenv("APP_ENV"); env != "" && env != "production" {
 		goto SKIP
 	}
-	if quiz.StartTime.After(time.Now()) {
+	if quiz.StartTime.Before(time.Now()) || quiz.StartTime.Add(time.Minute*time.Duration(quiz.Duration+10)).Before(time.Now()) {
 		c.Ctx.JSON(apiResponse{
 			"status":  "failed",
-			"message": "Quiz is not running",
+			"message": "Quiz is not active",
 		})
 		return
 	}
@@ -139,11 +140,7 @@ SKIP:
 
 	var score uint = 0
 	for id, ans := range answers {
-		ua, ok := userAnswer[id]
-		if !ok {
-			continue
-		}
-		if ua == ans {
+		if ua, ok := userAnswer[id]; ok && ua == ans {
 			score++
 		}
 	}

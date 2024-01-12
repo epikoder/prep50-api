@@ -44,7 +44,7 @@ type (
 		Id            uuid.UUID     `sql:"primary_key;type:uuid;default:uuid_generate_v4()" gorm:"type:varchar(36);notnull;index;" json:"-"`
 		UserId        uuid.UUID     `sql:"primary_key;type:uuid;" gorm:"type:varchar(36);notnull;index;" json:"-"`
 		ExamId        uuid.UUID     `sql:"primary_key;type:uuid;" gorm:"type:varchar(36);notnull;" json:"-"`
-		TransactionId uuid.UUID     `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
+		TransactionId *uuid.UUID    `sql:"type:uuid;" gorm:"type:varchar(36);index;" json:"-"`
 		Session       uint          `json:"session"`
 		PaymentStatus PaymentStatus `json:"payment_status"`
 		CreatedAt     time.Time     `json:"created_at"`

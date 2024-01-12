@@ -91,6 +91,14 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 		ctx.JSON(res)
 		return
 	}
+	if time.Now().After(data.Start_Time) {
+		ctx.JSON(apiResponse{
+			"status":  "failed",
+			"message": "Quizz start time can not be in past",
+		})
+		return
+	}
+
 	user, _ := getUser(ctx)
 	_, week := data.Start_Time.ISOWeek()
 	session := settings.Get("exam.session", time.Now().Year()).(int)
@@ -120,6 +128,7 @@ func CreateWeeklyQuiz(ctx iris.Context) {
 	ctx.JSON(apiResponse{
 		"status":  "success",
 		"message": "weekly quizz created successfully",
+		"data":    w,
 	})
 }
 
@@ -175,14 +184,12 @@ func UpdateWeeklyQuizQuestion(ctx iris.Context) {
 			}
 		}
 	}
-
-	user, _ := getUser(ctx)
 	quizQues = []models.WeeklyQuestion{}
 	for _, id := range data.Add {
 		quizQues = append(quizQues, models.WeeklyQuestion{
 			QuizId:     quiz.Id,
 			QuestionId: id,
-			CreatedBy:  user.Id.String(),
+			CreatedAt:  time.Now(),
 		})
 	}
 

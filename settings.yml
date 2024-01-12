@@ -1,4 +1,4 @@
-exam.session: 2023
+exam.session:
 qquiz.questions: 60
 paystack.mode: "live"
 paystack.live.secretKey: ""

@@ -74,7 +74,7 @@ func Update() {
 
 func Get(k string, d interface{}) (v interface{}) {
 	v, ok := generalSettings[k]
-	if !ok {
+	if !ok || v == nil {
 		return d
 	}
 	if reflect.ValueOf(v).IsZero() {
@@ -85,7 +85,7 @@ func Get(k string, d interface{}) (v interface{}) {
 
 func GetString(k string, d string) (s string) {
 	v, ok := generalSettings[k]
-	if !ok {
+	if !ok || v == nil {
 		return d
 	}
 	s, ok = v.(string)
