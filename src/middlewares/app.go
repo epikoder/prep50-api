@@ -2,10 +2,8 @@ package middlewares
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Prep50mobileApp/prep50-api/src/models"
 	"github.com/Prep50mobileApp/prep50-api/src/pkg/config"
@@ -56,10 +54,6 @@ var (
 		return u, nil
 	}
 )
-
-func init() {
-	rand.Seed(time.Now().Unix())
-}
 
 func CORS(ctx iris.Context) {
 	origin := func() string {
@@ -121,7 +115,7 @@ func RateLimiter() iris.Handler {
 		MaxBurst: config.Conf.Throttle.Burst,
 	}
 
-	rateLimiter, err := throttled.NewGCRARateLimiter(store, quota)
+	rateLimiter, err := throttled.NewGCRARateLimiterCtx(throttled.WrapStoreWithContext(store), quota)
 	if err != nil {
 		panic(err)
 	}

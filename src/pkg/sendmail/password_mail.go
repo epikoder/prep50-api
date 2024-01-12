@@ -30,6 +30,7 @@ func SendPasswordResetMail(user *models.User, host string) (err error) {
 	if err != nil {
 		return err
 	}
+	fmt.Println(token)
 	var buf bytes.Buffer
 	if err = page.Compile(&buf, "auth/password_reset", map[string]interface{}{
 		"user": user,
